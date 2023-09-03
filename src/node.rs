@@ -4,18 +4,16 @@ pub struct LinkedListNode<'a, T> {
     pub(crate) data: Option<T>,
     pub(crate) prev: Option<&'a LinkedListNode<'a, T>>,
     pub(crate) next: Option<&'a LinkedListNode<'a, T>>,
-    pub(crate) ind: usize,
 }
 impl<'a, T> LinkedListNode<'a, T> {
     pub(crate) fn back_front_node() -> Self {
-        Self::closed_node(0)
+        Self::closed_node()
     }
-    pub(crate) fn closed_node(ind: usize) -> Self {
+    pub(crate) fn closed_node() -> Self {
         Self {
             data: None,
             prev: None,
             next: None,
-            ind,
         }
     }
 }

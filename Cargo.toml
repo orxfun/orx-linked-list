@@ -1,6 +1,6 @@
 [package]
 name = "orx-linked-list"
-version = "0.1.2"
+version = "0.2.0"
 edition = "2021"
 authors = ["orxfun <orx.ugur.arikan@gmail.com>"]
 description = "An actually useful linked list :) documentation will follow."
@@ -10,4 +10,4 @@ keywords = ["linked", "list", "vec", "array", "pinned"]
 categories = ["data-structures"]
 
 [dependencies]
-orx-imp-vec = "0.9.0"
+orx-imp-vec = "0.9.1"
