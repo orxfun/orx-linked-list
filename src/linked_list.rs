@@ -111,9 +111,8 @@ where
     /// assert_eq!(list.back(), Some(&7));
     /// ```
     pub fn back_mut(&mut self) -> Option<&mut T> {
-        self.imp[0]
-            .next
-            .and_then(|node| self.imp[node.ind].data.as_mut())
+        self.node_ind(self.back_node())
+            .and_then(|ind| self.imp[ind].data.as_mut())
     }
     /// Provides a reference to the front element, or None if the list is empty.
     ///
@@ -161,9 +160,8 @@ where
     /// assert_eq!(list.front(), Some(&7));
     /// ```
     pub fn front_mut(&mut self) -> Option<&mut T> {
-        self.imp[0]
-            .prev
-            .and_then(|node| self.imp[node.ind].data.as_mut())
+        self.node_ind(self.front_node())
+            .and_then(|ind| self.imp[ind].data.as_mut())
     }
 
     /// Appends an element to the back of a list.
@@ -187,18 +185,17 @@ where
     /// assert_eq!('b', *list.back().unwrap());
     /// ```
     pub fn push_back(&mut self, value: T) {
-        match self.back_node() {
+        match self.back_node_ind() {
             None => self.push_first_node(value),
-            Some(prior_back) => {
-                let node = self.imp.push_get_ref(LinkedListNode {
+            Some(prior_back_ind) => {
+                let ind = Some(self.imp.len());
+                self.imp.push(LinkedListNode {
                     data: Some(value),
                     next: None,
-                    prev: Some(prior_back),
-                    ind: self.imp.len(),
+                    prev: self.back_node(),
                 });
-
-                self.imp.set_next(prior_back.ind, Some(node.ind));
-                self.set_back(Some(node.ind));
+                self.imp.set_next(prior_back_ind, ind);
+                self.set_back(ind);
             }
         }
         self.len += 1;
@@ -224,18 +221,17 @@ where
     /// assert_eq!('b', *list.front().unwrap());
     /// ```
     pub fn push_front(&mut self, value: T) {
-        match self.front_node() {
+        match self.front_node_ind() {
             None => self.push_first_node(value),
-            Some(prior_front) => {
-                let node = self.imp.push_get_ref(LinkedListNode {
+            Some(prior_front_ind) => {
+                let ind = Some(self.imp.len());
+                self.imp.push(LinkedListNode {
                     data: Some(value),
-                    next: Some(prior_front),
+                    next: self.front_node(),
                     prev: None,
-                    ind: self.imp.len(),
                 });
-
-                self.imp.set_prev(prior_front.ind, Some(node.ind));
-                self.set_front(Some(node.ind));
+                self.imp.set_prev(prior_front_ind, ind);
+                self.set_front(ind);
             }
         }
         self.len += 1;
@@ -267,7 +263,7 @@ where
     /// ```
     pub fn pop_back(&mut self) -> Option<T> {
         if let Some(old_back_ind) = self.back_node_ind() {
-            let new_back_ind = self.imp[old_back_ind].prev.map(|n| n.ind);
+            let new_back_ind = self.node_ind(self.imp[old_back_ind].prev);
             self.set_back(new_back_ind);
 
             if let Some(new_back_ind) = new_back_ind {
@@ -308,7 +304,7 @@ where
     /// ```
     pub fn pop_front(&mut self) -> Option<T> {
         if let Some(old_front_ind) = self.front_node_ind() {
-            let new_front_ind = self.imp[old_front_ind].next.map(|n| n.ind);
+            let new_front_ind = self.node_ind(self.imp[old_front_ind].next);
             self.set_front(new_front_ind);
 
             if let Some(new_front_ind) = new_front_ind {
@@ -394,7 +390,7 @@ where
         for _ in 0..at {
             curr = curr.next.expect(IS_SOME);
         }
-        let imp_at = curr.ind;
+        let imp_at = self.node_ind(Some(curr)).expect(IS_SOME);
 
         // update vec ends
         if at == 0 {
@@ -407,13 +403,11 @@ where
         }
 
         // update links
-        if let Some(prev) = curr.prev {
-            let curr_next_ind = curr.next.map(|n| n.ind);
-            self.imp.set_next(prev.ind, curr_next_ind);
+        if let Some(prev_ind) = self.node_ind(curr.prev) {
+            self.imp.set_next(prev_ind, self.node_ind(curr.next));
         }
-        if let Some(next) = curr.next {
-            let curr_prev_ind = curr.prev.map(|n| n.ind);
-            self.imp.set_prev(next.ind, curr_prev_ind);
+        if let Some(next_ind) = self.node_ind(curr.next) {
+            self.imp.set_prev(next_ind, self.node_ind(curr.prev));
         }
 
         self.len -= 1;
@@ -421,6 +415,22 @@ where
     }
 
     // helpers
+    /// Returns index of the referenced node:
+    ///
+    /// * might return None only if `node.is_none()`;
+    /// * when `node.is_some()` it is expected to be a valid reference;
+    /// hence, the method panics if not.
+    ///
+    /// # Safety
+    ///
+    /// Since this method, as well as the `LinkedListNode` struct are internal
+    /// to this crate; it is never expected to receive an argument where the
+    /// Some variant of the reference does not belong to the underlying imp
+    /// vector.
+    /// Therefore, `expect` call in the method body will never panic.
+    pub(crate) fn node_ind(&self, node: Option<&'a LinkedListNode<'a, T>>) -> Option<usize> {
+        node.map(|node_ref| self.imp.index_of(node_ref).expect(IS_SOME))
+    }
     #[inline(always)]
     pub(crate) fn back_node(&self) -> Option<&'a LinkedListNode<'a, T>> {
         self.imp[0].next
@@ -431,11 +441,11 @@ where
     }
     #[inline(always)]
     pub(crate) fn back_node_ind(&self) -> Option<usize> {
-        self.imp[0].next.map(|n| n.ind)
+        self.node_ind(self.back_node())
     }
     #[inline(always)]
     pub(crate) fn front_node_ind(&self) -> Option<usize> {
-        self.imp[0].prev.map(|n| n.ind)
+        self.node_ind(self.front_node())
     }
     #[inline(always)]
     pub(crate) fn set_back(&mut self, back_idx: Option<usize>) {
@@ -448,17 +458,17 @@ where
     fn push_first_node(&mut self, value: T) {
         debug_assert!(self.imp[0].prev.is_none());
         debug_assert!(self.imp[0].next.is_none());
-        let node = self.imp.push_get_ref(LinkedListNode {
+        let ind = Some(self.imp.len());
+        self.imp.push(LinkedListNode {
             data: Some(value),
             prev: None,
             next: None,
-            ind: self.imp.len(),
         });
-        self.imp.set_prev(0, Some(node.ind));
-        self.imp.set_next(0, Some(node.ind));
+        self.imp.set_prev(0, ind);
+        self.imp.set_next(0, ind);
     }
     fn remove_get_at(&mut self, imp_at: usize) -> T {
-        std::mem::replace(&mut self.imp[imp_at], LinkedListNode::closed_node(imp_at))
+        std::mem::replace(&mut self.imp[imp_at], LinkedListNode::closed_node())
             .data
             .expect(IS_SOME)
     }

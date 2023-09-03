@@ -247,7 +247,7 @@ where
                     last_occupied_idx = occupied_idx;
 
                     // update occupied's prev & next
-                    let prev_idx = self.imp[occupied_idx].prev.map(|node| node.ind);
+                    let prev_idx = self.node_ind(self.imp[occupied_idx].prev);
                     if let Some(prev_idx) = prev_idx {
                         self.imp.set_next(prev_idx, Some(vacant_idx));
                     } else {
@@ -255,7 +255,7 @@ where
                         self.set_front(Some(vacant_idx));
                     }
 
-                    let next_idx = self.imp[occupied_idx].next.map(|node| node.ind);
+                    let next_idx = self.node_ind(self.imp[occupied_idx].next);
                     if let Some(next_idx) = next_idx {
                         self.imp.set_prev(next_idx, Some(vacant_idx));
                     } else {
@@ -265,7 +265,6 @@ where
 
                     // write to vacant from occupied
                     unsafe { self.imp.unsafe_swap(vacant_idx, occupied_idx) };
-                    self.imp[vacant_idx].ind = vacant_idx;
                 } else {
                     break;
                 }
