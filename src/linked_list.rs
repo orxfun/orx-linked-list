@@ -1,6 +1,7 @@
-use crate::node::LinkedListNode;
+use crate::{mem::MemoryUtilization, node::LinkedListNode};
 use orx_imp_vec::prelude::{ImpVec, PinnedVec, SplitVec};
 
+/// The LinkedList allows pushing and popping elements at either end in constant time.
 #[derive(Default)]
 pub struct LinkedList<'a, T, P = SplitVec<LinkedListNode<'a, T>>>
 where
@@ -8,6 +9,11 @@ where
 {
     pub(crate) imp: ImpVec<LinkedListNode<'a, T>, P>,
     pub(crate) len: usize,
+    /// Memory utilization strategy of the linked list allowing control over the tradeoff between
+    /// memory efficiency and amortized time complexity of `pop_back`, `pop_front` or `remove` operations.
+    ///
+    /// See [MemoryUtilization] for details.
+    pub memory_utilization: MemoryUtilization,
 }
 
 impl<'a, T, P> LinkedList<'a, T, P>
@@ -23,7 +29,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_exponential_growth(2, 1.5);
+    /// let mut list = LinkedList::with_exponential_growth(2, 1.5, Default::default());
     /// assert_eq!(0, list.len());
     ///
     /// list.push_front('a');
@@ -48,7 +54,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_exponential_growth(2, 1.5);
+    /// let mut list = LinkedList::with_exponential_growth(2, 1.5, Default::default());
     /// assert!(list.is_empty());
     ///
     /// list.push_front('a');
@@ -74,7 +80,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_doubling_growth(4);
+    /// let mut list = LinkedList::with_doubling_growth(4, Default::default());
     /// assert_eq!(list.back(), None);
     ///
     /// list.push_back(42);
@@ -98,7 +104,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_linear_growth(16);
+    /// let mut list = LinkedList::with_linear_growth(16, Default::default());
     /// assert_eq!(list.back(), None);
     ///
     /// list.push_back(42);
@@ -123,7 +129,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_doubling_growth(4);
+    /// let mut list = LinkedList::with_doubling_growth(4, Default::default());
     /// assert_eq!(list.front(), None);
     ///
     /// list.push_front(42);
@@ -147,7 +153,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_linear_growth(16);
+    /// let mut list = LinkedList::with_linear_growth(16, Default::default());
     /// assert_eq!(list.front(), None);
     ///
     /// list.push_front(42);
@@ -173,7 +179,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_exponential_growth(2, 1.5);
+    /// let mut list = LinkedList::with_exponential_growth(2, 1.5, Default::default());
     ///
     /// list.push_back('a');
     /// assert_eq!('a', *list.back().unwrap());
@@ -209,7 +215,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_exponential_growth(2, 1.5);
+    /// let mut list = LinkedList::with_exponential_growth(2, 1.5, Default::default());
     ///
     /// list.push_front('a');
     /// assert_eq!('a', *list.front().unwrap());
@@ -246,7 +252,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_exponential_growth(2, 1.5);
+    /// let mut list = LinkedList::with_exponential_growth(2, 1.5, Default::default());
     ///
     /// // build linked list: x <-> a <-> b <-> c
     /// list.push_back('a');
@@ -262,7 +268,7 @@ where
     /// assert_eq!(None, list.pop_front());
     /// ```
     pub fn pop_back(&mut self) -> Option<T> {
-        if let Some(old_back_ind) = self.back_node_ind() {
+        let value = if let Some(old_back_ind) = self.back_node_ind() {
             let new_back_ind = self.node_ind(self.imp[old_back_ind].prev);
             self.set_back(new_back_ind);
 
@@ -276,8 +282,11 @@ where
             Some(self.remove_get_at(old_back_ind))
         } else {
             None
-        }
+        };
+        self.reclaim_memory_if_necessary(value.is_some());
+        value
     }
+
     /// Removes the last element from a list and returns it, or None if it is empty.
     ///
     /// This operation should compute in O(1) time.
@@ -287,7 +296,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_exponential_growth(2, 1.5);
+    /// let mut list = LinkedList::with_exponential_growth(2, 1.5, Default::default());
     ///
     /// // build linked list: c <-> b <-> a <-> x
     /// list.push_front('a');
@@ -303,7 +312,7 @@ where
     /// assert_eq!(None, list.pop_back());
     /// ```
     pub fn pop_front(&mut self) -> Option<T> {
-        if let Some(old_front_ind) = self.front_node_ind() {
+        let value = if let Some(old_front_ind) = self.front_node_ind() {
             let new_front_ind = self.node_ind(self.imp[old_front_ind].next);
             self.set_front(new_front_ind);
 
@@ -317,7 +326,9 @@ where
             Some(self.remove_get_at(old_front_ind))
         } else {
             None
-        }
+        };
+        self.reclaim_memory_if_necessary(value.is_some());
+        value
     }
 
     /// Removes all elements from the LinkedList.
@@ -329,7 +340,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_exponential_growth(2, 1.5);
+    /// let mut list = LinkedList::with_exponential_growth(2, 1.5, Default::default());
     ///
     /// // build linked list: x <-> a <-> b <-> c
     /// list.push_front('a');
@@ -366,7 +377,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_linear_growth(8);
+    /// let mut list = LinkedList::with_linear_growth(8, Default::default());
     ///
     /// // build linked list: x <-> a <-> b <-> c
     /// list.push_back('a');
@@ -410,11 +421,32 @@ where
             self.imp.set_prev(next_ind, self.node_ind(curr.prev));
         }
 
+        let value = self.remove_get_at(imp_at);
+        self.reclaim_memory_if_necessary(true);
         self.len -= 1;
-        self.remove_get_at(imp_at)
+        value
     }
 
     // helpers
+    fn reclaim_memory_if_necessary(&mut self, condition_to_reclaim: bool)
+    where
+        P: PinnedVec<LinkedListNode<'a, T>> + 'a,
+    {
+        if condition_to_reclaim {
+            match &self.memory_utilization {
+                MemoryUtilization::Eager => _ = self.memory_reclaim(),
+                MemoryUtilization::Lazy => {}
+                MemoryUtilization::WithThreshold(threshold) => {
+                    if self.len > 0 {
+                        let utilization = self.len as f32 / (self.imp.len() - 1) as f32;
+                        if utilization < *threshold {
+                            _ = self.memory_reclaim()
+                        }
+                    }
+                }
+            }
+        }
+    }
     /// Returns index of the referenced node:
     ///
     /// * might return None only if `node.is_none()`;

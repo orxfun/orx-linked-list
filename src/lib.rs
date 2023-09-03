@@ -37,7 +37,12 @@ mod common_traits;
 mod impl_bounded;
 mod iterator;
 mod linked_list;
+mod mem;
 mod new;
 mod node;
+/// Common traits, enums and structs.
 pub mod prelude;
-mod utilization;
+
+pub use crate::linked_list::LinkedList;
+pub use crate::mem::{MemoryStatus, MemoryUtilization};
+pub use orx_imp_vec::prelude::*;

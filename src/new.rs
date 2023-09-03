@@ -1,4 +1,4 @@
-use crate::{linked_list::LinkedList, node::LinkedListNode};
+use crate::{linked_list::LinkedList, mem::MemoryUtilization, node::LinkedListNode};
 use orx_imp_vec::{
     prelude::{CustomGrowth, DoublingGrowth, ExponentialGrowth, Fragment, LinearGrowth, SplitVec},
     ImpVec,
@@ -11,6 +11,8 @@ impl<'a, T> LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, DoublingGrowth>> {
     ///
     /// * `first_fragment_capacity` determines the capacity of the first fragment
     /// of the underlying split vector.
+    /// * `memory_utilization` defines the memory utilization strategy of the linked
+    /// list, see `MemoryUtilization` for details.
     ///
     /// *The `ImpVec` of the linked list allowing to build internal links
     /// uses a `SplitVec: PinnedVec` with `DoublingGrowth` growth strategy.
@@ -21,17 +23,25 @@ impl<'a, T> LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, DoublingGrowth>> {
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_doubling_growth(4);
+    /// let mut list = LinkedList::with_doubling_growth(4, MemoryUtilization::Lazy);
     ///
     /// for i in 0..8 {
     ///     list.push_back(i);
     /// }
     /// assert_eq!(8, list.len());
     /// ```
-    pub fn with_doubling_growth(first_fragment_capacity: usize) -> Self {
+    pub fn with_doubling_growth(
+        first_fragment_capacity: usize,
+        memory_utilization: MemoryUtilization,
+    ) -> Self {
+        memory_utilization.validate();
         let imp: ImpVec<_, _> = SplitVec::with_doubling_growth(first_fragment_capacity).into();
         imp.push(LinkedListNode::back_front_node());
-        Self { imp, len: 0 }
+        Self {
+            imp,
+            memory_utilization,
+            len: 0,
+        }
     }
 }
 impl<'a, T> LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, LinearGrowth>> {
@@ -40,6 +50,8 @@ impl<'a, T> LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, LinearGrowth>> {
     ///
     /// * `constant_fragment_capacity` determines the capacity of the first fragment
     /// and every succeeding fragment of the underlying split vector.
+    /// * `memory_utilization` defines the memory utilization strategy of the linked
+    /// list, see `MemoryUtilization` for details.
     ///
     /// *The `ImpVec` of the linked list allowing to build internal links
     /// uses a `SplitVec: PinnedVec` with `LinearGrowth` growth strategy.
@@ -50,17 +62,25 @@ impl<'a, T> LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, LinearGrowth>> {
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_linear_growth(5);
+    /// let mut list = LinkedList::with_linear_growth(5, MemoryUtilization::Eager);
     ///
     /// for i in 0..8 {
     ///     list.push_back(i);
     /// }
     /// assert_eq!(8, list.len());
     /// ```
-    pub fn with_linear_growth(constant_fragment_capacity: usize) -> Self {
+    pub fn with_linear_growth(
+        constant_fragment_capacity: usize,
+        memory_utilization: MemoryUtilization,
+    ) -> Self {
+        memory_utilization.validate();
         let imp: ImpVec<_, _> = SplitVec::with_linear_growth(constant_fragment_capacity).into();
         imp.push(LinkedListNode::back_front_node());
-        Self { imp, len: 0 }
+        Self {
+            imp,
+            memory_utilization,
+            len: 0,
+        }
     }
 }
 impl<'a, T> LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, ExponentialGrowth>> {
@@ -71,6 +91,8 @@ impl<'a, T> LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, ExponentialGrowth>
     /// of the underlying split vector.
     /// * `growth_coefficient` determines the exponential growth rate of the succeeding
     /// fragments of the split vector.
+    /// * `memory_utilization` defines the memory utilization strategy of the linked
+    /// list, see `MemoryUtilization` for details.
     ///
     /// *The `ImpVec` of the linked list allowing to build internal links
     /// uses a `SplitVec: PinnedVec` with `ExponentialGrowth` growth strategy.
@@ -81,7 +103,7 @@ impl<'a, T> LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, ExponentialGrowth>
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_exponential_growth(4, 1.5);
+    /// let mut list = LinkedList::with_exponential_growth(4, 1.5, MemoryUtilization::default());
     ///
     /// for i in 0..8 {
     ///     list.push_back(i);
@@ -91,11 +113,17 @@ impl<'a, T> LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, ExponentialGrowth>
     pub fn with_exponential_growth(
         first_fragment_capacity: usize,
         growth_coefficient: f32,
+        memory_utilization: MemoryUtilization,
     ) -> Self {
+        memory_utilization.validate();
         let imp: ImpVec<_, _> =
             SplitVec::with_exponential_growth(first_fragment_capacity, growth_coefficient).into();
         imp.push(LinkedListNode::back_front_node());
-        Self { imp, len: 0 }
+        Self {
+            imp,
+            memory_utilization,
+            len: 0,
+        }
     }
 }
 
@@ -108,6 +136,8 @@ impl<'a, T>
     ///
     /// * `get_capacity_of_new_fragment` determines the capacity of succeeding
     /// fragments as a function of already created and filled fragments.
+    /// * `memory_utilization` defines the memory utilization strategy of the linked
+    /// list, see `MemoryUtilization` for details.
     ///
     /// *The `ImpVec` of the linked list allowing to build internal links
     /// uses a `SplitVec: PinnedVec` with `CustomGrowth` growth strategy.
@@ -126,7 +156,7 @@ impl<'a, T>
     ///         } else {
     ///             8
     ///         }
-    ///     }));
+    ///     }), MemoryUtilization::WithThreshold(0.25));
     ///
     /// for i in 0..8 {
     ///     list.push_back(i);
@@ -135,10 +165,16 @@ impl<'a, T>
     /// ```
     pub fn with_custom_growth_function(
         get_capacity_of_new_fragment: Rc<GetCapacityOfNewFragment<LinkedListNode<'a, T>>>,
+        memory_utilization: MemoryUtilization,
     ) -> Self {
+        memory_utilization.validate();
         let imp: ImpVec<_, _> =
             SplitVec::with_custom_growth_function(get_capacity_of_new_fragment).into();
         imp.push(LinkedListNode::back_front_node());
-        Self { imp, len: 0 }
+        Self {
+            imp,
+            memory_utilization,
+            len: 0,
+        }
     }
 }
