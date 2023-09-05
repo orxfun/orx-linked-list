@@ -366,8 +366,7 @@ where
 
     /// Removes the element at the given index and returns it.
     ///
-    /// This operation should compute in *O*(*n*) time
-    /// to access the `at`-th element and constant time to remove.
+    /// This operation requires *O*(*n*) time to access the `at`-th element and constant time to remove.
     ///
     /// # Panics
     /// Panics if at >= len
@@ -391,24 +390,14 @@ where
     /// assert_eq!(list.remove(0), 'b');
     /// ```
     pub fn remove(&mut self, at: usize) -> T {
-        let len = self.len();
-        assert!(
-            at < len,
-            "Cannot remove at an index outside of the list bounds"
-        );
-
-        let mut curr = self.imp[0].prev.expect(IS_SOME);
-        for _ in 0..at {
-            curr = curr.next.expect(IS_SOME);
-        }
-        let imp_at = self.node_ind(Some(curr)).expect(IS_SOME);
+        let curr = self.node_at(at);
 
         // update vec ends
         if at == 0 {
             // prev | front
             self.imp[0].prev = curr.next;
         }
-        if at == len - 1 {
+        if at == self.len - 1 {
             // next | back
             self.imp[0].next = curr.prev;
         }
@@ -421,10 +410,128 @@ where
             self.imp.set_prev(next_ind, self.node_ind(curr.prev));
         }
 
+        let imp_at = self.node_ind(Some(curr)).expect(IS_SOME);
         let value = self.remove_get_at(imp_at);
         self.reclaim_memory_if_necessary(true);
         self.len -= 1;
         value
+    }
+    /// Inserts the element at the given position.
+    ///
+    /// This operation requires *O*(*n*) time to access the `at`-th element and constant time to insert.
+    ///
+    /// # Panics
+    /// Panics if at > len
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use orx_linked_list::prelude::*;
+    ///
+    /// let mut list = LinkedList::with_linear_growth(8, Default::default());
+    ///
+    /// // build linked list: a <-> b <-> c
+    /// list.push_back('a');
+    /// list.push_back('b');
+    /// list.push_back('c');
+    ///
+    /// list.insert_at(1, 'w');
+    /// assert_eq!(vec!['a', 'w', 'b', 'c'], list.collect_vec());
+    /// ```
+    pub fn insert_at(&mut self, at: usize, value: T) {
+        if at == self.len {
+            self.push_back(value);
+        } else {
+            let curr = self.node_at(at);
+            let curr_ind = self.node_ind(Some(curr)).expect(IS_SOME);
+            let curr_prev_ind = self.node_ind(curr.prev);
+
+            let ind = self.imp.len();
+            let node = self.imp.push_get_ref(LinkedListNode {
+                data: Some(value),
+                prev: curr.prev,
+                next: Some(curr),
+            });
+
+            // update links
+            self.imp.set_prev(curr_ind, Some(ind));
+            if let Some(prev_ind) = curr_prev_ind {
+                self.imp.set_next(prev_ind, Some(ind));
+            }
+
+            // update vec ends
+            if at == 0 {
+                // prev | front
+                self.imp[0].prev = Some(node);
+            }
+
+            self.len += 1;
+        }
+    }
+
+    /// Returns a reference to element at the `at` position starting from the `front`;
+    /// None when `at` is out of bounds.
+    ///
+    /// This operation requires *O*(*n*) time.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use orx_linked_list::prelude::*;
+    ///
+    /// let mut list = LinkedList::with_linear_growth(8, Default::default());
+    ///
+    /// // build linked list: a <-> b <-> c
+    /// list.push_back('b');
+    /// list.push_front('a');
+    /// list.push_back('c');
+    ///
+    /// assert_eq!(Some(&'a'), list.get_at(0));
+    /// assert_eq!(Some(&'b'), list.get_at(1));
+    /// assert_eq!(Some(&'c'), list.get_at(2));
+    /// assert_eq!(None, list.get_at(3));
+    /// ```
+    pub fn get_at(&self, at: usize) -> Option<&T> {
+        if at < self.len {
+            self.node_at(at).data.as_ref()
+        } else {
+            None
+        }
+    }
+    /// Returns a mutable reference to element at the `at` position starting from the `front`;
+    /// None when `at` is out of bounds.
+    ///
+    /// This operation requires *O*(*n*) time.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use orx_linked_list::prelude::*;
+    ///
+    /// let mut list = LinkedList::with_linear_growth(8, Default::default());
+    ///
+    /// // build linked list: a <-> b <-> c
+    /// list.push_back('b');
+    /// list.push_front('a');
+    /// list.push_back('c');
+    ///
+    /// *list.get_mut_at(0).unwrap() = 'x';
+    /// *list.get_mut_at(1).unwrap() = 'y';
+    /// *list.get_mut_at(2).unwrap() = 'z';
+    /// assert_eq!(None, list.get_mut_at(3));
+    ///
+    /// assert_eq!(Some(&'x'), list.get_at(0));
+    /// assert_eq!(Some(&'y'), list.get_at(1));
+    /// assert_eq!(Some(&'z'), list.get_at(2));
+    /// ```
+    pub fn get_mut_at(&mut self, at: usize) -> Option<&mut T> {
+        if at < self.len {
+            let node = self.node_at(at);
+            let ind = self.node_ind(Some(node))?;
+            self.imp[ind].data.as_mut()
+        } else {
+            None
+        }
     }
 
     // helpers
@@ -499,10 +606,24 @@ where
         self.imp.set_prev(0, ind);
         self.imp.set_next(0, ind);
     }
+    fn node_at(&self, at: usize) -> &'a LinkedListNode<'a, T> {
+        self.panic_if_out_of_bounds(at);
+        let mut curr = self.imp[0].prev.expect(IS_SOME);
+        for _ in 0..at {
+            curr = curr.next.expect(IS_SOME);
+        }
+        curr
+    }
     fn remove_get_at(&mut self, imp_at: usize) -> T {
         std::mem::replace(&mut self.imp[imp_at], LinkedListNode::closed_node())
             .data
             .expect(IS_SOME)
+    }
+    fn panic_if_out_of_bounds(&self, idx: usize) {
+        assert!(
+            idx < self.len,
+            "Cannot remove at an index outside of the list bounds"
+        );
     }
 }
 
@@ -510,6 +631,8 @@ const IS_SOME: &str = "the data of an active node must be Some variant";
 
 #[cfg(test)]
 mod tests {
+    use orx_imp_vec::prelude::DoublingGrowth;
+
     use super::*;
 
     #[test]
@@ -652,5 +775,56 @@ mod tests {
         assert_eq!(vec![0, 1, 2, 3, 4], list.collect_vec());
 
         _ = list.remove(5);
+    }
+
+    #[test]
+    fn insert() {
+        fn get_list<'a>(
+        ) -> LinkedList<'a, usize, SplitVec<LinkedListNode<'a, usize>, DoublingGrowth>> {
+            let mut list = LinkedList::with_doubling_growth(2, MemoryUtilization::Eager);
+
+            list.push_back(3);
+            list.push_front(2);
+            list.push_front(1);
+            list.push_back(4);
+            list.push_front(0);
+
+            assert_eq!(vec![0, 1, 2, 3, 4], list.collect_vec());
+            list
+        }
+
+        for i in 0..=5 {
+            let mut expected = vec![0, 1, 2, 3, 4];
+            expected.insert(i, 42);
+
+            let mut list = get_list();
+            list.insert_at(i, 42);
+
+            assert_eq!(expected, list.collect_vec());
+        }
+    }
+
+    #[test]
+    fn get_at() {
+        let mut list = LinkedList::with_doubling_growth(4, Default::default());
+
+        for i in 0..1000 {
+            list.push_back(i);
+        }
+
+        for i in 0..list.len() {
+            assert_eq!(Some(&i), list.get_at(i));
+        }
+        assert_eq!(None, list.get_at(1000));
+
+        for i in 0..list.len() {
+            *list.get_mut_at(i).expect(IS_SOME) *= 10;
+        }
+        assert_eq!(None, list.get_mut_at(1000));
+
+        for i in 0..list.len() {
+            assert_eq!(Some(&(i * 10)), list.get_at(i));
+        }
+        assert_eq!(None, list.get_at(1000));
     }
 }
