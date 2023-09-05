@@ -34,7 +34,7 @@ impl<'a, T> LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, DoublingGrowth>> {
         first_fragment_capacity: usize,
         memory_utilization: MemoryUtilization,
     ) -> Self {
-        memory_utilization.validate();
+        let memory_utilization = memory_utilization.into_valid();
         let imp: ImpVec<_, _> = SplitVec::with_doubling_growth(first_fragment_capacity).into();
         imp.push(LinkedListNode::back_front_node());
         Self {
@@ -73,7 +73,7 @@ impl<'a, T> LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, LinearGrowth>> {
         constant_fragment_capacity: usize,
         memory_utilization: MemoryUtilization,
     ) -> Self {
-        memory_utilization.validate();
+        let memory_utilization = memory_utilization.into_valid();
         let imp: ImpVec<_, _> = SplitVec::with_linear_growth(constant_fragment_capacity).into();
         imp.push(LinkedListNode::back_front_node());
         Self {
@@ -115,7 +115,7 @@ impl<'a, T> LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, ExponentialGrowth>
         growth_coefficient: f32,
         memory_utilization: MemoryUtilization,
     ) -> Self {
-        memory_utilization.validate();
+        let memory_utilization = memory_utilization.into_valid();
         let imp: ImpVec<_, _> =
             SplitVec::with_exponential_growth(first_fragment_capacity, growth_coefficient).into();
         imp.push(LinkedListNode::back_front_node());
@@ -167,7 +167,7 @@ impl<'a, T>
         get_capacity_of_new_fragment: Rc<GetCapacityOfNewFragment<LinkedListNode<'a, T>>>,
         memory_utilization: MemoryUtilization,
     ) -> Self {
-        memory_utilization.validate();
+        let memory_utilization = memory_utilization.into_valid();
         let imp: ImpVec<_, _> =
             SplitVec::with_custom_growth_function(get_capacity_of_new_fragment).into();
         imp.push(LinkedListNode::back_front_node());
@@ -176,5 +176,60 @@ impl<'a, T>
             memory_utilization,
             len: 0,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn doubling() {
+        let list = LinkedList::<i32, _>::with_doubling_growth(10, MemoryUtilization::Eager);
+        assert_eq!(list.imp.fragments().len(), 1);
+        assert_eq!(list.imp.fragments()[0].capacity(), 10);
+        assert_eq!(list.memory_utilization, MemoryUtilization::Eager);
+    }
+
+    #[test]
+    fn linear() {
+        let list = LinkedList::<i32, _>::with_linear_growth(10, MemoryUtilization::Lazy);
+        assert_eq!(list.imp.fragments().len(), 1);
+        assert_eq!(list.imp.fragments()[0].capacity(), 10);
+        assert_eq!(list.memory_utilization, MemoryUtilization::Lazy);
+    }
+
+    #[test]
+    fn exponential() {
+        let list = LinkedList::<i32, _>::with_exponential_growth(
+            10,
+            1.5,
+            MemoryUtilization::WithThreshold(0.5),
+        );
+        assert_eq!(list.imp.fragments().len(), 1);
+        assert_eq!(list.imp.fragments()[0].capacity(), 10);
+        assert_eq!(
+            list.memory_utilization,
+            MemoryUtilization::WithThreshold(0.5)
+        );
+    }
+
+    #[test]
+    fn custom() {
+        let list = LinkedList::<i32, _>::with_custom_growth_function(
+            Rc::new(
+                |fragments: &[Fragment<_>]| {
+                    if fragments.len() % 2 == 0 {
+                        3
+                    } else {
+                        8
+                    }
+                },
+            ),
+            MemoryUtilization::Lazy,
+        );
+        assert_eq!(list.imp.fragments().len(), 1);
+        assert_eq!(list.imp.fragments()[0].capacity(), 3);
+        assert_eq!(list.memory_utilization, MemoryUtilization::Lazy);
     }
 }

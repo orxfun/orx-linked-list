@@ -36,7 +36,7 @@ use orx_imp_vec::{prelude::PinnedVec, ImpVec};
 /// select the required threshold level between memory utilization and amortized
 /// time complexity of these methods. Note that setting the least memory utilization
 /// to a value lower than 1.0 would still least to a constant amortized time complexity.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MemoryUtilization {
     /// With `Lazy` strategy, `memory_reclaim` is never called automatically:
     /// * leads to the cheapest possible `pop_back`, `pop_front` or `remove` operations,
@@ -178,12 +178,21 @@ pub enum MemoryUtilization {
     Eager,
 }
 impl MemoryUtilization {
-    pub(crate) fn validate(&self) {
+    /// Returns a valid memory utilization with:
+    /// * `Eager` if `self` is `Eager` or `WithThreshold(x)` where x > 1.0;
+    /// * `Lazy` if `self` is `Lazy` or `WithThreshold(x)` where x < 0.0;
+    /// * `WithThreshold(x)` otherwise where x in [0.0, 1.0].
+    pub(crate) fn into_valid(self) -> MemoryUtilization {
         if let MemoryUtilization::WithThreshold(threshold) = self {
-            assert!(
-                (&0.0..=&1.0).contains(&threshold),
-                "Least memory utilization threshold must be within [0, 1]"
-            );
+            if threshold < 0.0 {
+                MemoryUtilization::Lazy
+            } else if threshold > 1.0 {
+                MemoryUtilization::Eager
+            } else {
+                self
+            }
+        } else {
+            self
         }
     }
 }
@@ -483,5 +492,106 @@ where
     }
     fn get_first_occupied(imp: &ImpVec<LinkedListNode<'a, T>, P>, start: usize) -> Option<usize> {
         (start..imp.len()).find(|&i| imp[i].data.is_some())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn assert_eq_f32(first: f32, second: f32) {
+        assert!((first - second).abs() < f32::EPSILON);
+    }
+
+    #[test]
+    fn into_valid() {
+        let lazy = MemoryUtilization::Lazy.into_valid();
+        assert_eq!(lazy, MemoryUtilization::Lazy);
+
+        let lazy = MemoryUtilization::WithThreshold(-1.0).into_valid();
+        assert_eq!(lazy, MemoryUtilization::Lazy);
+
+        let eager = MemoryUtilization::Eager.into_valid();
+        assert_eq!(eager, MemoryUtilization::Eager);
+
+        let eager = MemoryUtilization::WithThreshold(3.0).into_valid();
+        assert_eq!(eager, MemoryUtilization::Eager);
+
+        let with_threshold = MemoryUtilization::WithThreshold(0.6).into_valid();
+        assert_eq!(with_threshold, MemoryUtilization::WithThreshold(0.6));
+    }
+
+    #[test]
+    fn default_memory_utilization() {
+        let with_threshold = MemoryUtilization::default();
+        assert_eq!(with_threshold, MemoryUtilization::WithThreshold(0.5));
+        assert_eq!(
+            with_threshold.into_valid(),
+            MemoryUtilization::WithThreshold(0.5)
+        );
+    }
+
+    #[test]
+    fn utilization() {
+        let status = MemoryStatus {
+            num_active_nodes: 3,
+            num_used_nodes: 4,
+        };
+        assert_eq_f32(0.75, status.utilization());
+
+        let status = MemoryStatus {
+            num_active_nodes: 0,
+            num_used_nodes: 0,
+        };
+        assert_eq_f32(1.0, status.utilization());
+    }
+
+    #[test]
+    fn list_utilization() {
+        let mut list = LinkedList::with_doubling_growth(4, MemoryUtilization::Lazy);
+
+        assert_eq_f32(1.0, list.memory_status().utilization());
+
+        list.push_back('a');
+        assert_eq_f32(1.0, list.memory_status().utilization());
+
+        list.push_back('b');
+        assert_eq_f32(1.0, list.memory_status().utilization());
+
+        list.push_back('c');
+        assert_eq_f32(1.0, list.memory_status().utilization());
+
+        list.push_back('d');
+        assert_eq_f32(1.0, list.memory_status().utilization());
+
+        _ = list.pop_back();
+        assert_eq_f32(0.75, list.memory_status().utilization());
+
+        _ = list.pop_front();
+        assert_eq_f32(0.50, list.memory_status().utilization());
+
+        _ = list.pop_back();
+        assert_eq_f32(0.25, list.memory_status().utilization());
+
+        _ = list.pop_front();
+        assert_eq_f32(0.0, list.memory_status().utilization());
+
+        _ = list.pop_front();
+        assert_eq_f32(0.0, list.memory_status().utilization());
+
+        list.memory_reclaim();
+        assert_eq_f32(1.0, list.memory_status().utilization());
+
+        list.push_back('a');
+        assert_eq_f32(1.0, list.memory_status().utilization());
+
+        list.push_back('b');
+        assert_eq_f32(1.0, list.memory_status().utilization());
+
+        _ = list.pop_front();
+        assert_eq_f32(0.50, list.memory_status().utilization());
+
+        list.memory_reclaim();
+        assert_eq_f32(1.0, list.memory_status().utilization());
     }
 }

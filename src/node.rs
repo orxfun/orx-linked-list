@@ -32,3 +32,49 @@ impl<'a, T> SelfRefVecItem<'a> for LinkedListNode<'a, T> {
         self.next = next;
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ctors() {
+        let node = LinkedListNode::<String>::back_front_node();
+        assert!(node.prev.is_none());
+        assert!(node.next.is_none());
+        assert!(node.data.is_none());
+    }
+
+    #[test]
+    fn prev_next() {
+        let mut a = LinkedListNode {
+            data: Some('a'),
+            prev: None,
+            next: None,
+        };
+        assert!(a.prev().is_none());
+        assert!(a.next().is_none());
+
+        let b = LinkedListNode {
+            data: Some('b'),
+            prev: None,
+            next: None,
+        };
+        let c = LinkedListNode {
+            data: Some('c'),
+            prev: Some(&b),
+            next: None,
+        };
+
+        a.set_next(Some(&b));
+        a.set_prev(Some(&c));
+
+        assert_eq!(Some('b'), a.next().and_then(|x| x.data));
+        assert_eq!(Some('c'), a.prev().and_then(|x| x.data));
+
+        a.set_next(None);
+        a.set_prev(None);
+        assert!(a.prev().is_none());
+        assert!(a.next().is_none());
+    }
+}

@@ -5,7 +5,7 @@
 //! ```rust
 //! use orx_linked_list::prelude::*;
 //!
-//! let mut list = LinkedList::with_exponential_growth(2, 1.5);
+//! let mut list = LinkedList::with_exponential_growth(2, 1.5, MemoryUtilization::default());
 //!
 //! // build linked list: x <-> a <-> b <-> c
 //! list.push_back('a');
@@ -33,6 +33,7 @@
     clippy::todo
 )]
 
+mod collect;
 mod common_traits;
 mod impl_bounded;
 mod iterator;

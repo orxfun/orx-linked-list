@@ -507,3 +507,150 @@ where
 }
 
 const IS_SOME: &str = "the data of an active node must be Some variant";
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn len_is_empty() {
+        let mut list = LinkedList::with_doubling_growth(4, MemoryUtilization::Eager);
+
+        assert!(list.is_empty());
+        assert_eq!(list.len(), 0);
+
+        list.push_back(1);
+        assert!(!list.is_empty());
+        assert_eq!(list.len(), 1);
+
+        list.push_front(2);
+        assert!(!list.is_empty());
+        assert_eq!(list.len(), 2);
+
+        list.pop_back();
+        assert!(!list.is_empty());
+        assert_eq!(list.len(), 1);
+
+        list.pop_front();
+        assert!(list.is_empty());
+        assert_eq!(list.len(), 0);
+
+        list.push_back(1);
+        list.clear();
+        assert!(list.is_empty());
+        assert_eq!(list.len(), 0);
+    }
+
+    #[test]
+    fn back_front() {
+        let mut list = LinkedList::with_linear_growth(16, MemoryUtilization::Lazy);
+
+        assert_eq!(None, list.back());
+        assert_eq!(None, list.front());
+        assert_eq!(None, list.pop_back());
+        assert_eq!(None, list.pop_front());
+
+        list.push_back("hello");
+        assert_eq!(Some(&"hello"), list.back());
+        assert_eq!(Some(&"hello"), list.front());
+        assert_eq!(Some("hello"), list.pop_back());
+        assert_eq!(None, list.pop_front());
+
+        list.push_front("world");
+        assert_eq!(Some(&"world"), list.back());
+        assert_eq!(Some(&"world"), list.front());
+        assert_eq!(Some("world"), list.pop_front());
+        assert_eq!(None, list.pop_back());
+
+        list.push_back("hello");
+        list.push_back("world");
+        assert_eq!(Some(&"world"), list.back());
+        assert_eq!(Some(&"hello"), list.front());
+
+        list.push_back("!");
+        assert_eq!(Some(&"!"), list.back());
+
+        assert_eq!(Some("hello"), list.pop_front());
+        assert_eq!(Some("!"), list.pop_back());
+        assert_eq!(Some("world"), list.pop_front());
+    }
+
+    #[test]
+    fn back_front_mut() {
+        let mut list = LinkedList::<usize, _>::with_exponential_growth(
+            8,
+            1.25,
+            MemoryUtilization::WithThreshold(0.6),
+        );
+
+        assert_eq!(None, list.back_mut());
+        assert_eq!(None, list.front_mut());
+
+        // 10 - 20 - 30 - 40
+        list.push_back(20);
+        list.push_back(30);
+        list.push_front(10);
+        list.push_back(40);
+
+        let back = list.back_mut();
+        assert_eq!(Some(&mut 40), back);
+        *back.expect("is-some") *= 10;
+        assert_eq!(Some(&400), list.back());
+        assert_eq!(Some(400), list.pop_back());
+
+        let front = list.front_mut();
+        assert_eq!(Some(&mut 10), front);
+        *front.expect("is-some") *= 10;
+        assert_eq!(Some(&100), list.front());
+        assert_eq!(Some(100), list.pop_front());
+    }
+
+    #[test]
+    fn remove() {
+        let mut list = LinkedList::with_doubling_growth(2, MemoryUtilization::Eager);
+
+        list.push_back(3);
+        list.push_front(2);
+        list.push_front(1);
+        list.push_back(4);
+        list.push_front(0);
+
+        assert_eq!(vec![0, 1, 2, 3, 4], list.collect_vec());
+
+        let removed = list.remove(4);
+        assert_eq!(4, removed);
+        assert_eq!(vec![0, 1, 2, 3], list.collect_vec());
+
+        let removed = list.remove(2);
+        assert_eq!(2, removed);
+        assert_eq!(vec![0, 1, 3], list.collect_vec());
+
+        let removed = list.remove(0);
+        assert_eq!(0, removed);
+        assert_eq!(vec![1, 3], list.collect_vec());
+
+        let removed = list.remove(1);
+        assert_eq!(3, removed);
+        assert_eq!(vec![1], list.collect_vec());
+
+        let removed = list.remove(0);
+        assert_eq!(1, removed);
+        assert!(list.collect_vec().is_empty());
+    }
+
+    #[test]
+    #[should_panic]
+    fn remove_out_of_bounds() {
+        let mut list = LinkedList::with_doubling_growth(2, MemoryUtilization::Eager);
+
+        list.push_back(3);
+        list.push_front(2);
+        list.push_front(1);
+        list.push_back(4);
+        list.push_front(0);
+
+        assert_eq!(vec![0, 1, 2, 3, 4], list.collect_vec());
+
+        _ = list.remove(5);
+    }
+}
