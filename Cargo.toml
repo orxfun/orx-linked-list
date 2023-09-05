@@ -10,4 +10,4 @@ keywords = ["linked", "list", "vec", "array", "pinned"]
 categories = ["data-structures"]
 
 [dependencies]
-orx-imp-vec = "0.9.1"
+orx-imp-vec = { path = "../orx-imp-vec" }
