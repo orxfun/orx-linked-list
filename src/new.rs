@@ -1,6 +1,55 @@
 use crate::{linked_list::LinkedList, node::LinkedListNode};
 use orx_imp_vec::prelude::*;
 
+impl<'a, T> LinkedList<'a, T> {
+    /// Creates an empty LinkedList with default pinned vector.
+    ///
+    /// Default underlying pinned vector is the `SplitVec` with default growth strategy.
+    ///
+    /// *See [SplitVec(https://crates.io/crates/orx-split-vec) for details.*
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use orx_linked_list::prelude::*;
+    ///
+    /// let mut list = LinkedList::new();
+    /// list.push_back('a');
+    /// ```
+    pub fn new() -> Self {
+        let imp: ImpVec<_> = SplitVec::new().into();
+        imp.push(LinkedListNode::back_front_node());
+        Self {
+            imp,
+            len: 0,
+            memory_utilization: Default::default(),
+        }
+    }
+    /// Creates an empty LinkedList with default pinned vector
+    /// having the given `initial_capacity`.
+    ///
+    /// Default underlying pinned vector is the `SplitVec` with default growth strategy.
+    ///
+    /// *See [SplitVec(https://crates.io/crates/orx-split-vec) for details.*
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use orx_linked_list::prelude::*;
+    ///
+    /// let mut list = LinkedList::with_initial_capacity(8);
+    /// list.push_back('a');
+    /// ```
+    pub fn with_initial_capacity(initial_capacity: usize) -> Self {
+        let imp: ImpVec<_> = SplitVec::with_initial_capacity(initial_capacity).into();
+        imp.push(LinkedListNode::back_front_node());
+        Self {
+            imp,
+            len: 0,
+            memory_utilization: Default::default(),
+        }
+    }
+}
 impl<'a, T> LinkedList<'a, T, FixedVec<LinkedListNode<'a, T>>> {
     /// Creates an empty LinkedList with fixed capacity.
     ///
@@ -28,7 +77,7 @@ impl<'a, T> LinkedList<'a, T, FixedVec<LinkedListNode<'a, T>>> {
     ///
     /// ```
     pub fn with_fixed_capacity(fixed_capacity: usize) -> Self {
-        let imp: ImpVec<_, _> = FixedVec::new(fixed_capacity + 1).into();
+        let imp: ImpVec<_, _> = FixedVec::new(fixed_capacity).into();
         imp.push(LinkedListNode::back_front_node());
         Self {
             imp,
@@ -140,5 +189,34 @@ impl<'a, T> LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, Exponential>> {
             memory_utilization: Default::default(),
             len: 0,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new() {
+        let mut list = LinkedList::new();
+        list.push_back('a');
+
+        let list: LinkedList<char> = list;
+        let list: LinkedList<char, SplitVec<LinkedListNode<char>>> = list;
+        let list: LinkedList<char, SplitVec<LinkedListNode<char>, Doubling>> = list;
+        assert_eq!(1, list.imp.fragments().len());
+        assert_eq!(4, list.imp.fragments()[0].capacity());
+    }
+
+    #[test]
+    fn with_initial_capacity() {
+        let mut list = LinkedList::with_initial_capacity(10);
+        list.push_back('a');
+
+        let list: LinkedList<char> = list;
+        let list: LinkedList<char, SplitVec<LinkedListNode<char>>> = list;
+        let list: LinkedList<char, SplitVec<LinkedListNode<char>, Doubling>> = list;
+        assert_eq!(1, list.imp.fragments().len());
+        assert_eq!(10, list.imp.fragments()[0].capacity());
     }
 }

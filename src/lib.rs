@@ -20,7 +20,7 @@
 //! ```rust
 //! use orx_linked_list::prelude::*;
 //!
-//! let mut list = LinkedList::with_doubling_growth(4);
+//! let mut list = LinkedList::new();
 //!
 //! list.push_back('y');
 //! list.push_front('x');
