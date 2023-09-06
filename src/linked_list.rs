@@ -3,7 +3,7 @@ use orx_imp_vec::prelude::*;
 
 /// The LinkedList allows pushing and popping elements at either end in constant time.
 #[derive(Default)]
-pub struct LinkedList<'a, T, P>
+pub struct LinkedList<'a, T, P = SplitVec<LinkedListNode<'a, T>>>
 where
     P: PinnedVec<LinkedListNode<'a, T>>,
 {

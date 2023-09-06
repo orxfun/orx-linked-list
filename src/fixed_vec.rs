@@ -10,7 +10,7 @@ impl<'a, T> LinkedList<'a, T, FixedVec<LinkedListNode<'a, T>>> {
     /// pub use orx_linked_list::prelude::*;
     ///
     /// let mut list =
-    ///     LinkedList::with_fixed_capacity(4).with_memory_utilization(MemoryUtilization::Lazy);
+    ///     LinkedList::with_fixed_capacity(5).with_memory_utilization(MemoryUtilization::Lazy);
     /// assert_eq!(4, list.room());
     ///
     /// list.push_back(1);
@@ -46,7 +46,7 @@ mod tests {
     #[test]
     fn room() {
         let mut list =
-            LinkedList::with_fixed_capacity(4).with_memory_utilization(MemoryUtilization::Lazy);
+            LinkedList::with_fixed_capacity(5).with_memory_utilization(MemoryUtilization::Lazy);
         assert_eq!(4, list.room());
 
         list.push_back(1);
