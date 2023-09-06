@@ -1,7 +1,6 @@
-use std::fmt::Debug;
-
 use crate::{node::LinkedListNode, prelude::LinkedList};
 use orx_imp_vec::prelude::PinnedVec;
+use std::fmt::Debug;
 
 impl<'a, T, P> Debug for LinkedList<'a, T, P>
 where
@@ -27,7 +26,7 @@ mod tests {
 
     #[test]
     fn debug() {
-        let mut list = LinkedList::with_exponential_growth(4, 1.6, Default::default());
+        let mut list = LinkedList::with_exponential_growth(4, 1.6);
         list.push_back('x');
         list.push_back('y');
         list.push_back('z');
