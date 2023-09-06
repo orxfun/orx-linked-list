@@ -1,4 +1,4 @@
-use crate::{node::LinkedListNode, prelude::LinkedList, LinkedListExponential, LinkedListLinear};
+use crate::{node::LinkedListNode, prelude::LinkedList};
 use orx_imp_vec::prelude::{ImpVec, PinnedVec};
 
 /// `LinkedList` holds all elements close to each other in a `PinnedVec`
@@ -600,49 +600,4 @@ mod tests {
         list.memory_reclaim();
         assert_eq_f32(1.0, list.memory_status().utilization());
     }
-}
-
-fn asdf() {
-    let mut list = LinkedList::with_doubling_growth(4);
-
-    list.push_back('y');
-    list.push_front('x');
-    list.push_back('z');
-    assert_eq!(vec!['x', 'y', 'z'], list.collect_vec());
-
-    assert_eq!(list.pop_back(), Some('z'));
-    assert_eq!(list.pop_front(), Some('x'));
-    assert_eq!(vec!['y'], list.collect_vec());
-
-    list.push_front('x');
-    list.push_back('z');
-    assert_eq!(vec!['x', 'y', 'z'], list.collect_vec());
-
-    list.insert_at(1, '?');
-    assert_eq!(vec!['x', '?', 'y', 'z'], list.collect_vec());
-
-    assert_eq!(Some(&'?'), list.get_at(1));
-    *list.get_mut_at(1).unwrap() = '!';
-
-    assert_eq!('!', list.remove_at(1));
-    assert_eq!(vec!['x', 'y', 'z'], list.collect_vec());
-
-    // memory utilizaiton when Lazy
-    let status = list.memory_status();
-    assert_eq!(3, status.num_active_nodes); // current length
-    assert_eq!(6, status.num_used_nodes); // number of pushes so far
-    assert!((status.utilization() - 0.5).abs() <= f32::EPSILON);
-
-    list.memory_reclaim();
-    assert_eq!(3, status.num_active_nodes); // current length
-    assert_eq!(3, status.num_used_nodes); // number of pushes so far
-    assert!((status.utilization() - 1.0).abs() <= f32::EPSILON);
-
-    // alternatively utilization can be kept at 100% by Eager
-    let _: LinkedListLinear<char> =
-        LinkedList::with_linear_growth(32).with_memory_utilization(MemoryUtilization::Eager);
-
-    // or automatically kept above a given threshold
-    let _: LinkedListExponential<char> = LinkedList::with_exponential_growth(4, 1.5)
-        .with_memory_utilization(MemoryUtilization::WithThreshold(0.6));
 }

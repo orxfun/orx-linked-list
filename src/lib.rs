@@ -20,7 +20,7 @@
 //! ```rust
 //! use orx_linked_list::prelude::*;
 //!
-//! mut list = LinkedList::with_doubling_growth(4);
+//! let mut list = LinkedList::with_doubling_growth(4);
 //!
 //! list.push_back('y');
 //! list.push_front('x');
@@ -78,6 +78,15 @@
 //!     = LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, Exponential>>;
 //! ```
 //!
+//! These variants can be constructed with corresponding associated functions:
+//!
+//! ```rust ignore
+//! let list: LinkedListFixed<char> = LinkedList::with_fixed_capacity(100);
+//! let list: LinkedListLinear<char> = LinkedList::with_linear_growth(32);
+//! let list: LinkedListDoubling<char> = LinkedList::with_doubling_growth(4);
+//! let list: LinkedListExponential<char> = LinkedList::with_exponential_growth(4, 1.5);
+//! ```
+//!
 //! ### Time Complexity vs Memory Utilization
 //!
 //! `LinkedList` holds all elements close to each other in a `PinnedVec` aiming for better cache locality while using thin references rather than wide pointers and to reduce heap allocations. In order to achieve *O(1)* time complexity while avoiding smart pointers, remove and pop operations are designed to be semi-lazy.
@@ -97,6 +106,14 @@
 //! * `WithThreshold(threshold)`: `pop_back`, `pop_front` or `remove_at` method call is followed by an automatic `memory_reclaim` call only if the memory utilization drops below a pre-determined `threshold`:
 //!     * it is a generalization of `Lazy` and `Eager` allowing to select the required threshold level between memory utilization and amortized time complexity of these methods. Note that setting the least memory utilization to a value lower than 1.0 would still least to a constant amortized time complexity.
 //!
+//! Memory utilization stategy is defined by a field which can be modified any time.
+//!
+//! ```rust ignore
+//! let list = list
+//!     .with_memory_utilization(MemoryUtilization::Eager)
+//!     .with_memory_utilization(MemoryUtilization::Lazy)
+//!     .with_memory_utilization(MemoryUtilization::WithThreshold(0.5));
+//! ```
 
 #![warn(
     missing_docs,
