@@ -1,5 +1,5 @@
-use crate::{node::LinkedListNode, prelude::LinkedList};
-use orx_imp_vec::{prelude::PinnedVec, ImpVec};
+use crate::{node::LinkedListNode, prelude::LinkedList, LinkedListExponential, LinkedListLinear};
+use orx_imp_vec::prelude::{ImpVec, PinnedVec};
 
 /// `LinkedList` holds all elements close to each other in a `PinnedVec`
 /// aiming for better cache locality while using thin references rather
@@ -39,7 +39,7 @@ use orx_imp_vec::{prelude::PinnedVec, ImpVec};
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum MemoryUtilization {
     /// With `Lazy` strategy, `memory_reclaim` is never called automatically:
-    /// * leads to the cheapest possible `pop_back`, `pop_front` or `remove` operations,
+    /// * leads to the cheapest possible `pop_back`, `pop_front` or `remove_at` operations,
     /// * however, the utilization of the vector can be low especially when
     /// a large number of elements enter and exit the linked list.
     /// * might be a better fit where keeping the time complexity of these operations
@@ -50,7 +50,8 @@ pub enum MemoryUtilization {
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_linear_growth(8, MemoryUtilization::Lazy);
+    /// let mut list = LinkedList::with_linear_growth(8)
+    ///     .with_memory_utilization(MemoryUtilization::Lazy);
     ///
     /// // fill list with 4 elements
     /// list.push_back('a');
@@ -64,7 +65,7 @@ pub enum MemoryUtilization {
     /// assert_eq!(1.00, util.utilization());
     ///
     /// // remove 1 of 4
-    /// _ = list.remove(2);
+    /// _ = list.remove_at(2);
     /// let util = list.memory_status();
     /// assert_eq!(3, util.num_active_nodes);
     /// assert_eq!(4, util.num_used_nodes);
@@ -79,14 +80,14 @@ pub enum MemoryUtilization {
     /// assert_eq!(0.25, util.utilization());
     ///
     /// // remove the last element
-    /// _ = list.remove(0);
+    /// _ = list.remove_at(0);
     /// let util = list.memory_status();
     /// assert_eq!(0, util.num_active_nodes);
     /// assert_eq!(4, util.num_used_nodes);
     /// assert_eq!(0.00, util.utilization());
     /// ```
     Lazy,
-    /// With `WithThreshold`strategy, `pop_back`, `pop_front` or `remove` method call
+    /// With `WithThreshold`strategy, `pop_back`, `pop_front` or `remove_at` method call
     /// is followed by a `memory_reclaim` call only if the memory utilization drops below the
     /// pre-determined threshold:
     ///     * this strategy is a generalization of `Lazy` and `Eager` allowing to
@@ -99,7 +100,8 @@ pub enum MemoryUtilization {
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_linear_growth(8, MemoryUtilization::WithThreshold(0.51));
+    /// let mut list = LinkedList::with_linear_growth(8)
+    ///     .with_memory_utilization(MemoryUtilization::WithThreshold(0.51));
     ///
     /// // fill list with 4 elements
     /// list.push_back('a');
@@ -113,7 +115,7 @@ pub enum MemoryUtilization {
     /// assert_eq!(1.00, util.utilization());
     ///
     /// // remove 1 of 4; utilization remains above the threshold
-    /// _ = list.remove(2);
+    /// _ = list.remove_at(2);
     /// let util = list.memory_status();
     /// assert_eq!(3, util.num_active_nodes);
     /// assert_eq!(4, util.num_used_nodes);
@@ -128,7 +130,7 @@ pub enum MemoryUtilization {
     /// assert_eq!(1.00, util.utilization());
     /// ```
     WithThreshold(f32),
-    /// With `Eager` strategy, every `pop_back`, `pop_front` or `remove` method call is followed
+    /// With `Eager` strategy, every `pop_back`, `pop_front` or `remove_at` method call is followed
     /// by a `memory_reclaim` call:
     /// * this strategy keeps the vector without gaps at 100% utilization;
     /// * however, abovementioned operations require *O(n)* time complexity;
@@ -140,7 +142,8 @@ pub enum MemoryUtilization {
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_doubling_growth(8, MemoryUtilization::Eager);
+    /// let mut list = LinkedList::with_doubling_growth(8)
+    ///     .with_memory_utilization(MemoryUtilization::Eager);
     ///
     /// // fill list with 4 elements
     /// list.push_back('a');
@@ -154,7 +157,7 @@ pub enum MemoryUtilization {
     /// assert_eq!(1.00, util.utilization());
     ///
     /// // remove 1 of 4
-    /// _ = list.remove(2);
+    /// _ = list.remove_at(2);
     /// let util = list.memory_status();
     /// assert_eq!(3, util.num_active_nodes);
     /// assert_eq!(3, util.num_used_nodes);
@@ -169,7 +172,7 @@ pub enum MemoryUtilization {
     /// assert_eq!(1.00, util.utilization());
     ///
     /// // remove the last element
-    /// _ = list.remove(0);
+    /// _ = list.remove_at(0);
     /// let util = list.memory_status();
     /// assert_eq!(0, util.num_active_nodes);
     /// assert_eq!(0, util.num_used_nodes);
@@ -297,7 +300,8 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_exponential_growth(2, 1.5, MemoryUtilization::Lazy);
+    /// let mut list = LinkedList::with_exponential_growth(2, 1.5)
+    ///     .with_memory_utilization(MemoryUtilization::Lazy);
     ///
     /// // fill list with 4 elements
     /// list.push_back('a');
@@ -311,7 +315,7 @@ where
     /// assert_eq!(1.00, util.utilization());
     ///
     /// // remove 1 of 4
-    /// _ = list.remove(2);
+    /// _ = list.remove_at(2);
     /// let util = list.memory_status();
     /// assert_eq!(3, util.num_active_nodes);
     /// assert_eq!(4, util.num_used_nodes);
@@ -326,7 +330,7 @@ where
     /// assert_eq!(0.25, util.utilization());
     ///
     /// // remove the last element
-    /// _ = list.remove(0);
+    /// _ = list.remove_at(0);
     /// let util = list.memory_status();
     /// assert_eq!(0, util.num_active_nodes);
     /// assert_eq!(4, util.num_used_nodes);
@@ -395,7 +399,8 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_exponential_growth(2, 1.5, MemoryUtilization::Lazy);
+    /// let mut list = LinkedList::with_exponential_growth(2, 1.5)
+    ///     .with_memory_utilization(MemoryUtilization::Lazy);
     ///
     /// // build list: c <-> b <-> a <-> d
     /// list.push_back('a');
@@ -424,7 +429,7 @@ where
     /// assert_eq!(list.iter().cloned().collect::<Vec<_>>(), ['c', 'b', 'a']);
     /// assert_eq!(1.00, list.memory_status().utilization());
     ///
-    /// let removed = list.remove(1);
+    /// let removed = list.remove_at(1);
     /// assert_eq!('b', removed);
     /// let popped = list.pop_front();
     /// assert_eq!(Some('c'), popped);
@@ -548,7 +553,8 @@ mod tests {
 
     #[test]
     fn list_utilization() {
-        let mut list = LinkedList::with_doubling_growth(4, MemoryUtilization::Lazy);
+        let mut list =
+            LinkedList::with_doubling_growth(4).with_memory_utilization(MemoryUtilization::Lazy);
 
         assert_eq_f32(1.0, list.memory_status().utilization());
 
@@ -594,4 +600,49 @@ mod tests {
         list.memory_reclaim();
         assert_eq_f32(1.0, list.memory_status().utilization());
     }
+}
+
+fn asdf() {
+    let mut list = LinkedList::with_doubling_growth(4);
+
+    list.push_back('y');
+    list.push_front('x');
+    list.push_back('z');
+    assert_eq!(vec!['x', 'y', 'z'], list.collect_vec());
+
+    assert_eq!(list.pop_back(), Some('z'));
+    assert_eq!(list.pop_front(), Some('x'));
+    assert_eq!(vec!['y'], list.collect_vec());
+
+    list.push_front('x');
+    list.push_back('z');
+    assert_eq!(vec!['x', 'y', 'z'], list.collect_vec());
+
+    list.insert_at(1, '?');
+    assert_eq!(vec!['x', '?', 'y', 'z'], list.collect_vec());
+
+    assert_eq!(Some(&'?'), list.get_at(1));
+    *list.get_mut_at(1).unwrap() = '!';
+
+    assert_eq!('!', list.remove_at(1));
+    assert_eq!(vec!['x', 'y', 'z'], list.collect_vec());
+
+    // memory utilizaiton when Lazy
+    let status = list.memory_status();
+    assert_eq!(3, status.num_active_nodes); // current length
+    assert_eq!(6, status.num_used_nodes); // number of pushes so far
+    assert!((status.utilization() - 0.5).abs() <= f32::EPSILON);
+
+    list.memory_reclaim();
+    assert_eq!(3, status.num_active_nodes); // current length
+    assert_eq!(3, status.num_used_nodes); // number of pushes so far
+    assert!((status.utilization() - 1.0).abs() <= f32::EPSILON);
+
+    // alternatively utilization can be kept at 100% by Eager
+    let _: LinkedListLinear<char> =
+        LinkedList::with_linear_growth(32).with_memory_utilization(MemoryUtilization::Eager);
+
+    // or automatically kept above a given threshold
+    let _: LinkedListExponential<char> = LinkedList::with_exponential_growth(4, 1.5)
+        .with_memory_utilization(MemoryUtilization::WithThreshold(0.6));
 }

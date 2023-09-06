@@ -18,7 +18,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_doubling_growth(8, MemoryUtilization::default());
+    /// let mut list = LinkedList::with_doubling_growth(8);
     /// list.push_back(0);
     /// list.push_back(1);
     /// list.push_back(2);
@@ -37,7 +37,7 @@ mod tests {
 
     #[test]
     fn contains() {
-        let mut list = LinkedList::with_linear_growth(8, crate::MemoryUtilization::Eager);
+        let mut list = LinkedList::with_linear_growth(8);
 
         assert!(!list.contains(&'x'));
 

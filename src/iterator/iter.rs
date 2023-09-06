@@ -15,7 +15,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_linear_growth(4, MemoryUtilization::Lazy);
+    /// let mut list = LinkedList::with_linear_growth(4);
     ///
     /// list.push_back(1);
     /// list.push_back(2);
@@ -46,7 +46,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_linear_growth(4, MemoryUtilization::Lazy);
+    /// let mut list = LinkedList::with_linear_growth(4);
     ///
     /// list.push_back(1);
     /// list.push_back(2);
@@ -132,7 +132,7 @@ mod tests {
 
     #[test]
     fn next() {
-        let mut list = LinkedList::with_linear_growth(64, crate::MemoryUtilization::Lazy);
+        let mut list = LinkedList::with_linear_growth(64);
 
         list.push_back(2);
         list.push_back(3);
@@ -169,7 +169,7 @@ mod tests {
 
     #[test]
     fn next_rev() {
-        let mut list = LinkedList::with_linear_growth(64, crate::MemoryUtilization::Lazy);
+        let mut list = LinkedList::with_linear_growth(64);
 
         list.push_back(2);
         list.push_back(3);

@@ -1,6 +1,5 @@
-use orx_imp_vec::prelude::PinnedVec;
-
 use crate::{node::LinkedListNode, LinkedList};
+use orx_imp_vec::prelude::PinnedVec;
 
 impl<'a, T, P> LinkedList<'a, T, P>
 where

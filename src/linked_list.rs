@@ -1,9 +1,9 @@
 use crate::{mem::MemoryUtilization, node::LinkedListNode};
-use orx_imp_vec::prelude::{ImpVec, PinnedVec, SplitVec};
+use orx_imp_vec::prelude::*;
 
 /// The LinkedList allows pushing and popping elements at either end in constant time.
 #[derive(Default)]
-pub struct LinkedList<'a, T, P = SplitVec<LinkedListNode<'a, T>>>
+pub struct LinkedList<'a, T, P>
 where
     P: PinnedVec<LinkedListNode<'a, T>>,
 {
@@ -20,6 +20,15 @@ impl<'a, T, P> LinkedList<'a, T, P>
 where
     P: PinnedVec<LinkedListNode<'a, T>> + 'a,
 {
+    /// Covnerts the linked list into one with the given `memory_utilization`.
+    pub fn with_memory_utilization(self, memory_utilization: MemoryUtilization) -> Self {
+        Self {
+            imp: self.imp,
+            len: self.len,
+            memory_utilization: memory_utilization.into_valid(),
+        }
+    }
+
     /// Returns the length of the LinkedList.
     ///
     /// This operation should compute in O(1) time.
@@ -29,7 +38,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_exponential_growth(2, 1.5, Default::default());
+    /// let mut list = LinkedList::with_exponential_growth(2, 1.5);
     /// assert_eq!(0, list.len());
     ///
     /// list.push_front('a');
@@ -54,7 +63,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_exponential_growth(2, 1.5, Default::default());
+    /// let mut list = LinkedList::with_exponential_growth(2, 1.5);
     /// assert!(list.is_empty());
     ///
     /// list.push_front('a');
@@ -80,7 +89,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_doubling_growth(4, Default::default());
+    /// let mut list = LinkedList::with_doubling_growth(4);
     /// assert_eq!(list.back(), None);
     ///
     /// list.push_back(42);
@@ -104,7 +113,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_linear_growth(16, Default::default());
+    /// let mut list = LinkedList::with_linear_growth(16);
     /// assert_eq!(list.back(), None);
     ///
     /// list.push_back(42);
@@ -129,7 +138,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_doubling_growth(4, Default::default());
+    /// let mut list = LinkedList::with_doubling_growth(4);
     /// assert_eq!(list.front(), None);
     ///
     /// list.push_front(42);
@@ -153,7 +162,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_linear_growth(16, Default::default());
+    /// let mut list = LinkedList::with_linear_growth(16);
     /// assert_eq!(list.front(), None);
     ///
     /// list.push_front(42);
@@ -179,7 +188,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_exponential_growth(2, 1.5, Default::default());
+    /// let mut list = LinkedList::with_exponential_growth(2, 1.5);
     ///
     /// list.push_back('a');
     /// assert_eq!('a', *list.back().unwrap());
@@ -215,7 +224,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_exponential_growth(2, 1.5, Default::default());
+    /// let mut list = LinkedList::with_exponential_growth(2, 1.5);
     ///
     /// list.push_front('a');
     /// assert_eq!('a', *list.front().unwrap());
@@ -252,7 +261,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_exponential_growth(2, 1.5, Default::default());
+    /// let mut list = LinkedList::with_exponential_growth(2, 1.5);
     ///
     /// // build linked list: x <-> a <-> b <-> c
     /// list.push_back('a');
@@ -296,7 +305,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_exponential_growth(2, 1.5, Default::default());
+    /// let mut list = LinkedList::with_exponential_growth(2, 1.5);
     ///
     /// // build linked list: c <-> b <-> a <-> x
     /// list.push_front('a');
@@ -340,7 +349,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_exponential_growth(2, 1.5, Default::default());
+    /// let mut list = LinkedList::with_exponential_growth(2, 1.5);
     ///
     /// // build linked list: x <-> a <-> b <-> c
     /// list.push_front('a');
@@ -376,7 +385,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_linear_growth(8, Default::default());
+    /// let mut list = LinkedList::with_linear_growth(8);
     ///
     /// // build linked list: x <-> a <-> b <-> c
     /// list.push_back('a');
@@ -384,12 +393,12 @@ where
     /// list.push_front('x');
     /// list.push_back('c');
     ///
-    /// assert_eq!(list.remove(1), 'a');
-    /// assert_eq!(list.remove(0), 'x');
-    /// assert_eq!(list.remove(1), 'c');
-    /// assert_eq!(list.remove(0), 'b');
+    /// assert_eq!(list.remove_at(1), 'a');
+    /// assert_eq!(list.remove_at(0), 'x');
+    /// assert_eq!(list.remove_at(1), 'c');
+    /// assert_eq!(list.remove_at(0), 'b');
     /// ```
-    pub fn remove(&mut self, at: usize) -> T {
+    pub fn remove_at(&mut self, at: usize) -> T {
         let curr = self.node_at(at);
 
         // update vec ends
@@ -428,7 +437,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_linear_growth(8, Default::default());
+    /// let mut list = LinkedList::with_linear_growth(8);
     ///
     /// // build linked list: a <-> b <-> c
     /// list.push_back('a');
@@ -479,7 +488,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_linear_growth(8, Default::default());
+    /// let mut list = LinkedList::with_linear_growth(8);
     ///
     /// // build linked list: a <-> b <-> c
     /// list.push_back('b');
@@ -508,7 +517,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_linear_growth(8, Default::default());
+    /// let mut list = LinkedList::with_linear_growth(8);
     ///
     /// // build linked list: a <-> b <-> c
     /// list.push_back('b');
@@ -631,13 +640,12 @@ const IS_SOME: &str = "the data of an active node must be Some variant";
 
 #[cfg(test)]
 mod tests {
-    use orx_imp_vec::prelude::DoublingGrowth;
-
     use super::*;
+    use crate::LinkedListDoubling;
 
     #[test]
     fn len_is_empty() {
-        let mut list = LinkedList::with_doubling_growth(4, MemoryUtilization::Eager);
+        let mut list = LinkedList::with_doubling_growth(4);
 
         assert!(list.is_empty());
         assert_eq!(list.len(), 0);
@@ -666,7 +674,7 @@ mod tests {
 
     #[test]
     fn back_front() {
-        let mut list = LinkedList::with_linear_growth(16, MemoryUtilization::Lazy);
+        let mut list = LinkedList::with_linear_growth(16);
 
         assert_eq!(None, list.back());
         assert_eq!(None, list.front());
@@ -700,11 +708,7 @@ mod tests {
 
     #[test]
     fn back_front_mut() {
-        let mut list = LinkedList::<usize, _>::with_exponential_growth(
-            8,
-            1.25,
-            MemoryUtilization::WithThreshold(0.6),
-        );
+        let mut list = LinkedList::<usize, _>::with_exponential_growth(8, 1.25);
 
         assert_eq!(None, list.back_mut());
         assert_eq!(None, list.front_mut());
@@ -730,7 +734,7 @@ mod tests {
 
     #[test]
     fn remove() {
-        let mut list = LinkedList::with_doubling_growth(2, MemoryUtilization::Eager);
+        let mut list = LinkedList::with_doubling_growth(2);
 
         list.push_back(3);
         list.push_front(2);
@@ -740,23 +744,23 @@ mod tests {
 
         assert_eq!(vec![0, 1, 2, 3, 4], list.collect_vec());
 
-        let removed = list.remove(4);
+        let removed = list.remove_at(4);
         assert_eq!(4, removed);
         assert_eq!(vec![0, 1, 2, 3], list.collect_vec());
 
-        let removed = list.remove(2);
+        let removed = list.remove_at(2);
         assert_eq!(2, removed);
         assert_eq!(vec![0, 1, 3], list.collect_vec());
 
-        let removed = list.remove(0);
+        let removed = list.remove_at(0);
         assert_eq!(0, removed);
         assert_eq!(vec![1, 3], list.collect_vec());
 
-        let removed = list.remove(1);
+        let removed = list.remove_at(1);
         assert_eq!(3, removed);
         assert_eq!(vec![1], list.collect_vec());
 
-        let removed = list.remove(0);
+        let removed = list.remove_at(0);
         assert_eq!(1, removed);
         assert!(list.collect_vec().is_empty());
     }
@@ -764,7 +768,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn remove_out_of_bounds() {
-        let mut list = LinkedList::with_doubling_growth(2, MemoryUtilization::Eager);
+        let mut list = LinkedList::with_doubling_growth(2);
 
         list.push_back(3);
         list.push_front(2);
@@ -774,14 +778,13 @@ mod tests {
 
         assert_eq!(vec![0, 1, 2, 3, 4], list.collect_vec());
 
-        _ = list.remove(5);
+        _ = list.remove_at(5);
     }
 
     #[test]
     fn insert() {
-        fn get_list<'a>(
-        ) -> LinkedList<'a, usize, SplitVec<LinkedListNode<'a, usize>, DoublingGrowth>> {
-            let mut list = LinkedList::with_doubling_growth(2, MemoryUtilization::Eager);
+        fn get_list<'a>() -> LinkedListDoubling<'a, usize> {
+            let mut list = LinkedList::with_doubling_growth(2);
 
             list.push_back(3);
             list.push_front(2);
@@ -806,7 +809,7 @@ mod tests {
 
     #[test]
     fn get_at() {
-        let mut list = LinkedList::with_doubling_growth(4, Default::default());
+        let mut list = LinkedList::with_doubling_growth(4);
 
         for i in 0..1000 {
             list.push_back(i);
