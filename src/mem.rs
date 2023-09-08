@@ -201,7 +201,7 @@ impl MemoryUtilization {
 }
 impl Default for MemoryUtilization {
     fn default() -> Self {
-        Self::WithThreshold(0.5)
+        Self::WithThreshold(0.6)
     }
 }
 /// Utilization of the underlying vector of the linked list.
@@ -529,10 +529,10 @@ mod tests {
     #[test]
     fn default_memory_utilization() {
         let with_threshold = MemoryUtilization::default();
-        assert_eq!(with_threshold, MemoryUtilization::WithThreshold(0.5));
+        assert_eq!(with_threshold, MemoryUtilization::WithThreshold(0.6));
         assert_eq!(
             with_threshold.into_valid(),
-            MemoryUtilization::WithThreshold(0.5)
+            MemoryUtilization::WithThreshold(0.6)
         );
     }
 

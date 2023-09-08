@@ -50,6 +50,7 @@ impl<'a, T> LinkedList<'a, T> {
         }
     }
 }
+
 impl<'a, T> LinkedList<'a, T, FixedVec<LinkedListNode<'a, T>>> {
     /// Creates an empty LinkedList with fixed capacity.
     ///

@@ -47,47 +47,30 @@
 //!
 //! ## Memory
 //!
-//! `LinkedList` provides two ways to configure the memory strategy:
+//! `LinkedList` provides different levels of control on memory strategies; it can be used by the simplest type signature relying on the defaults or as detailed as possible by determining the tradeoff between time complexity and memory utilization, as well as, the growth stretegies of the backing storage.
 //!
-//! * the first configuration is inherited from the `PinnedVec` variants and defines how the underlying storage will be kept;
-//! * the second is related with the tradeoff between memory utilization and laziness favouring faster operations.
+//! ### Defaults
 //!
-//! ### Underlying Storage Variants
+//! The list can be directly used by the default memory management settings by only specifying the element data type.
 //!
-//! The complete signature of a `LinkedList` holding elements of type `T` is as follows:
+//! ```rust
+//! use orx_linked_list::prelude::*;
 //!
-//! ```rust ignore
-//! LinkedList<'a, T, P> where P: PinnedVec<LinkedListNode<'a, T>>
+//! // char list
+//! let mut list = LinkedList::new();
+//! list.push_back('x');
+//!
+//! // i32 list with an initial capacity
+//! let mut list = LinkedList::with_initial_capacity(42);
+//! list.push_back(42);
 //! ```
 //!
-//! The choice of the underlying `PinnedVec` defines the dynamic allocations. See [`FixedVec`](https://crates.io/crates/orx-fixed-vec) or [`SplitVec`](https://crates.io/crates/orx-split-vec) for possible strategies.
+//! Default values of the configurable settings defined in the following subsections are as follows:
 //!
-//! The following type aliases are defined for convenience to simplify the type signatures:
+//! * `memory_utilization`: `MemoryUtilization::WithThreshold(0.6)`;
+//! * underlying `PinnedVec`: default `SplitVec` which uses a `Doubling` growth strategy.
 //!
-//! ```rust ignore
-//! pub type LinkedListFixed<'a, T>
-//!     = LinkedList<'a, T, FixedVec<LinkedListNode<'a, T>>>;
-//!
-//! pub type LinkedListLinear<'a, T>
-//!     = LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, Linear>>;
-//!
-//! pub type LinkedListDoubling<'a, T>
-//!     = LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, Doubling>>;
-//!
-//! pub type LinkedListExponential<'a, T>
-//!     = LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, Exponential>>;
-//! ```
-//!
-//! These variants can be constructed with corresponding associated functions:
-//!
-//! ```rust ignore
-//! let list: LinkedListFixed<char> = LinkedList::with_fixed_capacity(100);
-//! let list: LinkedListLinear<char> = LinkedList::with_linear_growth(32);
-//! let list: LinkedListDoubling<char> = LinkedList::with_doubling_growth(4);
-//! let list: LinkedListExponential<char> = LinkedList::with_exponential_growth(4, 1.5);
-//! ```
-//!
-//! ### Time Complexity vs Memory Utilization
+//! ### Tradeoff between Memory Utilization & Time Complexity
 //!
 //! `LinkedList` holds all elements close to each other in a `PinnedVec` aiming for better cache locality while using thin references rather than wide pointers and to reduce heap allocations. In order to achieve *O(1)* time complexity while avoiding smart pointers, remove and pop operations are designed to be semi-lazy.
 //!
@@ -108,12 +91,62 @@
 //!
 //! Memory utilization stategy is defined by a field which can be modified any time.
 //!
-//! ```rust ignore
-//! let list = list
+//! ```rust
+//! use orx_linked_list::prelude::*;
+//!
+//! let list = LinkedList::<u32>::new()
 //!     .with_memory_utilization(MemoryUtilization::Eager)
 //!     .with_memory_utilization(MemoryUtilization::Lazy)
 //!     .with_memory_utilization(MemoryUtilization::WithThreshold(0.5));
 //! ```
+//!
+//!
+//! ### Underlying PinnedVec
+//!
+//! `LinkedList` uses an [ImpVec](https://crates.io/crates/orx-imp-vec) to establish and maintain the interconnections among elements of the list. An `ImpVec` can use any vector implementing [PinnedVec](https://crates.io/crates/orx-pinned-vec) which guarantees that the memory locations of elements stay intact. There are two major implementations of `PinnedVec`: a [FixedVec](https://crates.io/crates/orx-fixed-vec) and a [SplitVec](https://crates.io/crates/orx-split-vec). Finally, a split vec can be created with different `Growth` strategies.
+//!
+//! This means that a `LinkedList` can use a variety of backing storage. This is apparent from the complete signature without the default type paremeter value:
+//!
+//! ```rust ignore
+//! LinkedList<'a, T, P> where P: PinnedVec<LinkedListNode<'a, T>>
+//! ```
+//!
+//! Please see the relevant crates for details; however, below are brief rules of thumbs:
+//!
+//! * `FixedVec` has a hard limit on capacity; however, provides complexity and performance of standard vector;
+//! * `SplitVec` allows for a dynamic capacity with different growth strategies:
+//!     * `SplitVec<T, Doubling>`: every time the vector requires new room, a new chunk of memory is allocated which is double the capacity of the prior chunk;
+//!     * `SplitVec<T, Linear>`: every chunk has the same capacity;
+//!     * `SplitVec<T, Exponential>`: this is a generalization of the prior two strategies allowing to define any exponential growth function in between them with a slightly increased access cost.
+//!     * `SplitVec<T, G>`: actually, any growth strategy can be defined by implementing `G: Growth`.
+//!
+//! The following type aliases are defined for convenience to simplify the type signatures:
+//!
+//! ```rust ignore
+//! pub type LinkedListFixed<'a, T>
+//!     = LinkedList<'a, T, FixedVec<LinkedListNode<'a, T>>>;
+//!
+//! pub type LinkedListLinear<'a, T>
+//!     = LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, Linear>>;
+//!
+//! pub type LinkedListDoubling<'a, T>
+//!     = LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, Doubling>>;
+//!
+//! pub type LinkedListExponential<'a, T>
+//!     = LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, Exponential>>;
+//! ```
+//!
+//! These variants can be constructed with corresponding associated functions:
+//!
+//! ```rust
+//! use orx_linked_list::prelude::*;
+//!
+//! let list: LinkedListFixed<char> = LinkedList::with_fixed_capacity(100);
+//! let list: LinkedListLinear<char> = LinkedList::with_linear_growth(32);
+//! let list: LinkedListDoubling<char> = LinkedList::with_doubling_growth(4);
+//! let list: LinkedListExponential<char> = LinkedList::with_exponential_growth(4, 1.5);
+//! ```
+//!
 
 #![warn(
     missing_docs,
