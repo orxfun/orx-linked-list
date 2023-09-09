@@ -1,6 +1,7 @@
 use orx_imp_vec::prelude::SelfRefVecItem;
 
 /// A node of the linked list.
+#[derive(Clone)]
 pub struct LinkedListNode<'a, T> {
     pub(crate) data: Option<T>,
     pub(crate) prev: Option<&'a LinkedListNode<'a, T>>,

@@ -13,7 +13,7 @@ use std::marker::PhantomData;
 ///
 /// Note that it is possible to convert a `LinkedList` to a `LinkedListX`
 /// using `built(self)` and vice versa by `continue_building(self)` methods.
-/// Note that both methods are consuming; however, the conversion is cheap.
+/// Both methods are consuming and the conversions are cheap.
 ///
 /// # Examples
 ///
@@ -38,7 +38,7 @@ use std::marker::PhantomData;
 ///     fn cast_spell(&self) {}
 /// }
 ///
-/// // build the structure: both mutable elements and structure
+/// // build the structure: both the structure and elements are mutable
 /// let mut list: LinkedList<'_, Wizard> = LinkedList::new();
 /// list.push_back(Wizard::new("Gandalf", 99));
 /// list.push_front(Wizard::new("Sauron", 72));
@@ -81,7 +81,7 @@ use std::marker::PhantomData;
 ///
 /// # On structural immutablility
 ///
-/// Together with standard rust `mut` choice, `LinkedList` and LinkedListX` together
+/// Together with the choice between immutable or `mut` variable, `LinkedList` and LinkedListX`
 /// address the fact that im|mutability of collections is more than a boolean choice.
 ///
 /// See the complete possibilities here:
@@ -91,7 +91,7 @@ use std::marker::PhantomData;
 /// |     `LinkedList`  | -                  | -                     | not really, see *Immutable `LinkedList` vs Immutable `LinkedListX`* |
 /// | `mut LinkedList`  | +                  | +                     | while building the linked list |
 /// |     `LinkedListX` | -                  | -                     | as an absolute immutable built linked list |
-/// | `mut LinkedListX` | -                  | +                     | as a structurally immutable built linked list; while values of nodes can be mutated but relations cannot be |
+/// | `mut LinkedListX` | +                  | -                     | as a structurally immutable built linked list; while values of nodes can be mutated but relations cannot be |
 ///
 ///
 /// ## Immutable `LinkedList` vs Immutable `LinkedListX`
@@ -105,7 +105,7 @@ use std::marker::PhantomData;
 /// There is nothing to do with this `list`, it is and will be an empty list.
 ///
 /// The situation is common. For instance, when we cannot convenitently `collect`,
-/// we create a `mut std::vec::Vec` build it up and move it
+/// we create a `mut std::vec::Vec`, build it up and move it
 /// to an immutable variable to make sure that the built vector will not be mutated.
 ///
 /// Linked list is a self referencing data structure which is much harder to `collect`.
@@ -118,49 +118,30 @@ use std::marker::PhantomData;
 ///
 /// let mut list = LinkedList::new();
 /// list.push_back('a');
-/// let list = list; // building is complete, no undesired mutation is allowed
+/// let list: LinkedList<_> = list; // building is complete, no undesired mutation is allowed
 /// ```
 ///
 /// However, to be able to build the inter-element relations via thin references,
 /// `LinkedList` makes use of `ImpVec`. `ImpVec` wraps a `PinnedVec` giving it the
 /// ability to define such relations with cheap thin references. It achieves this
-/// with one additional level of indirection which wraps the `PinnedVec`.
+/// with one additional level of indirection which wraps the `PinnedVec` that
+/// actually holds the data.
 ///
-/// But if the structural mutation is complete, we do not need and will not use
+/// If the structural mutation is completed, we do not need and will not use
 /// the ability to build inter-element references. Therefore, we can get rid of the
-/// additional indirection to reach the access performance of `PinnedVec`, rather than
-/// that of the `ImpVec`.
+/// additional indirection and achieve the access performance of `PinnedVec`.
 ///
 /// The transformation is convenient and cheap, and bidirectional.
 ///
-/// Therefore, the usage below would be preferable to the example above:
+/// Therefore, the usage below would be preferable than the example above:
 ///
 /// ```rust
 /// use orx_linked_list::prelude::*;
 ///
 /// let mut list = LinkedList::new();
 /// list.push_back('a');
-/// let list = list.built(); // building is complete, no undesired mutation is allowed
+/// let list: LinkedListX<_> = list.built(); // building is complete, no undesired mutation is allowed
 /// ```
-///
-/// ## Recommended Usage
-///
-/// Therefore, the recommended usage of the linked list is as below:
-///
-/// * create and empty `mut LinkedList`,
-///     * `let mut list = LinkedList::new();`
-/// * keep it as `mut LinkedList` as long as structural mutations are ongoing:
-///     * cheap insertions and removals are the main features of a linked list;
-///     * therefore, in many cases, we might stay here until we drop the linked list.
-/// * if structural mutations are completed at some point, while we still need the data and built relations:
-///     * in addition to reference, if data of the elements are also immutable, convert it to `LinkedListX`:
-///         * `let list = list.built()`;
-///         * this allows faster access to elements than `LinkedList` while completely blocking all mutations.
-///     * otherwise if we still want to mutate the underlying values of the elements:
-///         * `let mut list = list.built()`;
-///         * this again allows faster access to elements than `LinkedList`,
-///         * no structural mutations are allowed, so references (node relations) will still stay intact,
-///         * however, underlying data of elements can be mutated.
 #[derive(Default)]
 pub struct LinkedListX<'a, T, P = SplitVec<LinkedListNode<'a, T>>>
 where
