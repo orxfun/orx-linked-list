@@ -339,7 +339,7 @@ where
     pub fn memory_status(&self) -> MemoryStatus {
         MemoryStatus {
             num_active_nodes: self.len,
-            num_used_nodes: self.imp.len() - 1,
+            num_used_nodes: self.vec.len() - 1,
         }
     }
     /// This method reclaims the gaps which are opened due to lazy pops and removals,
@@ -455,33 +455,33 @@ where
     pub fn memory_reclaim(&mut self) -> usize {
         let mut last_occupied_idx = 0;
 
-        for i in 1..self.imp.len() {
-            if self.imp[i].data.is_none() {
+        for i in 1..self.vec.len() {
+            if self.vec[i].data.is_none() {
                 let vacant_idx = i;
-                let occupied_idx = Self::get_first_occupied(&self.imp, vacant_idx + 1);
+                let occupied_idx = Self::get_first_occupied(&self.vec, vacant_idx + 1);
 
                 if let Some(occupied_idx) = occupied_idx {
                     last_occupied_idx = vacant_idx;
 
                     // update occupied's prev & next
-                    let prev_idx = self.node_ind(self.imp[occupied_idx].prev);
+                    let prev_idx = self.node_ind(self.vec[occupied_idx].prev);
                     if let Some(prev_idx) = prev_idx {
-                        self.imp.set_next(prev_idx, Some(vacant_idx));
+                        self.vec.set_next(prev_idx, Some(vacant_idx));
                     } else {
                         // no prev -> front
                         self.set_front(Some(vacant_idx));
                     }
 
-                    let next_idx = self.node_ind(self.imp[occupied_idx].next);
+                    let next_idx = self.node_ind(self.vec[occupied_idx].next);
                     if let Some(next_idx) = next_idx {
-                        self.imp.set_prev(next_idx, Some(vacant_idx));
+                        self.vec.set_prev(next_idx, Some(vacant_idx));
                     } else {
                         // no next -> back
                         self.set_back(Some(vacant_idx));
                     }
 
                     // write to vacant from occupied
-                    unsafe { self.imp.unsafe_swap(vacant_idx, occupied_idx) };
+                    unsafe { self.vec.unsafe_swap(vacant_idx, occupied_idx) };
                 } else {
                     break;
                 }
@@ -490,9 +490,8 @@ where
             }
         }
 
-        let to_be_reclaimed = self.imp.len() - 1 - last_occupied_idx;
-        dbg!(last_occupied_idx, to_be_reclaimed, self.imp.len());
-        unsafe { self.imp.unsafe_truncate(last_occupied_idx + 1) };
+        let to_be_reclaimed = self.vec.len() - 1 - last_occupied_idx;
+        unsafe { self.vec.unsafe_truncate(last_occupied_idx + 1) };
         to_be_reclaimed
     }
     fn get_first_occupied(imp: &ImpVec<LinkedListNode<'a, T>, P>, start: usize) -> Option<usize> {

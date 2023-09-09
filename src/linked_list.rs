@@ -1,13 +1,16 @@
-use crate::{mem::MemoryUtilization, node::LinkedListNode};
+use crate::{linked_list_x::LinkedListX, mem::MemoryUtilization, node::LinkedListNode};
 use orx_imp_vec::prelude::*;
 
 /// The LinkedList allows pushing and popping elements at either end in constant time.
+///
+/// Also see [`LinkedListX`] for the **structurally immutable** version of the linked list.
 #[derive(Default)]
 pub struct LinkedList<'a, T, P = SplitVec<LinkedListNode<'a, T>>>
 where
-    P: PinnedVec<LinkedListNode<'a, T>>,
+    T: 'a,
+    P: PinnedVec<LinkedListNode<'a, T>> + 'a,
 {
-    pub(crate) imp: ImpVec<LinkedListNode<'a, T>, P>,
+    pub(crate) vec: ImpVec<LinkedListNode<'a, T>, P>,
     pub(crate) len: usize,
     /// Memory utilization strategy of the linked list allowing control over the tradeoff between
     /// memory efficiency and amortized time complexity of `pop_back`, `pop_front` or `remove` operations.
@@ -18,38 +21,47 @@ where
 
 impl<'a, T, P> LinkedList<'a, T, P>
 where
+    T: 'a,
     P: PinnedVec<LinkedListNode<'a, T>> + 'a,
 {
+    /// Converts the `LinkedList` to a `LinkedList` stopping all **structural mutations**.
+    ///
+    /// Mutations of element data depends on whether the created `LinkedListX` is assigned
+    /// to an immutable variable or `mut` variable.
+    ///
+    /// See the documentation of [`LinkedListX`] for details.
+    pub fn built(self) -> LinkedListX<'a, T, P> {
+        LinkedListX {
+            vec: self.vec.into_pinned(),
+            len: self.len,
+            marker: Default::default(),
+        }
+    }
     /// Covnerts the linked list into one with the given `memory_utilization`.
     pub fn with_memory_utilization(self, memory_utilization: MemoryUtilization) -> Self {
         Self {
-            imp: self.imp,
+            vec: self.vec,
             len: self.len,
             memory_utilization: memory_utilization.into_valid(),
         }
     }
 
-    /// Returns the length of the LinkedList.
-    ///
-    /// This operation should compute in O(1) time.
+    /// Returns the length of the linked list.
     ///
     /// # Examples
     ///
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_exponential_growth(2, 1.5);
+    /// let mut list = LinkedList::new();
     /// assert_eq!(0, list.len());
     ///
-    /// list.push_front('a');
+    /// list.push_back('a');
     /// list.push_front('b');
     /// assert_eq!(2, list.len());
     ///
     /// _ = list.pop_back();
     /// assert_eq!(1, list.len());
-    ///
-    /// _ = list.pop_front();
-    /// assert_eq!(0, list.len());
     /// ```
     pub fn len(&self) -> usize {
         self.len
@@ -63,7 +75,7 @@ where
     /// ```
     /// use orx_linked_list::prelude::*;
     ///
-    /// let mut list = LinkedList::with_exponential_growth(2, 1.5);
+    /// let mut list = LinkedList::new();
     /// assert!(list.is_empty());
     ///
     /// list.push_front('a');
@@ -127,7 +139,7 @@ where
     /// ```
     pub fn back_mut(&mut self) -> Option<&mut T> {
         self.node_ind(self.back_node())
-            .and_then(|ind| self.imp[ind].data.as_mut())
+            .and_then(|ind| self.vec[ind].data.as_mut())
     }
     /// Provides a reference to the front element, or None if the list is empty.
     ///
@@ -176,7 +188,7 @@ where
     /// ```
     pub fn front_mut(&mut self) -> Option<&mut T> {
         self.node_ind(self.front_node())
-            .and_then(|ind| self.imp[ind].data.as_mut())
+            .and_then(|ind| self.vec[ind].data.as_mut())
     }
 
     /// Appends an element to the back of a list.
@@ -203,13 +215,13 @@ where
         match self.back_node_ind() {
             None => self.push_first_node(value),
             Some(prior_back_ind) => {
-                let ind = Some(self.imp.len());
-                self.imp.push(LinkedListNode {
+                let ind = Some(self.vec.len());
+                self.vec.push(LinkedListNode {
                     data: Some(value),
                     next: None,
                     prev: self.back_node(),
                 });
-                self.imp.set_next(prior_back_ind, ind);
+                self.vec.set_next(prior_back_ind, ind);
                 self.set_back(ind);
             }
         }
@@ -239,13 +251,13 @@ where
         match self.front_node_ind() {
             None => self.push_first_node(value),
             Some(prior_front_ind) => {
-                let ind = Some(self.imp.len());
-                self.imp.push(LinkedListNode {
+                let ind = Some(self.vec.len());
+                self.vec.push(LinkedListNode {
                     data: Some(value),
                     next: self.front_node(),
                     prev: None,
                 });
-                self.imp.set_prev(prior_front_ind, ind);
+                self.vec.set_prev(prior_front_ind, ind);
                 self.set_front(ind);
             }
         }
@@ -278,11 +290,11 @@ where
     /// ```
     pub fn pop_back(&mut self) -> Option<T> {
         let value = if let Some(old_back_ind) = self.back_node_ind() {
-            let new_back_ind = self.node_ind(self.imp[old_back_ind].prev);
+            let new_back_ind = self.node_ind(self.vec[old_back_ind].prev);
             self.set_back(new_back_ind);
 
             if let Some(new_back_ind) = new_back_ind {
-                self.imp.set_next(new_back_ind, None);
+                self.vec.set_next(new_back_ind, None);
             } else {
                 self.set_front(None);
             }
@@ -322,11 +334,11 @@ where
     /// ```
     pub fn pop_front(&mut self) -> Option<T> {
         let value = if let Some(old_front_ind) = self.front_node_ind() {
-            let new_front_ind = self.node_ind(self.imp[old_front_ind].next);
+            let new_front_ind = self.node_ind(self.vec[old_front_ind].next);
             self.set_front(new_front_ind);
 
             if let Some(new_front_ind) = new_front_ind {
-                self.imp.set_prev(new_front_ind, None);
+                self.vec.set_prev(new_front_ind, None);
             } else {
                 self.set_back(None);
             }
@@ -368,8 +380,8 @@ where
     /// assert_eq!(None, list.back());
     /// ```
     pub fn clear(&mut self) {
-        self.imp.clear();
-        self.imp.push(LinkedListNode::back_front_node());
+        self.vec.clear();
+        self.vec.push(LinkedListNode::back_front_node());
         self.len = 0;
     }
 
@@ -404,19 +416,19 @@ where
         // update vec ends
         if at == 0 {
             // prev | front
-            self.imp[0].prev = curr.next;
+            self.vec[0].prev = curr.next;
         }
         if at == self.len - 1 {
             // next | back
-            self.imp[0].next = curr.prev;
+            self.vec[0].next = curr.prev;
         }
 
         // update links
         if let Some(prev_ind) = self.node_ind(curr.prev) {
-            self.imp.set_next(prev_ind, self.node_ind(curr.next));
+            self.vec.set_next(prev_ind, self.node_ind(curr.next));
         }
         if let Some(next_ind) = self.node_ind(curr.next) {
-            self.imp.set_prev(next_ind, self.node_ind(curr.prev));
+            self.vec.set_prev(next_ind, self.node_ind(curr.prev));
         }
 
         let imp_at = self.node_ind(Some(curr)).expect(IS_SOME);
@@ -455,23 +467,23 @@ where
             let curr_ind = self.node_ind(Some(curr)).expect(IS_SOME);
             let curr_prev_ind = self.node_ind(curr.prev);
 
-            let ind = self.imp.len();
-            let node = self.imp.push_get_ref(LinkedListNode {
+            let ind = self.vec.len();
+            let node = self.vec.push_get_ref(LinkedListNode {
                 data: Some(value),
                 prev: curr.prev,
                 next: Some(curr),
             });
 
             // update links
-            self.imp.set_prev(curr_ind, Some(ind));
+            self.vec.set_prev(curr_ind, Some(ind));
             if let Some(prev_ind) = curr_prev_ind {
-                self.imp.set_next(prev_ind, Some(ind));
+                self.vec.set_next(prev_ind, Some(ind));
             }
 
             // update vec ends
             if at == 0 {
                 // prev | front
-                self.imp[0].prev = Some(node);
+                self.vec[0].prev = Some(node);
             }
 
             self.len += 1;
@@ -537,7 +549,7 @@ where
         if at < self.len {
             let node = self.node_at(at);
             let ind = self.node_ind(Some(node))?;
-            self.imp[ind].data.as_mut()
+            self.vec[ind].data.as_mut()
         } else {
             None
         }
@@ -554,7 +566,7 @@ where
                 MemoryUtilization::Lazy => {}
                 MemoryUtilization::WithThreshold(threshold) => {
                     if self.len > 0 {
-                        let utilization = self.len as f32 / (self.imp.len() - 1) as f32;
+                        let utilization = self.len as f32 / (self.vec.len() - 1) as f32;
                         if utilization < *threshold {
                             _ = self.memory_reclaim()
                         }
@@ -577,15 +589,15 @@ where
     /// vector.
     /// Therefore, `expect` call in the method body will never panic.
     pub(crate) fn node_ind(&self, node: Option<&'a LinkedListNode<'a, T>>) -> Option<usize> {
-        node.map(|node_ref| self.imp.index_of(node_ref).expect(IS_SOME))
+        node.map(|node_ref| self.vec.index_of(node_ref).expect(IS_SOME))
     }
     #[inline(always)]
     pub(crate) fn back_node(&self) -> Option<&'a LinkedListNode<'a, T>> {
-        self.imp[0].next
+        self.vec[0].next
     }
     #[inline(always)]
     pub(crate) fn front_node(&self) -> Option<&'a LinkedListNode<'a, T>> {
-        self.imp[0].prev
+        self.vec[0].prev
     }
     #[inline(always)]
     pub(crate) fn back_node_ind(&self) -> Option<usize> {
@@ -597,34 +609,34 @@ where
     }
     #[inline(always)]
     pub(crate) fn set_back(&mut self, back_idx: Option<usize>) {
-        self.imp.set_next(0, back_idx);
+        self.vec.set_next(0, back_idx);
     }
     #[inline(always)]
     pub(crate) fn set_front(&mut self, front_idx: Option<usize>) {
-        self.imp.set_prev(0, front_idx);
+        self.vec.set_prev(0, front_idx);
     }
     fn push_first_node(&mut self, value: T) {
-        debug_assert!(self.imp[0].prev.is_none());
-        debug_assert!(self.imp[0].next.is_none());
-        let ind = Some(self.imp.len());
-        self.imp.push(LinkedListNode {
+        debug_assert!(self.vec[0].prev.is_none());
+        debug_assert!(self.vec[0].next.is_none());
+        let ind = Some(self.vec.len());
+        self.vec.push(LinkedListNode {
             data: Some(value),
             prev: None,
             next: None,
         });
-        self.imp.set_prev(0, ind);
-        self.imp.set_next(0, ind);
+        self.vec.set_prev(0, ind);
+        self.vec.set_next(0, ind);
     }
     fn node_at(&self, at: usize) -> &'a LinkedListNode<'a, T> {
         self.panic_if_out_of_bounds(at);
-        let mut curr = self.imp[0].prev.expect(IS_SOME);
+        let mut curr = self.vec[0].prev.expect(IS_SOME);
         for _ in 0..at {
             curr = curr.next.expect(IS_SOME);
         }
         curr
     }
     fn remove_get_at(&mut self, imp_at: usize) -> T {
-        std::mem::replace(&mut self.imp[imp_at], LinkedListNode::closed_node())
+        std::mem::replace(&mut self.vec[imp_at], LinkedListNode::closed_node())
             .data
             .expect(IS_SOME)
     }
@@ -636,7 +648,7 @@ where
     }
 }
 
-const IS_SOME: &str = "the data of an active node must be Some variant";
+pub(crate) const IS_SOME: &str = "the data of an active node must be Some variant";
 
 #[cfg(test)]
 mod tests {

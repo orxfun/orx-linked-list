@@ -166,6 +166,7 @@ mod fixed_vec;
 mod impl_bounded;
 mod iterator;
 mod linked_list;
+mod linked_list_x;
 mod mem;
 mod new;
 mod node;
@@ -174,6 +175,7 @@ pub mod prelude;
 mod variants;
 
 pub use crate::linked_list::LinkedList;
+pub use crate::linked_list_x::LinkedListX;
 pub use crate::mem::{MemoryStatus, MemoryUtilization};
 pub use crate::variants::{
     LinkedListDoubling, LinkedListExponential, LinkedListFixed, LinkedListLinear,

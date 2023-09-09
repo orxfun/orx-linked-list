@@ -33,7 +33,7 @@ impl<'a, T> LinkedList<'a, T, FixedVec<LinkedListNode<'a, T>>> {
     /// Note that since `FixedVec` has a strict capacity; pushing to the list
     /// while there is no room leads to a panic.
     pub fn room(&self) -> usize {
-        self.imp.room()
+        self.vec.room()
     }
 }
 

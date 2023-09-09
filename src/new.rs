@@ -20,7 +20,7 @@ impl<'a, T> LinkedList<'a, T> {
         let imp: ImpVec<_> = SplitVec::new().into();
         imp.push(LinkedListNode::back_front_node());
         Self {
-            imp,
+            vec: imp,
             len: 0,
             memory_utilization: Default::default(),
         }
@@ -44,7 +44,7 @@ impl<'a, T> LinkedList<'a, T> {
         let imp: ImpVec<_> = SplitVec::with_initial_capacity(initial_capacity).into();
         imp.push(LinkedListNode::back_front_node());
         Self {
-            imp,
+            vec: imp,
             len: 0,
             memory_utilization: Default::default(),
         }
@@ -81,7 +81,7 @@ impl<'a, T> LinkedList<'a, T, FixedVec<LinkedListNode<'a, T>>> {
         let imp: ImpVec<_, _> = FixedVec::new(fixed_capacity).into();
         imp.push(LinkedListNode::back_front_node());
         Self {
-            imp,
+            vec: imp,
             len: 0,
             memory_utilization: Default::default(),
         }
@@ -114,7 +114,7 @@ impl<'a, T> LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, Doubling>> {
         let imp: ImpVec<_, _> = SplitVec::with_doubling_growth(first_fragment_capacity).into();
         imp.push(LinkedListNode::back_front_node());
         Self {
-            imp,
+            vec: imp,
             memory_utilization: Default::default(),
             len: 0,
         }
@@ -147,7 +147,7 @@ impl<'a, T> LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, Linear>> {
         let imp: ImpVec<_, _> = SplitVec::with_linear_growth(constant_fragment_capacity).into();
         imp.push(LinkedListNode::back_front_node());
         Self {
-            imp,
+            vec: imp,
             memory_utilization: Default::default(),
             len: 0,
         }
@@ -186,7 +186,7 @@ impl<'a, T> LinkedList<'a, T, SplitVec<LinkedListNode<'a, T>, Exponential>> {
             SplitVec::with_exponential_growth(first_fragment_capacity, growth_coefficient).into();
         imp.push(LinkedListNode::back_front_node());
         Self {
-            imp,
+            vec: imp,
             memory_utilization: Default::default(),
             len: 0,
         }
@@ -205,8 +205,8 @@ mod tests {
         let list: LinkedList<char> = list;
         let list: LinkedList<char, SplitVec<LinkedListNode<char>>> = list;
         let list: LinkedList<char, SplitVec<LinkedListNode<char>, Doubling>> = list;
-        assert_eq!(1, list.imp.fragments().len());
-        assert_eq!(4, list.imp.fragments()[0].capacity());
+        assert_eq!(1, list.vec.fragments().len());
+        assert_eq!(4, list.vec.fragments()[0].capacity());
     }
 
     #[test]
@@ -217,7 +217,7 @@ mod tests {
         let list: LinkedList<char> = list;
         let list: LinkedList<char, SplitVec<LinkedListNode<char>>> = list;
         let list: LinkedList<char, SplitVec<LinkedListNode<char>, Doubling>> = list;
-        assert_eq!(1, list.imp.fragments().len());
-        assert_eq!(10, list.imp.fragments()[0].capacity());
+        assert_eq!(1, list.vec.fragments().len());
+        assert_eq!(10, list.vec.fragments()[0].capacity());
     }
 }
