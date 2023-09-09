@@ -160,6 +160,7 @@
     clippy::todo
 )]
 
+mod clone;
 mod collect;
 mod common_traits;
 mod fixed_vec;
