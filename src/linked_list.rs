@@ -4,7 +4,6 @@ use orx_imp_vec::prelude::*;
 /// The LinkedList allows pushing and popping elements at either end in constant time.
 ///
 /// Also see [`LinkedListX`] for the **structurally immutable** version of the linked list.
-#[derive(Default)]
 pub struct LinkedList<'a, T, P = SplitVec<LinkedListNode<'a, T>>>
 where
     T: 'a,

@@ -199,14 +199,21 @@ mod tests {
 
     #[test]
     fn new() {
+        fn test_default_list(list: LinkedList<char>) {
+            let list: LinkedList<char> = list;
+            let list: LinkedList<char, SplitVec<LinkedListNode<char>>> = list;
+            let list: LinkedList<char, SplitVec<LinkedListNode<char>, Doubling>> = list;
+            assert_eq!(1, list.vec.fragments().len());
+            assert_eq!(4, list.vec.fragments()[0].capacity());
+        }
+
         let mut list = LinkedList::new();
         list.push_back('a');
+        test_default_list(list);
 
-        let list: LinkedList<char> = list;
-        let list: LinkedList<char, SplitVec<LinkedListNode<char>>> = list;
-        let list: LinkedList<char, SplitVec<LinkedListNode<char>, Doubling>> = list;
-        assert_eq!(1, list.vec.fragments().len());
-        assert_eq!(4, list.vec.fragments()[0].capacity());
+        let mut list = LinkedList::default();
+        list.push_back('a');
+        test_default_list(list);
     }
 
     #[test]
