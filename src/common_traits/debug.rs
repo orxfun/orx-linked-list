@@ -1,4 +1,6 @@
-use crate::{node::LinkedListNode, prelude::LinkedList};
+use crate::{
+    iterator::iter::IterFromFront, node::LinkedListNode, prelude::LinkedList, LinkedListX,
+};
 use orx_imp_vec::prelude::PinnedVec;
 use std::fmt::Debug;
 
@@ -9,15 +11,28 @@ where
 {
     #[allow(clippy::unwrap_in_result)]
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "[{}]",
-            self.iter()
-                .map(|x| format!("{:?}", x))
-                .collect::<Vec<_>>()
-                .join(", ")
-        )
+        fmt(f, self.iter())
     }
+}
+impl<'a, T, P> Debug for LinkedListX<'a, T, P>
+where
+    P: PinnedVec<LinkedListNode<'a, T>> + 'a,
+    T: Debug,
+{
+    #[allow(clippy::unwrap_in_result)]
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        fmt(f, self.iter())
+    }
+}
+
+fn fmt<T: Debug>(f: &mut std::fmt::Formatter<'_>, iter: IterFromFront<'_, T>) -> std::fmt::Result {
+    write!(
+        f,
+        "[{}]",
+        iter.map(|x| format!("{:?}", x))
+            .collect::<Vec<_>>()
+            .join(", ")
+    )
 }
 
 #[cfg(test)]
@@ -32,6 +47,9 @@ mod tests {
         list.push_back('z');
 
         let debug = format!("{:?}", list);
+        assert_eq!("['x', 'y', 'z']", debug);
+
+        let debug = format!("{:?}", list.built());
         assert_eq!("['x', 'y', 'z']", debug);
     }
 }

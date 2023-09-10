@@ -1,8 +1,6 @@
-use std::fmt::Debug;
-
-use orx_imp_vec::{prelude::PinnedVec, ImpVec};
-
 use crate::{linked_list::IS_SOME, node::LinkedListNode, LinkedList, LinkedListX};
+use orx_imp_vec::{prelude::PinnedVec, ImpVec};
+use std::fmt::Debug;
 
 impl<'a, T, P> Clone for LinkedList<'a, T, P>
 where
