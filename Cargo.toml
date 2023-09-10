@@ -1,6 +1,6 @@
 [package]
 name = "orx-linked-list"
-version = "0.8.1"
+version = "0.8.2"
 edition = "2021"
 authors = ["orxfun <orx.ugur.arikan@gmail.com>"]
 description = "An efficient doubly linked list using thin references with a focus on better cache locality avoiding heap allocations by smart pointers."
