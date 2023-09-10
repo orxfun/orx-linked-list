@@ -1,6 +1,6 @@
 [package]
 name = "orx-linked-list"
-version = "0.8.0"
+version = "0.8.1"
 edition = "2021"
 authors = ["orxfun <orx.ugur.arikan@gmail.com>"]
 description = "An efficient doubly linked list using thin references with a focus on better cache locality avoiding heap allocations by smart pointers."
@@ -10,4 +10,4 @@ keywords = ["linked", "list", "vec", "array", "pinned"]
 categories = ["data-structures"]
 
 [dependencies]
-orx-imp-vec = "0.9.6"
+orx-imp-vec = "0.9.7"
