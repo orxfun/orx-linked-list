@@ -25,24 +25,24 @@ let mut list = LinkedList::new();
 list.push_back('y');
 list.push_front('x');
 list.push_back('z');
-assert_eq!(vec!['x', 'y', 'z'], list.collect_vec());
+assert_eq!(vec!['x', 'y', 'z'], list);
 
 assert_eq!(list.pop_back(), Some('z'));
 assert_eq!(list.pop_front(), Some('x'));
-assert_eq!(vec!['y'], list.collect_vec());
+assert_eq!(vec!['y'], list);
 
 list.push_front('x');
 list.push_back('z');
-assert_eq!(vec!['x', 'y', 'z'], list.collect_vec());
+assert_eq!(vec!['x', 'y', 'z'], list);
 
 list.insert_at(1, '?');
-assert_eq!(vec!['x', '?', 'y', 'z'], list.collect_vec());
+assert_eq!(vec!['x', '?', 'y', 'z'], list);
 
 assert_eq!(Some(&'?'), list.get_at(1));
 *list.get_mut_at(1).unwrap() = '!';
 
 assert_eq!('!', list.remove_at(1));
-assert_eq!(vec!['x', 'y', 'z'], list.collect_vec());
+assert_eq!(vec!['x', 'y', 'z'], list);
 ```
 
 ## Memory
