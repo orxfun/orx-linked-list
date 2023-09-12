@@ -502,6 +502,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test::validator::validate_list;
 
     fn assert_eq_f32(first: f32, second: f32) {
         assert!((first - second).abs() < f32::EPSILON);
@@ -595,8 +596,10 @@ mod tests {
 
         _ = list.pop_front();
         assert_eq_f32(0.50, list.memory_status().utilization());
+        validate_list(&list);
 
         list.memory_reclaim();
+        validate_list(&list);
         assert_eq_f32(1.0, list.memory_status().utilization());
     }
 }

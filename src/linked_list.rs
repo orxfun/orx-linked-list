@@ -4,6 +4,16 @@ use orx_imp_vec::prelude::*;
 /// The LinkedList allows pushing and popping elements at either end in constant time.
 ///
 /// Also see [`LinkedListX`] for the **structurally immutable** version of the linked list.
+/// Cost of conversion between these two types is considerably cheap
+/// (equivalent to adding/removing a `RefCell` indirection).
+///
+/// Another major difference is between the implementation of `Send` and `Sync` traits:
+///
+/// | type / trait | `Send` | `Sync` |
+/// |:---    |   :----:   |   :----:   |
+/// |     `LinkedList`  | +    | -    |
+/// | `LinkedListX`     | +    | +    |
+///
 pub struct LinkedList<'a, T, P = SplitVec<LinkedListNode<'a, T>>>
 where
     T: 'a,
@@ -652,33 +662,39 @@ pub(crate) const IS_SOME: &str = "the data of an active node must be Some varian
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::LinkedListDoubling;
+    use crate::{test::validator::validate_list, LinkedListDoubling};
 
     #[test]
     fn len_is_empty() {
         let mut list = LinkedList::with_doubling_growth(4);
 
+        validate_list(&list);
         assert!(list.is_empty());
         assert_eq!(list.len(), 0);
 
         list.push_back(1);
+        validate_list(&list);
         assert!(!list.is_empty());
         assert_eq!(list.len(), 1);
 
         list.push_front(2);
+        validate_list(&list);
         assert!(!list.is_empty());
         assert_eq!(list.len(), 2);
 
         list.pop_back();
+        validate_list(&list);
         assert!(!list.is_empty());
         assert_eq!(list.len(), 1);
 
         list.pop_front();
+        validate_list(&list);
         assert!(list.is_empty());
         assert_eq!(list.len(), 0);
 
         list.push_back(1);
         list.clear();
+        validate_list(&list);
         assert!(list.is_empty());
         assert_eq!(list.len(), 0);
     }
@@ -687,18 +703,21 @@ mod tests {
     fn back_front() {
         let mut list = LinkedList::with_linear_growth(16);
 
+        validate_list(&list);
         assert_eq!(None, list.back());
         assert_eq!(None, list.front());
         assert_eq!(None, list.pop_back());
         assert_eq!(None, list.pop_front());
 
         list.push_back("hello");
+        validate_list(&list);
         assert_eq!(Some(&"hello"), list.back());
         assert_eq!(Some(&"hello"), list.front());
         assert_eq!(Some("hello"), list.pop_back());
         assert_eq!(None, list.pop_front());
 
         list.push_front("world");
+        validate_list(&list);
         assert_eq!(Some(&"world"), list.back());
         assert_eq!(Some(&"world"), list.front());
         assert_eq!(Some("world"), list.pop_front());
@@ -706,21 +725,26 @@ mod tests {
 
         list.push_back("hello");
         list.push_back("world");
+        validate_list(&list);
         assert_eq!(Some(&"world"), list.back());
         assert_eq!(Some(&"hello"), list.front());
 
         list.push_back("!");
+        validate_list(&list);
         assert_eq!(Some(&"!"), list.back());
 
+        validate_list(&list);
         assert_eq!(Some("hello"), list.pop_front());
         assert_eq!(Some("!"), list.pop_back());
         assert_eq!(Some("world"), list.pop_front());
+        validate_list(&list);
     }
 
     #[test]
     fn back_front_mut() {
         let mut list = LinkedList::<usize, _>::with_exponential_growth(8, 1.25);
 
+        validate_list(&list);
         assert_eq!(None, list.back_mut());
         assert_eq!(None, list.front_mut());
 
@@ -730,17 +754,21 @@ mod tests {
         list.push_front(10);
         list.push_back(40);
 
+        validate_list(&list);
         let back = list.back_mut();
         assert_eq!(Some(&mut 40), back);
         *back.expect("is-some") *= 10;
         assert_eq!(Some(&400), list.back());
         assert_eq!(Some(400), list.pop_back());
 
+        validate_list(&list);
         let front = list.front_mut();
         assert_eq!(Some(&mut 10), front);
         *front.expect("is-some") *= 10;
         assert_eq!(Some(&100), list.front());
         assert_eq!(Some(100), list.pop_front());
+
+        validate_list(&list);
     }
 
     #[test]
@@ -754,26 +782,32 @@ mod tests {
         list.push_front(0);
 
         assert_eq!(vec![0, 1, 2, 3, 4], list.collect_vec());
+        validate_list(&list);
 
         let removed = list.remove_at(4);
         assert_eq!(4, removed);
         assert_eq!(vec![0, 1, 2, 3], list.collect_vec());
+        validate_list(&list);
 
         let removed = list.remove_at(2);
         assert_eq!(2, removed);
         assert_eq!(vec![0, 1, 3], list.collect_vec());
+        validate_list(&list);
 
         let removed = list.remove_at(0);
         assert_eq!(0, removed);
         assert_eq!(vec![1, 3], list.collect_vec());
+        validate_list(&list);
 
         let removed = list.remove_at(1);
         assert_eq!(3, removed);
         assert_eq!(vec![1], list.collect_vec());
+        validate_list(&list);
 
         let removed = list.remove_at(0);
         assert_eq!(1, removed);
         assert!(list.collect_vec().is_empty());
+        validate_list(&list);
     }
 
     #[test]
@@ -813,6 +847,7 @@ mod tests {
 
             let mut list = get_list();
             list.insert_at(i, 42);
+            validate_list(&list);
 
             assert_eq!(expected, list.collect_vec());
         }
@@ -830,15 +865,113 @@ mod tests {
             assert_eq!(Some(&i), list.get_at(i));
         }
         assert_eq!(None, list.get_at(1000));
+        validate_list(&list);
 
         for i in 0..list.len() {
             *list.get_mut_at(i).expect(IS_SOME) *= 10;
         }
         assert_eq!(None, list.get_mut_at(1000));
+        validate_list(&list);
 
         for i in 0..list.len() {
             assert_eq!(Some(&(i * 10)), list.get_at(i));
         }
         assert_eq!(None, list.get_at(1000));
+        validate_list(&list);
+    }
+
+    #[test]
+    fn move_around() {
+        #[inline(never)]
+        fn take_push_sum(mut list: LinkedList<usize>) -> LinkedList<usize> {
+            let clone = list.clone();
+            let sum: usize = clone.iter().sum();
+            validate_list(&clone);
+            drop(clone);
+
+            list.push_back(sum);
+            validate_list(&list);
+            list
+        }
+        #[inline(never)]
+        fn take_push_1(list: LinkedList<usize>) -> LinkedList<usize> {
+            let mut shadow = list;
+            shadow.push_back(1);
+            validate_list(&shadow);
+            shadow
+        }
+
+        let mut list = LinkedList::new();
+        list.push_back(0);
+        let list = take_push_1(list); // 0-1
+        let list = take_push_sum(list); // 0-1-1
+        let list = take_push_sum(list); // 0-1-1-2
+        let list = take_push_sum(list); // 0-1-1-2-4
+        let list = take_push_sum(list); // 0-1-1-2-4-8
+        let list = take_push_sum(list); // 0-1-1-2-4-8-16
+        let list = take_push_sum(list); // 0-1-1-2-4-8-16-32
+        let list = take_push_1(list); // 0-1-1-2-4-8-16-32-1
+
+        validate_list(&list);
+        assert_eq!(vec![0, 1, 1, 2, 4, 8, 16, 32, 1], list);
+    }
+
+    #[test]
+    fn move_around_large_lists() {
+        #[inline(never)]
+        fn take_push_1(list: LinkedList<usize>) -> LinkedList<usize> {
+            let mut shadow = list;
+            shadow.push_back(1);
+            validate_list(&shadow);
+            shadow
+        }
+
+        let mut list = LinkedList::new();
+        for i in 0..10000 {
+            list.push_back(i);
+            list.push_front(20000 - i);
+        }
+        validate_list(&list);
+        let other_list = list;
+        validate_list(&other_list);
+
+        let list_back = take_push_1(other_list);
+        validate_list(&list_back);
+    }
+
+    #[test]
+    fn move_to_closure() {
+        struct SomeType(i32);
+        struct Coeff(Box<i32>);
+
+        let coef = Coeff(Box::new(2));
+        let mut list = LinkedList::new();
+        for i in 0..1000 {
+            list.push_back(SomeType(21 - i));
+            list.push_front(SomeType(21 + i));
+        }
+
+        let closure_with_ownership =
+            |list: LinkedList<SomeType>, sum: i32| *coef.0 * sum / list.len() as i32;
+        let closure_with_move = move || {
+            let sum: i32 = list.iter().map(|x| x.0).sum();
+            closure_with_ownership(list, sum)
+        };
+
+        let average_per_element = closure_with_move();
+        assert_eq!(42, average_per_element);
+    }
+
+    #[test]
+    fn send() {
+        let mut list = LinkedList::new();
+        for _ in 0..1000 {
+            list.push_back(1);
+            list.push_front(2);
+        }
+
+        let handle = std::thread::spawn(move || list.iter().sum::<usize>());
+        let result = handle.join().expect("must work");
+        assert_eq!(1000 * (1 + 2), result);
     }
 }

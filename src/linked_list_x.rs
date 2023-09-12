@@ -2,18 +2,26 @@ use crate::{linked_list::IS_SOME, node::LinkedListNode, LinkedList};
 use orx_imp_vec::prelude::{PinnedVec, SplitVec};
 use std::marker::PhantomData;
 
-/// `LinkedListX` is a **structurally immutable** `LinkedList`.
+/// `LinkedListX` is a **structurally immutable** [`LinkedList`].
 /// In other words, it is a linked list which is done building:
 ///
 /// * no insertions or removals are allowed from the list,
 /// * the list cannot be cleared.
 ///
-/// On the other hand, having a mut reference, the data of the elements
+/// On the other hand, having a `mut` reference, the data of the elements
 /// can still be mutated.
 ///
 /// Note that it is possible to convert a `LinkedList` to a `LinkedListX`
 /// using `built(self)` and vice versa by `continue_building(self)` methods.
-/// Both methods are consuming and the conversions are cheap.
+/// Both methods are consuming and the conversions are cheap
+/// (equivalent to adding/removing a `RefCell` indirection).
+///
+/// Another major difference is between the implementation of `Send` and `Sync` traits:
+///
+/// | type / trait | `Send` | `Sync` |
+/// |:---    |   :----:   |   :----:   |
+/// |     `LinkedList`  | +    | -    |
+/// | `LinkedListX`     | +    | +    |
 ///
 /// # Examples
 ///
@@ -445,7 +453,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{LinkedList, MemoryUtilization};
+    use crate::{test::validator::validate_list_x, LinkedList, MemoryUtilization};
 
     #[test]
     fn len_is_empty() {
@@ -607,5 +615,136 @@ mod tests {
         let list = list.continue_building();
         assert_eq!(vec!['a', 'b', 'c', 'd'], list.collect_vec());
         assert_eq!(MemoryUtilization::default(), list.memory_utilization);
+    }
+
+    #[test]
+    fn move_around() {
+        #[inline(never)]
+        fn take_push_sum(mut list: LinkedList<usize>) -> LinkedList<usize> {
+            let clone = list.clone();
+            let sum: usize = clone.iter().sum();
+            validate_list_x(&clone.built());
+
+            list.push_back(sum);
+            let built = list.built();
+            validate_list_x(&built);
+            built.continue_building()
+        }
+        #[inline(never)]
+        fn take_push_1(list: LinkedList<usize>) -> LinkedList<usize> {
+            let mut shadow = list;
+            shadow.push_back(1);
+            let built = shadow.built();
+            validate_list_x(&built);
+            built.continue_building()
+        }
+
+        let mut list = LinkedList::new();
+        list.push_back(0);
+        let list = take_push_1(list); // 0-1
+        let list = take_push_sum(list); // 0-1-1
+        let list = take_push_sum(list); // 0-1-1-2
+        let list = take_push_sum(list); // 0-1-1-2-4
+        let list = take_push_sum(list); // 0-1-1-2-4-8
+        let list = take_push_sum(list); // 0-1-1-2-4-8-16
+        let list = take_push_sum(list); // 0-1-1-2-4-8-16-32
+        let list = take_push_1(list); // 0-1-1-2-4-8-16-32-1
+
+        assert_eq!(vec![0, 1, 1, 2, 4, 8, 16, 32, 1], list);
+        validate_list_x(&list.built());
+    }
+
+    #[test]
+    fn move_around_large_lists() {
+        #[inline(never)]
+        fn take_push_1(list: LinkedList<usize>) -> LinkedList<usize> {
+            let mut shadow = list;
+            shadow.push_back(1);
+            let built = shadow.built();
+            validate_list_x(&built);
+            built.continue_building()
+        }
+
+        let mut list = LinkedList::new();
+        for i in 0..10000 {
+            list.push_back(i);
+            list.push_front(20000 - i);
+        }
+
+        let built = list.built();
+        validate_list_x(&built);
+        let list = built.continue_building();
+        let other_list = list;
+        let built = other_list.built();
+        validate_list_x(&built);
+        let other_list = built.continue_building();
+
+        let list_back = take_push_1(other_list);
+        validate_list_x(&list_back.built());
+    }
+
+    #[test]
+    fn move_to_closure() {
+        struct SomeType(i32);
+        struct Coeff(Box<i32>);
+
+        let coef = Coeff(Box::new(2));
+        let mut list = LinkedList::new();
+        for i in 0..1000 {
+            list.push_back(SomeType(21 - i));
+            list.push_front(SomeType(21 + i));
+        }
+
+        let list = list.built();
+
+        let closure_with_ownership =
+            |list: LinkedListX<SomeType>, sum: i32| *coef.0 * sum / list.len() as i32;
+        let closure_with_move = move || {
+            let sum: i32 = list.iter().map(|x| x.0).sum();
+            closure_with_ownership(list, sum)
+        };
+
+        let average_per_element = closure_with_move();
+        assert_eq!(42, average_per_element);
+    }
+
+    #[test]
+    fn send() {
+        let mut list = LinkedList::new();
+        for _ in 0..1000 {
+            list.push_back(1);
+            list.push_front(2);
+        }
+        let listx = list.built();
+
+        let handle = std::thread::spawn(move || listx.iter().sum::<usize>());
+        let result = handle.join().expect("must work");
+        assert_eq!(1000 * (1 + 2), result);
+    }
+    #[test]
+    fn sync() {
+        let mut list = LinkedList::new();
+        for _ in 0..1000 {
+            list.push_back(1);
+            list.push_front(2);
+        }
+        let listx = list.built();
+        let shared = std::sync::Arc::new(listx);
+
+        let mut handles = vec![];
+        for i in 0..10 {
+            let shared = std::sync::Arc::clone(&shared);
+            let handle = std::thread::spawn(move || shared.iter().sum::<usize>() + i);
+            handles.push(handle);
+        }
+        let mut results: Vec<_> = handles
+            .into_iter()
+            .map(|h| h.join().expect("must succeed"))
+            .collect();
+        results.sort();
+        assert!(results
+            .iter()
+            .enumerate()
+            .all(|(i, sum)| *sum == 1000 * (1 + 2) + i));
     }
 }

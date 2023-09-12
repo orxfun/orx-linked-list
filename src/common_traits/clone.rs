@@ -12,11 +12,9 @@ where
         for i in 0..imp.len() {
             if i == 0 || imp[i].data.is_some() {
                 if let Some(prev) = self.vec[i].prev {
-                    dbg!("prev", i, self.vec.index_of(prev));
                     imp.set_prev(i, self.vec.index_of(prev));
                 }
                 if let Some(next) = self.vec[i].next {
-                    dbg!("next", i, self.vec.index_of(next));
                     imp.set_next(i, self.vec.index_of(next));
                 }
             }
