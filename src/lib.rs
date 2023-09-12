@@ -172,6 +172,7 @@ mod new;
 mod node;
 /// Common traits, enums and structs.
 pub mod prelude;
+mod test;
 mod variants;
 
 pub use crate::linked_list::LinkedList;
