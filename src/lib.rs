@@ -81,13 +81,13 @@
 //! * `Lazy`: `memory_reclaim` is never called automatically:
 //!     * leads to the cheapest possible `pop_back`, `pop_front` or `remove_at` operations,
 //!     * however, the utilization of the vector can be low especially when a large number of elements enter and exit the linked list.
-//!     * might be a better fit where keeping the time complexity of these operations at *O(1)* is important; or when utilization is not expected to drop too low.
+//!     * would be a good fit when it is important keeping the above mentioned operations at as fast as possible; or when utilization is not expected to drop very low.
 //! * `Eager`: every `pop_back`, `pop_front` or `remove_at` method call is automatically followed by a `memory_reclaim` call:
 //!     * this strategy continuously keeps the vector without gaps at 100% utilization;
 //!     * however, abovementioned operations require *O(n)* time complexity;
-//!     * might be a better fit where memory is scarce and more important than the increased time-complexity of these methods.
+//!     * might be a good fit when memory is scarce and more important than the increased time-complexity of these methods.
 //! * `WithThreshold(threshold)`: `pop_back`, `pop_front` or `remove_at` method call is followed by an automatic `memory_reclaim` call only if the memory utilization drops below a pre-determined `threshold`:
-//!     * it is a generalization of `Lazy` and `Eager` allowing to select the required threshold level between memory utilization and amortized time complexity of these methods. Note that setting the least memory utilization to a value lower than 1.0 would still least to a constant amortized time complexity.
+//!     * it is a generalization of `Lazy` and `Eager` allowing to select the required threshold level between memory utilization and amortized time complexity of these methods.
 //!
 //! Memory utilization stategy is defined by a field which can be modified any time.
 //!
