@@ -1,13 +1,24 @@
 [package]
 name = "orx-linked-list"
-version = "0.8.5"
+version = "1.0.0"
 edition = "2021"
 authors = ["orxfun <orx.ugur.arikan@gmail.com>"]
-description = "An efficient doubly linked list using thin references with a focus on better cache locality avoiding heap allocations by smart pointers."
+description = "An efficient doubly linked list using regular & references with a focus on better cache locality avoiding heap allocations by smart pointers."
 license = "MIT"
 repository = "https://github.com/orxfun/orx-linked-list/"
 keywords = ["linked", "list", "vec", "array", "pinned"]
-categories = ["data-structures"]
+categories = ["data-structures", "rust-patterns"]
 
 [dependencies]
-orx-imp-vec = "0.9.7"
+orx-imp-vec = "1.0"
+orx-split-vec = "1.2"
+
+
+[dev-dependencies]
+rand = "0.8"
+rand_chacha = "0.3"
+criterion = { version = "0.5", features = ["html_reports"] }
+
+[[bench]]
+name = "mutation_ends"
+harness = false
