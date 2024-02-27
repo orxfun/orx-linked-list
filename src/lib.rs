@@ -1,115 +1,97 @@
 //! # orx-linked-list
 //!
-//! An efficient doubly linked list using regular `&` references with a focus to avoid smart pointers and improve cache locality.
+//! An efficient and recursive singly and doubly linked list implementation.
 //!
-//! ## A. Motivation
+//! ## Variants and Time Complexity of Methods
 //!
-//! Self referential, often recursive, collections contain an important set of useful data structures including linked lists. However, building these structures with references `&` is not possible in safe rust.
+//! * `type SinglyLinkedList<'a, T> = List<'a, Singly, T>;`
+//! * `type DoublyLinkedList<'a, T> = List<'a, Doubly, T>;`
 //!
-//! Alternatively, these collections can be built using reference counted smart pointers such as `std::rc::Rc` and independent heap allocations. However, independent heap allocations is a drawback as the elements do not live close to each other leading to poor cache locality. Further, reference counted pointers have a runtime overhead. This crate makes use of [`orx_imp_vec::ImpVec`](https://crates.io/crates/orx-imp-vec) as the underlying storage which specializes in building such collections.
+//! ## Time Complexity of Methods
 //!
-//! ### Standard LinkedList
+//! | Method    | Time Complexity |
+//! | -------- | ------- |
+//! | access to front and back of the list  | **O(1)**    |
+//! | push to front and back (`Doubly` only) of the list | **O(1)**     |
+//! | pop from front and back (`Doubly` only) of the list    | **O(1)** |
+//! | insert at an arbitrary position    | O(n)    |
+//! | remove from an arbitrary position    | O(n)    |
+//! | append another list to the front or back of the list    | **O(1)**    |
+//! | retain elements by a predicate    | O(n)    |
+//! | retain and collect remove elements    | O(n)    |
+//! | iteration forwards or backwards (only `Doubly`)    | O(n)    |
 //!
-//! `std::collections::LinkedList` implementation avoids reference counted pointers and uses `NonNull` instead, most likely to avoid this overhead. However, this leads to a risky and difficult implementation that feels more low level than it should. You may see the implementation [here](https://doc.rust-lang.org/src/alloc/collections/linked_list.rs.html). The `unsafe` keyword is used more than 60 times in this file. These are usually related to reading from and writing to memory through raw pointers.
 //!
-//! ***Motivation:*** We do not need to count references provided that all elements and inter-element references belong to the same owner or container. This is because all elements will be dropped at the same time together with their inter-element references when the container `ImpVec` is dropped.
-//!
-//! ***Motivation:*** We should be able to define these structures without directly accessing memory through raw pointers. This is unnecessarily powerful and risky. Instead, unsafe code must be limited to methods which are specialized for and only allow defining required connections of self referential collections.
-//!
-//! ### orx_linked_list::LinkedList
-//!
-//! Linked list implementation in this crate uses an `ImpVec` as the underlying storage and makes use of its specialized methods. This brings the following advantages:
-//!
-//! * Allows for a higher level implementation without any use of raw pointers.
-//! * Avoids smart pointers.
-//! * Avoids almost completely accessing through integer indices.
-//! * All nodes belong to the same `ImpVec` living close to each other. This allows for better cache locality.
-//! * Full fetched doubly-linked-list implementation uses the `unsafe` keyword seven times, which are repeated uses of three methods:
-//!   * `ImpVec::push_get_ref`
-//!   * `ImpVec::move_get_ref`
-//!   * `ImpVec::unsafe_truncate` (*a deref method from [`PinnedVec`](https://crates.io/crates/orx-pinned-vec)*)
-//!
-//! Furthermore, this implementation is more performant than the standard library implementation, a likely indicator of better cache locality. You may below the benchmark results for a series of random push/pop mutations after pushing "number of elements" elements to the list.
-//!
-//! <img src="https://raw.githubusercontent.com/orxfun/orx-linked-list/main/docs/img/bench_mutation_ends.PNG" alt="https://raw.githubusercontent.com/orxfun/orx-linked-list/main/docs/img/bench_mutation_ends.PNG" />
-//!
-//! ## B. Features
-//!
-//! `orx_linked_list::LinkedList` implementation provides standard linked list opeartions such as constant time insertions and removals. Further, it reflects the **recursive** nature of the data structure through so called `LinkedListSlice`s. The caller can move to the desired element of the linked list and get the rest of the list as a linked list slice; which is nothing but an immutable linked list. Furthermore, slices can simply be `collect`ed as an owned linked list.
+//! ## Examples
 //!
 //! ```rust
 //! use orx_linked_list::*;
 //!
-//! // BASIC
-//! let mut list = LinkedList::new();
-//! list.extend(vec!['a', 'b', 'c']);
+//! fn eq<'a, I: Iterator<Item = &'a u32> + Clone>(iter: I, slice: &[u32]) -> bool {
+//!     iter.clone().count() == slice.len() && iter.zip(slice.iter()).all(|(a, b)| a == b)
+//! }
 //!
-//! assert_eq!(list.len(), 3);
-//! assert!(list.contains(&'b'));
-//! assert_eq!(list.index_of(&'c'), Some(2));
-//! assert_eq!(list.from_back_index_of(&'c'), Some(0));
+//! let _list: List<Singly, u32> = List::new();
+//! let _list = SinglyLinkedList::<u32>::new();
+//! let _list: List<Doubly, u32> = List::new();
+//! let _list = DoublyLinkedList::<u32>::new();
 //!
-//! list.push_back('d');
-//! assert_eq!(Some(&'d'), list.back());
+//! let mut list = DoublyLinkedList::from_iter([3, 4, 5]);
+//! assert_eq!(list.front(), Some(&3));
+//! assert_eq!(list.back(), Some(&5));
+//! assert!(eq(list.iter(), &[3, 4, 5]));
+//! assert!(eq(list.iter_from_back(), &[5, 4, 3]));
 //!
-//! *list.get_at_mut(0).unwrap() = 'x';
+//! assert_eq!(list.pop_front(), Some(3));
+//! assert_eq!(list.pop_back(), Some(5));
 //!
-//! list.push_front('e');
-//! *list.front_mut().unwrap() = 'f';
+//! list.push_back(5);
+//! list.push_front(3);
+//! assert!(eq(list.iter(), &[3, 4, 5]));
 //!
-//! _ = list.remove_at(1);
-//! _ = list.pop_back();
-//! list.insert_at(0, 'x');
-//! list.clear();
-//! list.push_front('y');
-//! list.pop_front();
+//! let other = DoublyLinkedList::from_iter([6, 7, 8, 9]);
+//! list.append_back(other);
+//! assert!(eq(list.iter(), &[3, 4, 5, 6, 7, 8, 9]));
 //!
-//! // ITER
-//! let list: LinkedList<_> = ['a', 'b', 'c', 'd', 'e'].into_iter().collect();
+//! let other = DoublyLinkedList::from_iter([0, 1, 2]);
+//! list.append_front(other);
+//! assert!(eq(list.iter(), &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
 //!
-//! let forward: Vec<_> = list.iter().copied().collect();
-//! assert_eq!(forward, &['a', 'b', 'c', 'd', 'e']);
+//! list.retain(&|x| x < &5);
+//! assert!(eq(list.iter(), &[0, 1, 2, 3, 4]));
 //!
-//! let backward: Vec<_> = list.iter_from_back().copied().collect();
-//! assert_eq!(backward, &['e', 'd', 'c', 'b', 'a']);
+//! let mut odds = vec![];
+//! let mut collect_odds = |x| odds.push(x);
+//! list.retain_collect(&|x| x % 2 == 0, &mut collect_odds);
 //!
-//! // SPLITS
-//! let (left, right) = list.split(2).unwrap();
-//! assert_eq!(left, &['a', 'b']);
-//! assert_eq!(right, &['c', 'd', 'e']);
-//! // left & right are also nothing but immutable linked lists
-//! assert_eq!(right.front(), Some(&'c'));
-//! assert_eq!(left.back(), Some(&'b'));
-//!
-//! let (front, after) = list.split_front().unwrap();
-//! assert_eq!(front, &'a');
-//! assert_eq!(after, &['b', 'c', 'd', 'e']);
-//!
-//! let (before, back) = list.split_back().unwrap();
-//! assert_eq!(before, &['a', 'b', 'c', 'd']);
-//! assert_eq!(back, &'e');
-//!
-//! let (left, right) = list.split_before(&'d').unwrap();
-//! assert_eq!(left, &['a', 'b', 'c']);
-//! assert_eq!(right, &['d', 'e']);
-//!
-//! let (left, right) = list.split_after(&'d').unwrap();
-//! assert_eq!(left, &['a', 'b', 'c', 'd']);
-//! assert_eq!(right, &['e']);
-//!
-//! // RECURSIVE SPLITS
-//! let (left1, left2) = left.split(1).unwrap();
-//! assert_eq!(left1, &['a']);
-//! assert_eq!(left2, &['b', 'c', 'd']);
-//!
-//! // SPLIT TO OWNED
-//! let mut left_list = left.collect();
-//!
-//! assert_eq!(left_list, &['a', 'b', 'c', 'd']);
-//! _ = left_list.pop_front();
-//! _ = left_list.pop_back();
-//! assert_eq!(left_list, &['b', 'c']);
+//! assert!(eq(list.iter(), &[0, 2, 4]));
+//! assert!(eq(odds.iter(), &[1, 3]));
 //! ```
+//!
+//! ## Internal Features
+//!
+//! `orx_linked_list::List` makes use of the safety guarantees and efficiency features of [orx-selfref-col::SelfRefCol](https://crates.io/crates/orx-selfref-col).
+//! * `SelfRefCol` constructs its safety guarantees around the fact that all references will be among elements of the same collection. By preventing bringing in external references or leaking out references, it is safe to build the self referential collection with **regular `&` references**.
+//! * With careful encapsulation, `SelfRefCol` prevents passing in external references to the list and leaking within list node references to outside. Once this is established, it provides methods to easily mutate inter list node references. These features allowed a very convenient implementation of the linked list in this crate with almost no use of the `unsafe` keyword, no read or writes through pointers and no access by indices. Compared to the `std::collections::LinkedList` implementation, it can be observed that `orx_linked_list::List` is a much **higher level implementation**.
+//! * Furthermore, `orx_linked_list::List` is **significantly faster** than the standard linked list. One of the main reasons for this is the feature of `SelfRefCol` keeping all close to each other rather than at arbitrary locations in memory which leads to a better cache locality.
+//!
+//! ## Benchmarks
+//!
+//! ### Mutation Ends
+//!
+//! *You may see the benchmark at [benches/mutation_ends.rs](https://github.com/orxfun/orx-linked-list/blob/main/benches/mutation_ends.rs).*
+//!
+//! This benchmark compares time performance of calls to `push_front`, `push_back`, `pop_front` and `pop_back` methods.
+//!
+//! <img src="https://raw.githubusercontent.com/orxfun/orx-linked-list/main/docs/img/bench_mutation_ends.PNG" alt="https://raw.githubusercontent.com/orxfun/orx-linked-list/main/docs/img/bench_mutation_ends.PNG" />
+//!
+//! ### Iteration
+//!
+//! *You may see the benchmark at [benches/iter.rs](https://github.com/orxfun/orx-linked-list/blob/main/benches/iter.rs).*
+//!
+//! This benchmark compares time performance of iteration through the `iter` method.
+//!
+//! <img src="https://raw.githubusercontent.com/orxfun/orx-linked-list/main/docs/img/iter.PNG" alt="https://raw.githubusercontent.com/orxfun/orx-linked-list/main/docs/img/iter.PNG" />
 //!
 //! ## License
 //!
@@ -127,16 +109,11 @@
     clippy::todo
 )]
 
-mod eq;
-mod extend;
-mod from_iter;
-mod iter;
-mod linked_list;
-mod linked_list_slice;
-mod linked_list_view;
-mod mem;
-mod node;
+mod common_traits;
+mod iterators;
+mod list;
+mod option_utils;
+mod variants;
 
-pub use linked_list::LinkedList;
-pub use linked_list_view::LinkedListView;
-pub use mem::{MemoryStatus, MemoryUtilization};
+pub use list::{DoublyLinkedList, List, SinglyLinkedList};
+pub use variants::{doubly::Doubly, singly::Singly};
