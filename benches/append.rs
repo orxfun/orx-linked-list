@@ -53,26 +53,14 @@ fn get_std_vecdeque(actions: &[Action]) -> std::collections::VecDeque<u32> {
 
 // variants
 fn bench_orx_linked_list(group: &mut BenchmarkGroup<'_, WallTime>, data: &[Action], n: &usize) {
-    fn run(list: &orx_linked_list::DoublyLinkedList<u32>) -> u32 {
-        list.iter().sum()
-    }
-
     group.bench_with_input(
         BenchmarkId::new("orx_linked_list::DoublyLinkedList", n),
         n,
         |b, _| {
-            let list = get_orx_linked_list(data);
-            b.iter(|| run(&list))
+            let mut list = get_orx_linked_list(data);
+            b.iter(|| list.append_back(get_orx_linked_list(data)))
         },
     );
-}
-
-fn std_linked_list(list: &std::collections::LinkedList<u32>) -> u32 {
-    list.iter().sum()
-}
-
-fn std_vecdeque(list: &std::collections::VecDeque<u32>) -> u32 {
-    list.iter().sum()
 }
 
 fn bench(c: &mut Criterion) {
@@ -84,7 +72,7 @@ fn bench(c: &mut Criterion) {
         1_024 * 16 * 4 * 4,
     ];
 
-    let mut group = c.benchmark_group("iter");
+    let mut group = c.benchmark_group("append");
 
     for n in &treatments {
         let data = get_test_data(*n);
@@ -95,16 +83,16 @@ fn bench(c: &mut Criterion) {
             BenchmarkId::new("std::collections::LinkedList", n),
             n,
             |b, _| {
-                let list = get_std_linked_list(&data);
-                b.iter(|| std_linked_list(&list))
+                let mut list = get_std_linked_list(&data);
+                b.iter(|| list.append(&mut get_std_linked_list(&data)))
             },
         );
         group.bench_with_input(
             BenchmarkId::new("std::collections::VecDeque", n),
             n,
             |b, _| {
-                let list = get_std_vecdeque(&data);
-                b.iter(|| std_vecdeque(&list))
+                let mut list = get_std_vecdeque(&data);
+                b.iter(|| list.append(&mut get_std_vecdeque(&data)))
             },
         );
     }
