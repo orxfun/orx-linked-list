@@ -70,7 +70,7 @@ assert!(eq(odds.iter(), &[1, 3]));
 
 ## Internal Features
 
-`orx_linked_list::List` makes use of the safety guarantees and efficiency features of [orx-selfref-col::SelfRefCol](https://crates.io/crates/orx-selfref-col).
+`orx_linked_list::List` makes use of the safety guarantees and efficiency features of [SelfRefCol](https://crates.io/crates/orx-selfref-col).
 * `SelfRefCol` constructs its safety guarantees around the fact that all references will be among elements of the same collection. By preventing bringing in external references or leaking out references, it is safe to build the self referential collection with **regular `&` references**.
 * With careful encapsulation, `SelfRefCol` prevents passing in external references to the list and leaking within list node references to outside. Once this is established, it provides methods to easily mutate inter list node references. These features allowed a very convenient implementation of the linked list in this crate with almost no use of the `unsafe` keyword, no read or writes through pointers and no access by indices. Compared to the `std::collections::LinkedList` implementation, it can be observed that `orx_linked_list::List` is a much **higher level implementation**.
 * Furthermore, `orx_linked_list::List` is **significantly faster** than the standard linked list. One of the main reasons for this is the feature of `SelfRefCol` keeping all close to each other rather than at arbitrary locations in memory which leads to a better cache locality.
