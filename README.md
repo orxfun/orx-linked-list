@@ -1,5 +1,8 @@
 # orx-linked-list
 
+[![orx-linked-list crate](https://img.shields.io/crates/v/orx-linked-list.svg)](https://crates.io/crates/orx-linked-list)
+[![orx-linked-list documentation](https://docs.rs/orx-linked-list/badge.svg)](https://docs.rs/orx-linked-list)
+
 An efficient and recursive singly and doubly linked list implementation.
 
 ## Variants and Time Complexity of Methods
