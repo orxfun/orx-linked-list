@@ -5,7 +5,7 @@ impl<'a, T> FromIterator<T> for List<'a, Singly, T> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
         let mut col = SelfRefCol::from_iter(iter);
 
-        col.move_mutate((), |x, _| {
+        col.mutate((), |x, _| {
             x.set_ends([x.first_node(), x.last_node()]);
 
             let len = x.len();
@@ -29,7 +29,7 @@ impl<'a, T> FromIterator<T> for List<'a, Doubly, T> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
         let mut col = SelfRefCol::from_iter(iter);
 
-        col.move_mutate((), |x, _| {
+        col.mutate((), |x, _| {
             x.set_ends([x.first_node(), x.last_node()]);
 
             let len = x.len();

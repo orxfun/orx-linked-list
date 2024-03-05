@@ -21,6 +21,7 @@ impl<'a, T> ListEnds<'a, Doubly, T> for EndsDoubly<'a, T> {
 /// * The list keeps track of its `front` and `back`.
 /// * It is possible to iterate from the `front` to the `back` of the list with `iter` method;
 /// and from the `back` to the `front` with `iter_from_back` method.
+#[derive(Clone, Copy, Debug)]
 pub struct Doubly;
 
 impl<'a, T> Variant<'a, T> for Doubly

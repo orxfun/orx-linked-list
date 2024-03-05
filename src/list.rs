@@ -294,7 +294,7 @@ where
     /// ```
     pub fn swap_front(&mut self, new_front: T) -> Option<T> {
         self.col
-            .move_mutate_take(new_front, |x, value| match x.ends().front() {
+            .mutate_take(new_front, |x, value| match x.ends().front() {
                 Some(front_node) => Some(front_node.swap_data(&x, value)),
                 None => {
                     Self::push_first_node(&x, value);
@@ -324,7 +324,7 @@ where
     /// ```
     pub fn swap_back(&mut self, new_back: T) -> Option<T> {
         self.col
-            .move_mutate_take(new_back, |x, value| match x.ends().back() {
+            .mutate_take(new_back, |x, value| match x.ends().back() {
                 Some(back_node) => Some(back_node.swap_data(&x, value)),
                 None => {
                     Self::push_first_node(&x, value);
@@ -353,7 +353,7 @@ where
     /// assert!(list.is_empty());
     /// ```
     pub fn pop_front(&mut self) -> Option<T> {
-        self.col.mutate_take(|x| {
+        self.col.mutate_take((), |x, _| {
             x.ends().front().map(|prior_front| {
                 let new_front = *prior_front.next().get();
                 let new_back = some_only_if(new_front.is_some(), x.ends().back());
@@ -405,15 +405,14 @@ impl<'a, T: 'a> List<'a, Singly, T> {
     /// assert_eq!(Some(&'a'), list.front());
     /// ```
     pub fn push_front(&mut self, value: T) {
-        self.col
-            .move_mutate(value, |x, value| match x.ends().front() {
-                Some(prior_front) => {
-                    let new_front = x.push_get_ref(value);
-                    new_front.set_next(&x, prior_front);
-                    x.set_ends([Some(new_front), x.ends().back()]);
-                }
-                None => Self::push_first_node(&x, value),
-            });
+        self.col.mutate(value, |x, value| match x.ends().front() {
+            Some(prior_front) => {
+                let new_front = x.push_get_ref(value);
+                new_front.set_next(&x, prior_front);
+                x.set_ends([Some(new_front), x.ends().back()]);
+            }
+            None => Self::push_first_node(&x, value),
+        });
     }
 
     /// ***O(1)*** Appends the `other` list to the `front` of this list.
@@ -441,7 +440,7 @@ impl<'a, T: 'a> List<'a, Singly, T> {
     /// assert_eq!(&['d', 'e', 'a', 'b', 'c'], list.iter().copied().collect::<Vec<_>>().as_slice());
     /// ```
     pub fn append_front(&mut self, other: Self) {
-        self.col.move_append_mutate(other.col, (), |x, y, _| {
+        self.col.append_mutate(other.col, (), |x, y, _| {
             match (x.ends().front(), y.ends().back()) {
                 (Some(a), Some(b)) => {
                     b.set_next(&x, a);
@@ -480,7 +479,7 @@ impl<'a, T: 'a> List<'a, Singly, T> {
     /// assert_eq!(&['a', 'b', 'c', 'd', 'e'], list.iter().copied().collect::<Vec<_>>().as_slice());
     /// ```
     pub fn append_back(&mut self, other: Self) {
-        self.col.move_append_mutate(other.col, (), |x, y, _| {
+        self.col.append_mutate(other.col, (), |x, y, _| {
             match (x.ends().back(), y.ends().front()) {
                 (Some(a), Some(b)) => {
                     a.set_next(&x, b);
@@ -525,7 +524,7 @@ impl<'a, T: 'a> List<'a, Singly, T> {
         match at {
             _ if at >= self.len() => None,
             0 => self.pop_front(),
-            _ => self.col.move_mutate_take(at, |x, at| {
+            _ => self.col.mutate_take(at, |x, at| {
                 let (prev, current) = Self::get_prev_and_current_at(&x, at);
                 prev.set_next(&x, *current.next().get());
                 if at == x.len() - 1 {
@@ -566,13 +565,13 @@ impl<'a, T: 'a> List<'a, Singly, T> {
         assert!(at <= self.len(), "out of bounds");
         match at {
             0 => self.push_front(value),
-            at if at == self.len() => self.col.move_mutate((at, value), |x, (at, value)| {
+            at if at == self.len() => self.col.mutate((at, value), |x, (at, value)| {
                 let new_node = x.push_get_ref(value);
                 x.set_ends([x.ends().front(), Some(new_node)]);
                 let (_, prev) = Self::get_prev_and_current_at(&x, at - 1);
                 prev.set_next(&x, new_node);
             }),
-            at => self.col.move_mutate((at, value), |x, (at, value)| {
+            at => self.col.mutate((at, value), |x, (at, value)| {
                 let new_node = x.push_get_ref(value);
                 let (prev, current) = Self::get_prev_and_current_at(&x, at);
                 prev.set_next(&x, new_node);
@@ -689,8 +688,8 @@ impl<'a, T: 'a> List<'a, Singly, T> {
                 }
 
                 x.set_ends([front, back]);
-                x.reclaim_closed_nodes();
             });
+        self.col.reclaim_closed_nodes();
     }
 
     // helpers
@@ -761,16 +760,15 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// assert_eq!(Some(&'a'), list.front());
     /// ```
     pub fn push_front(&mut self, value: T) {
-        self.col
-            .move_mutate(value, |x, value| match x.ends().front() {
-                Some(prior_front) => {
-                    let new_front = x.push_get_ref(value);
-                    new_front.set_next(&x, prior_front);
-                    prior_front.set_prev(&x, new_front);
-                    x.set_ends([Some(new_front), x.ends().back()]);
-                }
-                None => Self::push_first_node(&x, value),
-            });
+        self.col.mutate(value, |x, value| match x.ends().front() {
+            Some(prior_front) => {
+                let new_front = x.push_get_ref(value);
+                new_front.set_next(&x, prior_front);
+                prior_front.set_prev(&x, new_front);
+                x.set_ends([Some(new_front), x.ends().back()]);
+            }
+            None => Self::push_first_node(&x, value),
+        });
     }
 
     /// ***O(1)*** Pushes the `value` to the `back` of the list.
@@ -793,16 +791,15 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// assert_eq!(Some(&'a'), list.back());
     /// ```
     pub fn push_back(&mut self, value: T) {
-        self.col
-            .move_mutate(value, |x, value| match x.ends().back() {
-                Some(prior_back) => {
-                    let new_back = x.push_get_ref(value);
-                    new_back.set_prev(&x, prior_back);
-                    prior_back.set_next(&x, new_back);
-                    x.set_ends([x.ends().front(), Some(new_back)]);
-                }
-                None => Self::push_first_node(&x, value),
-            });
+        self.col.mutate(value, |x, value| match x.ends().back() {
+            Some(prior_back) => {
+                let new_back = x.push_get_ref(value);
+                new_back.set_prev(&x, prior_back);
+                prior_back.set_next(&x, new_back);
+                x.set_ends([x.ends().front(), Some(new_back)]);
+            }
+            None => Self::push_first_node(&x, value),
+        });
     }
 
     /// ***O(1)*** Appends the `other` list to the `front` of this list.
@@ -830,7 +827,7 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// assert_eq!(&['d', 'e', 'a', 'b', 'c'], list.iter().copied().collect::<Vec<_>>().as_slice());
     /// ```
     pub fn append_front(&mut self, other: Self) {
-        self.col.move_append_mutate(other.col, (), |x, y, _| {
+        self.col.append_mutate(other.col, (), |x, y, _| {
             match (x.ends().front(), y.ends().back()) {
                 (Some(a), Some(b)) => {
                     b.set_next(&x, a);
@@ -870,7 +867,7 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// assert_eq!(&['a', 'b', 'c', 'd', 'e'], list.iter().copied().collect::<Vec<_>>().as_slice());
     /// ```
     pub fn append_back(&mut self, other: Self) {
-        self.col.move_append_mutate(other.col, (), |x, y, _| {
+        self.col.append_mutate(other.col, (), |x, y, _| {
             match (x.ends().back(), y.ends().front()) {
                 (Some(a), Some(b)) => {
                     a.set_next(&x, b);
@@ -905,7 +902,7 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// assert!(list.is_empty());
     /// ```
     pub fn pop_back(&mut self) -> Option<T> {
-        self.col.mutate_take(|x| {
+        self.col.mutate_take((), |x, _| {
             x.ends().back().map(|prior_back| {
                 let new_back = *prior_back.prev().get();
                 let new_front = some_only_if(new_back.is_some(), x.ends().front());
@@ -955,12 +952,12 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
             _ => {
                 let at_from_back = self.len() - 1 - at;
                 if at <= at_from_back {
-                    self.col.move_mutate_take(at, |x, at| {
+                    self.col.mutate_take(at, |x, at| {
                         let current = Self::get_node_at(&x, at);
                         Some(Self::remove_node(&x, current))
                     })
                 } else {
-                    self.col.move_mutate_take(at_from_back, |x, at_from_back| {
+                    self.col.mutate_take(at_from_back, |x, at_from_back| {
                         let current = Self::get_node_at_from_back(&x, at_from_back);
                         Some(Self::remove_node(&x, current))
                     })
@@ -1003,13 +1000,13 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
             at => {
                 let at_from_back = self.len() - 1 - at;
                 if at <= at_from_back {
-                    self.col.move_mutate((at, value), |x, (at, value)| {
+                    self.col.mutate((at, value), |x, (at, value)| {
                         let current = Self::get_node_at(&x, at);
                         Self::insert_node(&x, current, value);
                     });
                 } else {
                     self.col
-                        .move_mutate((at_from_back, value), |x, (at_from_back, value)| {
+                        .mutate((at_from_back, value), |x, (at_from_back, value)| {
                             let current = Self::get_node_at_from_back(&x, at_from_back);
                             Self::insert_node(&x, current, value);
                         });
@@ -1127,8 +1124,8 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
                 }
 
                 x.set_ends([front, back]);
-                x.reclaim_closed_nodes();
             });
+        self.col.reclaim_closed_nodes();
     }
 
     // helpers
@@ -1890,48 +1887,5 @@ pub(crate) mod tests {
             assert_eq!(front, singly.front());
             assert_eq!(back, singly.back());
         }
-    }
-
-    #[test]
-    fn asdf() {
-        fn eq<'a, I: Iterator<Item = &'a u32> + Clone>(iter: I, slice: &[u32]) -> bool {
-            iter.clone().count() == slice.len() && iter.zip(slice.iter()).all(|(a, b)| a == b)
-        }
-
-        let _list: List<Singly, u32> = List::new();
-        let _list = SinglyLinkedList::<u32>::new();
-        let _list: List<Doubly, u32> = List::new();
-        let _list = DoublyLinkedList::<u32>::new();
-
-        let mut list = DoublyLinkedList::from_iter([3, 4, 5]);
-        assert_eq!(list.front(), Some(&3));
-        assert_eq!(list.back(), Some(&5));
-        assert!(eq(list.iter(), &[3, 4, 5]));
-        assert!(eq(list.iter_from_back(), &[5, 4, 3]));
-
-        assert_eq!(list.pop_front(), Some(3));
-        assert_eq!(list.pop_back(), Some(5));
-
-        list.push_back(5);
-        list.push_front(3);
-        assert!(eq(list.iter(), &[3, 4, 5]));
-
-        let other = DoublyLinkedList::from_iter([6, 7, 8, 9]);
-        list.append_back(other);
-        assert!(eq(list.iter(), &[3, 4, 5, 6, 7, 8, 9]));
-
-        let other = DoublyLinkedList::from_iter([0, 1, 2]);
-        list.append_front(other);
-        assert!(eq(list.iter(), &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
-
-        list.retain(&|x| x < &5);
-        assert!(eq(list.iter(), &[0, 1, 2, 3, 4]));
-
-        let mut odds = vec![];
-        let mut collect_odds = |x| odds.push(x);
-        list.retain_collect(&|x| x % 2 == 0, &mut collect_odds);
-
-        assert!(eq(list.iter(), &[0, 2, 4]));
-        assert!(eq(odds.iter(), &[1, 3]));
     }
 }

@@ -20,6 +20,7 @@ impl<'a, T> ListEnds<'a, Singly, T> for EndsSingly<'a, T> {
 /// * Each node contains two data elements: the value of the element and a reference to the next node.
 /// * The list keeps track of its `front`.
 /// * It is possible to iterate from the `front` to the back of the list.
+#[derive(Clone, Copy, Debug)]
 pub struct Singly;
 
 impl<'a, T> Variant<'a, T> for Singly
