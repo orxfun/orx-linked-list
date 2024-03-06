@@ -22,7 +22,7 @@ fn large_list_singly() {
         assert_eq!(i, *x);
     }
 
-    assert_eq!(LARGE_LEN, list.iter().len());
+    assert_eq!(LARGE_LEN, list.iter().count());
 
     for i in 0..LARGE_LEN {
         let x = list.pop_front();
@@ -56,8 +56,8 @@ fn large_list_doubly() {
         assert_eq!(LARGE_LEN - 1 - i, *x);
     }
 
-    assert_eq!(LARGE_LEN, list.iter().len());
-    assert_eq!(LARGE_LEN, list.iter_from_back().len());
+    assert_eq!(LARGE_LEN, list.iter().count());
+    assert_eq!(LARGE_LEN, list.iter_from_back().count());
 
     for i in 0..LARGE_LEN {
         let x = list.pop_front();

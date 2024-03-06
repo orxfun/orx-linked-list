@@ -1,9 +1,9 @@
 use crate::{
-    iterators::{from_back::IterFromBack, from_front::IterFromFront},
+    iterators::{backward::IterBackward, forward::IterForward},
     option_utils::some_only_if,
     variants::{doubly::Doubly, ends::ListEnds, list_variant::ListVariant, singly::Singly},
 };
-use orx_selfref_col::{Node, NodeRefs, SelfRefCol};
+use orx_selfref_col::{Node, NodeIndex, NodeIndexError, NodeRefs, SelfRefCol};
 use orx_split_vec::{Recursive, SplitVec};
 
 /// A singly linked [`List`] allowing pushing and popping elements at the front in constant time.
@@ -227,6 +227,10 @@ where
 
     /// ***O(n)*** Returns an iterator to elements of the list from the `front` node to the back.
     ///
+    /// Time complexity:
+    /// * ***O(1)*** to access the front node.
+    /// * ***O(n)*** to iterate forward from the given node.
+    ///
     /// # Examples
     ///
     /// ```rust
@@ -245,8 +249,51 @@ where
     /// assert_eq!(Some(&'c'), iter.next());
     /// assert!(iter.next().is_none());
     /// ```
-    pub fn iter(&self) -> IterFromFront<'_, 'a, V, T> {
-        IterFromFront::new(self.len(), self.col.ends().front())
+    pub fn iter(&self) -> IterForward<'_, 'a, V, T> {
+        IterForward::new(self.col.ends().front())
+    }
+
+    /// ***O(n)*** Creates a forward iterator starting from the node with the given `node_index`.
+    ///
+    /// Returns the corresponding `NodeIndexError` if the given index is invalid for this linked list.
+    ///
+    /// Time complexity:
+    /// * ***O(1)*** to access the front node.
+    /// * ***O(n)*** to iterate forward from the given node.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use orx_linked_list::*;
+    ///
+    /// let mut list = DoublyLinkedList::new();
+    ///
+    /// let b = list.push_front('b');
+    /// list.push_back('c');
+    /// list.push_front('a');
+    /// list.push_back('d'); // list: [a-b-c-d]
+    ///
+    /// let mut iter = list.iter_forward_from(b);
+    ///
+    /// assert!(iter.is_ok());
+    ///
+    /// let mut iter = iter.unwrap();
+    ///
+    /// assert_eq!(Some(&'b'), iter.next());
+    /// assert_eq!(Some(&'c'), iter.next());
+    /// assert_eq!(Some(&'d'), iter.next());
+    /// assert_eq!(None, iter.next());
+    /// ```
+    pub fn iter_forward_from(
+        &self,
+        node_index: NodeIndex<'a, V, T>,
+    ) -> Result<IterForward<'_, 'a, V, T>, NodeIndexError> {
+        match node_index.invalidity_reason_for_collection(&self.col) {
+            None => Ok(IterForward::new(Some(unsafe {
+                node_index.as_ref_unchecked()
+            }))),
+            Some(e) => Err(e),
+        }
     }
 
     // mut
@@ -353,25 +400,217 @@ where
     /// assert!(list.is_empty());
     /// ```
     pub fn pop_front(&mut self) -> Option<T> {
-        self.col.mutate_take((), |x, _| {
-            x.ends().front().map(|prior_front| {
-                let new_front = *prior_front.next().get();
-                let new_back = some_only_if(new_front.is_some(), x.ends().back());
-                x.set_ends([new_front, new_back]);
+        self.col.mutate_take((), |x, _| Self::pop_front_node(&x))
+    }
 
-                if let Some(new_front) = new_front {
-                    new_front.clear_prev(&x);
+    // index
+    /// ***O(1)*** Returns a reference to the node with the given `node_index` in constant time.
+    ///
+    /// Returns None if the index is invalid.
+    ///
+    /// # Safety
+    ///
+    /// `get(node_index)` returns `Some` if all of of the following safety and correctness conditions hold:
+    /// * the index is created from this linked list,
+    /// * the node that this index is created for still belongs to the list`; i.e., it is not removed,
+    /// * the node positions in this list are not reorganized to reclaim memory:
+    ///   * this case is never observed if `MemoryReclaimNever` is used,
+    ///   * this case is observed when:
+    ///     * the memory reclaim policy is `MemoryReclaimOnThreshold`, and
+    ///     * the utilization of active nodes has dropped a threshold due to pop and remove operations.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use orx_linked_list::*;
+    ///
+    /// let mut list = DoublyLinkedList::new();
+    ///
+    /// let a = list.push_back('a');
+    /// let b = list.push_back('b');
+    ///
+    /// assert_eq!(Some(&'a'), list.get(a));
+    /// assert_eq!(Some(&'b'), list.get(b));
+    ///
+    /// list.push_front('c');
+    /// list.push_back('d');
+    /// list.push_front('e');
+    /// list.push_back('f');
+    ///
+    /// assert_eq!(Some(&'a'), list.get(a));
+    /// assert_eq!(Some(&'b'), list.get(b));
+    ///
+    /// list.clear();
+    ///
+    /// assert_eq!(None, list.get(a));
+    /// assert_eq!(None, list.get(b));
+    /// ```
+    pub fn get(&self, node_index: NodeIndex<'a, V, T>) -> Option<&T> {
+        node_index.data(&self.col)
+    }
+
+    /// ***O(1)*** Returns a reference to the node with the given `node_index` in constant time.
+    ///
+    /// Returns None if the index is invalid.
+    ///
+    /// # Safety
+    ///
+    /// `get(node_index)` returns `Some` if all of of the following safety and correctness conditions hold:
+    /// * the index is created from this linked list,
+    /// * the node that this index is created for still belongs to the list`; i.e., it is not removed,
+    /// * the node positions in this list are not reorganized to reclaim memory:
+    ///   * this case is never observed if `MemoryReclaimNever` is used,
+    ///   * this case is observed when:
+    ///     * the memory reclaim policy is `MemoryReclaimOnThreshold`, and
+    ///     * the utilization of active nodes has dropped a threshold due to pop and remove operations.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use orx_linked_list::*;
+    /// use orx_selfref_col::NodeIndexError;
+    ///
+    /// let mut list = DoublyLinkedList::new();
+    ///
+    /// let a = list.push_back('a');
+    /// let b = list.push_back('b');
+    ///
+    /// assert_eq!(Ok(&'a'), list.get_or_error(a));
+    /// assert_eq!(Ok(&'b'), list.get_or_error(b));
+    ///
+    /// list.push_front('c');
+    /// list.push_back('d');
+    /// list.push_front('e');
+    /// list.push_back('f');
+    ///
+    /// assert_eq!(Ok(&'a'), list.get_or_error(a));
+    /// assert_eq!(Ok(&'b'), list.get_or_error(b));
+    ///
+    /// list.clear();
+    ///
+    /// assert_eq!(Some(NodeIndexError::RemovedNode), list.get_or_error(a).err());
+    /// assert_eq!(Some(NodeIndexError::RemovedNode), list.get_or_error(b).err());
+    /// ```
+    pub fn get_or_error(&self, node_index: NodeIndex<'a, V, T>) -> Result<&T, NodeIndexError> {
+        match node_index.data(&self.col) {
+            Some(data) => Ok(data),
+            None => Err(NodeIndexError::RemovedNode),
+        }
+    }
+
+    /// ***O(n)*** Performs a forward search from the front and returns the index of the first node with value equal to the given `value`.
+    ///
+    /// Returns None if there is no element with the given value.
+    ///
+    /// Obtained `NodeIndex` can later be used for constant time access to the corresponding element.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use orx_linked_list::*;
+    /// use orx_selfref_col::NodeIndexError;
+    ///
+    /// let mut list = DoublyLinkedList::from_iter(['a', 'b', 'c', 'd']);
+    ///
+    /// let x = list.index_of(&'x');
+    /// assert!(x.is_none());
+    ///
+    /// let b = list.index_of(&'b'); // O(n)
+    /// assert!(b.is_some());
+    ///
+    /// let b = b.unwrap();
+    ///
+    /// let data_b = list.get(b); // O(1)
+    /// assert_eq!(data_b, Some(&'b'));
+    ///
+    /// // O(1) to create the iterators from the index
+    /// assert_eq!(&['b', 'c', 'd'], list.iter_forward_from(b).unwrap().copied().collect::<Vec<_>>().as_slice());
+    /// assert_eq!(&['b', 'a'], list.iter_backward_from(b).unwrap().copied().collect::<Vec<_>>().as_slice());
+    ///
+    /// list.insert_prev_to(b, 'X').unwrap(); // O(1)
+    /// list.insert_next_to(b, 'Y').unwrap(); // O(1)
+    /// assert_eq!(&['a', 'X', 'b', 'Y', 'c', 'd'], list.iter().copied().collect::<Vec<_>>().as_slice());
+    ///
+    /// let removed = list.remove(b);  // O(1)
+    /// assert_eq!(removed, Ok('b'));
+    /// assert_eq!(&['a', 'X', 'Y', 'c', 'd'], list.iter().copied().collect::<Vec<_>>().as_slice());
+    ///
+    /// assert_eq!(list.get(b), None);
+    /// assert_eq!(list.get_or_error(b).err(), Some(NodeIndexError::RemovedNode));
+    /// ```
+    pub fn index_of(&self, value: &T) -> Option<NodeIndex<'a, V, T>>
+    where
+        T: PartialEq,
+    {
+        self.col.visit_take(value, |x, value| {
+            let mut current = x.ends().front();
+            while let Some(node) = current {
+                match node.data() {
+                    Some(data) if value == data => return Some(node.index(&x)),
+                    _ => current = *node.next().get(),
                 }
-
-                prior_front.close_node_take_data(&x)
-            })
+            }
+            None
         })
+    }
+
+    /// ***O(n)*** Performs a forward search from the front and returns `true` if there exists a node with value equal to the given `value`.
+    ///
+    /// Returns false if there is no element with the given value.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use orx_linked_list::*;
+    ///
+    /// let mut list = DoublyLinkedList::from_iter(['a', 'b', 'c', 'd']);
+    ///
+    /// assert!(list.contains(&'a'));
+    /// assert!(!list.contains(&'x'));
+    /// ```
+    pub fn contains(&self, value: &T) -> bool
+    where
+        T: PartialEq,
+    {
+        self.index_of(value).is_some()
+    }
+
+    /// ***O(n)*** Performs a forward search from the front and returns the position of the first node with value equal to the given `value`.
+    ///
+    /// Returns None if there is no element with the given value.
+    ///
+    /// Note that, unlike vectors, the position of an element does **not** provide a constant time access to the element.
+    /// In order to obtain a `NodeIndex` allowing ***O(1)*** access, use the `index_of` method;
+    /// or store the node index returned when the element is added to the list for the first time by methods such as `push_front` or `insert_next_to`, etc.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use orx_linked_list::*;
+    /// use orx_selfref_col::NodeIndexError;
+    ///
+    /// let mut list = DoublyLinkedList::from_iter(['a', 'b', 'c', 'd']);
+    ///
+    /// let x = list.position_of(&'x');
+    /// assert_eq!(x, None);
+    ///
+    /// let b = list.position_of(&'b'); // O(n)
+    /// assert_eq!(b, Some(1));
+    /// ```
+    pub fn position_of(&self, value: &T) -> Option<usize>
+    where
+        T: PartialEq,
+    {
+        self.iter()
+            .enumerate()
+            .find(|(_, x)| *x == value)
+            .map(|(i, _)| i)
     }
 
     // helpers
     /// Pushes the `value` as the first node of the list and sets both ends to this first node.
     #[inline(always)]
-    fn push_first_node<'rf>(mut_key: &MutKey<'rf, 'a, V, T>, value: T) {
+    fn push_first_node<'rf>(mut_key: &MutKey<'rf, 'a, V, T>, value: T) -> NodeIndex<'a, V, T> {
         debug_assert!(
             mut_key.is_empty()
                 && mut_key.ends().front().is_none()
@@ -379,6 +618,46 @@ where
         );
         let node = mut_key.push_get_ref(value);
         mut_key.set_ends([Some(node), Some(node)]);
+        node.index(mut_key)
+    }
+
+    /// Returns a node reference to the front node of the collection provided that the collection is non-empty.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the collection is empty.
+    fn get_existing_front<'rf>(mut_key: &MutKey<'rf, 'a, V, T>) -> &'rf Node<'a, V, T> {
+        mut_key
+            .ends()
+            .front()
+            .expect("list is nonempty -> front and back exist")
+    }
+
+    /// Returns a node reference to the back node of the collection provided that the collection is non-empty.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the collection is empty.
+    fn get_existing_back<'rf>(mut_key: &MutKey<'rf, 'a, V, T>) -> &'rf Node<'a, V, T> {
+        mut_key
+            .ends()
+            .back()
+            .expect("list is nonempty -> front and back exist")
+    }
+
+    /// Pops the front node and returns its `value`; returns None if the list is empty.
+    fn pop_front_node<'rf>(x: &MutKey<'rf, 'a, V, T>) -> Option<T> {
+        x.ends().front().map(|prior_front| {
+            let new_front = *prior_front.next().get();
+            let new_back = some_only_if(new_front.is_some(), x.ends().back());
+            x.set_ends([new_front, new_back]);
+
+            if let Some(new_front) = new_front {
+                new_front.clear_prev(x);
+            }
+
+            prior_front.close_node_take_data(x)
+        })
     }
 }
 
@@ -404,15 +683,17 @@ impl<'a, T: 'a> List<'a, Singly, T> {
     /// assert_eq!(Some('b'), popped);
     /// assert_eq!(Some(&'a'), list.front());
     /// ```
-    pub fn push_front(&mut self, value: T) {
-        self.col.mutate(value, |x, value| match x.ends().front() {
-            Some(prior_front) => {
-                let new_front = x.push_get_ref(value);
-                new_front.set_next(&x, prior_front);
-                x.set_ends([Some(new_front), x.ends().back()]);
-            }
-            None => Self::push_first_node(&x, value),
-        });
+    pub fn push_front(&mut self, value: T) -> NodeIndex<'a, Singly, T> {
+        self.col
+            .mutate_take(value, |x, value| match x.ends().front() {
+                Some(prior_front) => {
+                    let new_front = x.push_get_ref(value);
+                    new_front.set_next(&x, prior_front);
+                    x.set_ends([Some(new_front), x.ends().back()]);
+                    new_front.index(&x)
+                }
+                None => Self::push_first_node(&x, value),
+            })
     }
 
     /// ***O(1)*** Appends the `other` list to the `front` of this list.
@@ -561,21 +842,23 @@ impl<'a, T: 'a> List<'a, Singly, T> {
     /// list.insert_at(1, 'x');
     /// assert_eq!(&['a', 'x', 'b', 'c'], list.iter().copied().collect::<Vec<_>>().as_slice());
     ///```
-    pub fn insert_at(&mut self, at: usize, value: T) {
+    pub fn insert_at(&mut self, at: usize, value: T) -> NodeIndex<'a, Singly, T> {
         assert!(at <= self.len(), "out of bounds");
         match at {
             0 => self.push_front(value),
-            at if at == self.len() => self.col.mutate((at, value), |x, (at, value)| {
+            at if at == self.len() => self.col.mutate_take((at, value), |x, (at, value)| {
                 let new_node = x.push_get_ref(value);
                 x.set_ends([x.ends().front(), Some(new_node)]);
                 let (_, prev) = Self::get_prev_and_current_at(&x, at - 1);
                 prev.set_next(&x, new_node);
+                new_node.index(&x)
             }),
-            at => self.col.mutate((at, value), |x, (at, value)| {
+            at => self.col.mutate_take((at, value), |x, (at, value)| {
                 let new_node = x.push_get_ref(value);
                 let (prev, current) = Self::get_prev_and_current_at(&x, at);
                 prev.set_next(&x, new_node);
                 new_node.set_next(&x, current);
+                new_node.index(&x)
             }),
         }
     }
@@ -715,6 +998,82 @@ impl<'a, T: 'a> List<'a, Singly, T> {
 
 impl<'a, T: 'a> List<'a, Doubly, T> {
     // get
+    /// ***O(n)*** Performs a backward search from the back and returns the index of the first node with value equal to the given `value`.
+    ///
+    /// Returns None if there is no element with the given value.
+    ///
+    /// Obtained `NodeIndex` can later be used for constant time access to the corresponding element.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use orx_linked_list::*;
+    /// use orx_selfref_col::NodeIndexError;
+    ///
+    /// let mut list = DoublyLinkedList::from_iter(['a', 'b', 'c', 'd']);
+    ///
+    /// let x = list.index_of_from_back(&'x');
+    /// assert!(x.is_none());
+    ///
+    /// let b = list.index_of_from_back(&'b'); // O(n)
+    /// assert!(b.is_some());
+    ///
+    /// let b = b.unwrap();
+    ///
+    /// let data_b = list.get(b); // O(1)
+    /// assert_eq!(data_b, Some(&'b'));
+    ///
+    /// // O(1) to create the iterators from the index
+    /// assert_eq!(&['b', 'c', 'd'], list.iter_forward_from(b).unwrap().copied().collect::<Vec<_>>().as_slice());
+    /// assert_eq!(&['b', 'a'], list.iter_backward_from(b).unwrap().copied().collect::<Vec<_>>().as_slice());
+    ///
+    /// list.insert_prev_to(b, 'X').unwrap(); // O(1)
+    /// list.insert_next_to(b, 'Y').unwrap(); // O(1)
+    /// assert_eq!(&['a', 'X', 'b', 'Y', 'c', 'd'], list.iter().copied().collect::<Vec<_>>().as_slice());
+    ///
+    /// let removed = list.remove(b);  // O(1)
+    /// assert_eq!(removed, Ok('b'));
+    /// assert_eq!(&['a', 'X', 'Y', 'c', 'd'], list.iter().copied().collect::<Vec<_>>().as_slice());
+    ///
+    /// assert_eq!(list.get(b), None);
+    /// assert_eq!(list.get_or_error(b).err(), Some(NodeIndexError::RemovedNode));
+    /// ```
+    pub fn index_of_from_back(&self, value: &T) -> Option<NodeIndex<'a, Doubly, T>>
+    where
+        T: PartialEq,
+    {
+        self.col.visit_take(value, |x, value| {
+            let mut current = x.ends().back();
+            while let Some(node) = current {
+                match node.data() {
+                    Some(data) if value == data => return Some(node.index(&x)),
+                    _ => current = *node.prev().get(),
+                }
+            }
+            None
+        })
+    }
+
+    /// ***O(n)*** Performs a backward search from the back and returns `true` if there exists a node with value equal to the given `value`.
+    ///
+    /// Returns false if there is no element with the given value.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use orx_linked_list::*;
+    ///
+    /// let mut list = DoublyLinkedList::from_iter(['a', 'b', 'c', 'd']);
+    ///
+    /// assert!(list.contains_from_back(&'a'));
+    /// assert!(!list.contains_from_back(&'x'));
+    /// ```
+    pub fn contains_from_back(&self, value: &T) -> bool
+    where
+        T: PartialEq,
+    {
+        self.index_of_from_back(value).is_some()
+    }
 
     /// ***O(n)*** Returns an iterator to elements of the list from the `back` node to the front.
     ///
@@ -736,8 +1095,50 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// assert_eq!(Some(&'a'), iter.next());
     /// assert!(iter.next().is_none());
     /// ```
-    pub fn iter_from_back(&self) -> IterFromBack<'_, 'a, T> {
-        IterFromBack::new(self.len(), self.col.ends().back())
+    pub fn iter_from_back(&self) -> IterBackward<'_, 'a, Doubly, T> {
+        IterBackward::new(self.col.ends().back())
+    }
+
+    /// ***O(n)*** Creates a backward iterator starting from the node with the given `node_index`.
+    ///
+    /// Returns the corresponding `NodeIndexError` if the given index is invalid for this linked list.
+    ///
+    /// Time complexity:
+    /// * ***O(1)*** to access the front node.
+    /// * ***O(n)*** to iterate forward from the given node.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use orx_linked_list::*;
+    ///
+    /// let mut list = DoublyLinkedList::new();
+    ///
+    /// let b = list.push_front('b');
+    /// list.push_back('c');
+    /// list.push_front('a');
+    /// list.push_back('d'); // list: [a-b-c-d]
+    ///
+    /// let mut iter = list.iter_backward_from(b);
+    ///
+    /// assert!(iter.is_ok());
+    ///
+    /// let mut iter = iter.unwrap();
+    ///
+    /// assert_eq!(Some(&'b'), iter.next());
+    /// assert_eq!(Some(&'a'), iter.next());
+    /// assert_eq!(None, iter.next());
+    /// ```
+    pub fn iter_backward_from(
+        &self,
+        node_index: NodeIndex<'a, Doubly, T>,
+    ) -> Result<IterBackward<'_, 'a, Doubly, T>, NodeIndexError> {
+        match node_index.invalidity_reason_for_collection(&self.col) {
+            None => Ok(IterBackward::new(Some(unsafe {
+                node_index.as_ref_unchecked()
+            }))),
+            Some(e) => Err(e),
+        }
     }
 
     /// ***O(1)*** Pushes the `value` to the `front` of the list.
@@ -759,16 +1160,9 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// assert_eq!(Some('b'), popped);
     /// assert_eq!(Some(&'a'), list.front());
     /// ```
-    pub fn push_front(&mut self, value: T) {
-        self.col.mutate(value, |x, value| match x.ends().front() {
-            Some(prior_front) => {
-                let new_front = x.push_get_ref(value);
-                new_front.set_next(&x, prior_front);
-                prior_front.set_prev(&x, new_front);
-                x.set_ends([Some(new_front), x.ends().back()]);
-            }
-            None => Self::push_first_node(&x, value),
-        });
+    pub fn push_front(&mut self, value: T) -> NodeIndex<'a, Doubly, T> {
+        self.col
+            .mutate_take(value, |x, value| Self::push_front_node(&x, value))
     }
 
     /// ***O(1)*** Pushes the `value` to the `back` of the list.
@@ -790,16 +1184,9 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// assert_eq!(Some('b'), popped);
     /// assert_eq!(Some(&'a'), list.back());
     /// ```
-    pub fn push_back(&mut self, value: T) {
-        self.col.mutate(value, |x, value| match x.ends().back() {
-            Some(prior_back) => {
-                let new_back = x.push_get_ref(value);
-                new_back.set_prev(&x, prior_back);
-                prior_back.set_next(&x, new_back);
-                x.set_ends([x.ends().front(), Some(new_back)]);
-            }
-            None => Self::push_first_node(&x, value),
-        });
+    pub fn push_back(&mut self, value: T) -> NodeIndex<'a, Doubly, T> {
+        self.col
+            .mutate_take(value, |x, value| Self::push_back_node(&x, value))
     }
 
     /// ***O(1)*** Appends the `other` list to the `front` of this list.
@@ -966,6 +1353,61 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
         }
     }
 
+    /// ***O(1)*** Removes and returns value of the element with the given `node_index`.
+    ///
+    /// Does not change the list and returns the `NodeIndexError` if the node index is invalid.
+    ///
+    /// # Safety
+    ///
+    /// Removal is carried out only if the `node_index` is valid.
+    /// And the node index is valid if all of of the following safety and correctness conditions hold:
+    /// * the index is created from this linked list,
+    /// * the node that this index is created for still belongs to the list`; i.e., it is not removed,
+    /// * the node positions in this list are not reorganized to reclaim memory:
+    ///   * this case is never observed if `MemoryReclaimNever` is used,
+    ///   * this case is observed when:
+    ///     * the memory reclaim policy is `MemoryReclaimOnThreshold`, and
+    ///     * the utilization of active nodes has dropped a threshold due to pop and remove operations.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use orx_linked_list::*;
+    /// use orx_selfref_col::NodeIndexError;
+    ///
+    /// let mut list = DoublyLinkedList::new();
+    ///
+    /// list.push_back('a');
+    /// let b = list.push_back('b');
+    /// list.push_back('c');
+    /// list.push_back('d');
+    ///
+    /// assert_eq!(vec!['a', 'b', 'c', 'd'], list.iter().copied().collect::<Vec<_>>());
+    ///
+    /// let removed = list.remove(b);
+    ///
+    /// assert_eq!(removed, Ok('b'));
+    /// assert_eq!(vec!['a', 'c', 'd'], list.iter().copied().collect::<Vec<_>>());
+    ///
+    /// let not_removed = list.remove(b);
+    /// assert_eq!(not_removed.err(), Some(NodeIndexError::RemovedNode));
+    /// assert_eq!(vec!['a', 'c', 'd'], list.iter().copied().collect::<Vec<_>>());
+    ///```
+    #[allow(clippy::missing_panics_doc)]
+    pub fn remove(&mut self, node_index: NodeIndex<'a, Doubly, T>) -> Result<T, NodeIndexError> {
+        self.col.mutate_take(node_index, |x, idx| {
+            x.get_node_ref_or_error(idx).map(|node| {
+                if node.ref_eq(Self::get_existing_front(&x)) {
+                    Self::pop_front_node(&x).expect("node exists")
+                } else if node.ref_eq(Self::get_existing_back(&x)) {
+                    Self::pop_back_node(&x).expect("node exists")
+                } else {
+                    Self::remove_node(&x, node)
+                }
+            })
+        })
+    }
+
     /// ***O(n)*** Inserts the given `value` at the `at`-th element of the list.
     ///
     /// Time complexity:
@@ -992,7 +1434,7 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// list.insert_at(1, 'x');
     /// assert_eq!(&['a', 'x', 'b', 'c'], list.iter().copied().collect::<Vec<_>>().as_slice());
     ///```
-    pub fn insert_at(&mut self, at: usize, value: T) {
+    pub fn insert_at(&mut self, at: usize, value: T) -> NodeIndex<'a, Doubly, T> {
         assert!(at <= self.len(), "out of bounds");
         match at {
             0 => self.push_front(value),
@@ -1000,19 +1442,125 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
             at => {
                 let at_from_back = self.len() - 1 - at;
                 if at <= at_from_back {
-                    self.col.mutate((at, value), |x, (at, value)| {
+                    self.col.mutate_take((at, value), |x, (at, value)| {
                         let current = Self::get_node_at(&x, at);
-                        Self::insert_node(&x, current, value);
-                    });
+                        Self::insert_node_prev_to(&x, current, value)
+                    })
                 } else {
                     self.col
-                        .mutate((at_from_back, value), |x, (at_from_back, value)| {
+                        .mutate_take((at_from_back, value), |x, (at_from_back, value)| {
                             let current = Self::get_node_at_from_back(&x, at_from_back);
-                            Self::insert_node(&x, current, value);
-                        });
+                            Self::insert_node_prev_to(&x, current, value)
+                        })
                 }
             }
         }
+    }
+
+    /// ***O(1)*** Inserts the given `value` as the previous of the node with the given `node_index` and returns the index of the inserted node.
+    ///
+    /// Does not change the list and returns the `NodeIndexError` if the node index is invalid.
+    ///
+    /// # Safety
+    ///
+    /// Insertion is carried out only if the `node_index` is valid.
+    /// And the node index is valid if all of of the following safety and correctness conditions hold:
+    /// * the index is created from this linked list,
+    /// * the node that this index is created for still belongs to the list`; i.e., it is not removed,
+    /// * the node positions in this list are not reorganized to reclaim memory:
+    ///   * this case is never observed if `MemoryReclaimNever` is used,
+    ///   * this case is observed when:
+    ///     * the memory reclaim policy is `MemoryReclaimOnThreshold`, and
+    ///     * the utilization of active nodes has dropped a threshold due to pop and remove operations.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use orx_linked_list::*;
+    ///
+    /// let mut list = DoublyLinkedList::new();
+    ///
+    /// list.push_back('a');
+    /// let b = list.push_back('b');
+    /// list.push_back('c');
+    /// list.push_back('d');
+    ///
+    /// assert_eq!(vec!['a', 'b', 'c', 'd'], list.iter().copied().collect::<Vec<_>>());
+    ///
+    /// let x = list.insert_prev_to(b, 'X').unwrap();
+    ///
+    /// assert_eq!(list.get(x), Some(&'X'));
+    /// assert_eq!(vec!['a', 'X', 'b', 'c', 'd'], list.iter().copied().collect::<Vec<_>>());
+    ///```
+    pub fn insert_prev_to(
+        &mut self,
+        node_index: NodeIndex<'a, Doubly, T>,
+        value: T,
+    ) -> Result<NodeIndex<'a, Doubly, T>, NodeIndexError> {
+        self.col
+            .mutate_take((node_index, value), |x, (idx, value)| {
+                x.get_node_ref_or_error(idx).map(|node| {
+                    let front = Self::get_existing_front(&x);
+                    if node.ref_eq(front) {
+                        Self::push_front_node(&x, value)
+                    } else {
+                        Self::insert_node_prev_to(&x, node, value)
+                    }
+                })
+            })
+    }
+
+    /// ***O(1)*** Inserts the given `value` as the next of the node with the given `node_index` and returns the index of the inserted node.
+    ///
+    /// Does not change the list and returns the `NodeIndexError` if the node index is invalid.
+    ///
+    /// # Safety
+    ///
+    /// Insertion is carried out only if the `node_index` is valid.
+    /// And the node index is valid if all of of the following safety and correctness conditions hold:
+    /// * the index is created from this linked list,
+    /// * the node that this index is created for still belongs to the list`; i.e., it is not removed,
+    /// * the node positions in this list are not reorganized to reclaim memory:
+    ///   * this case is never observed if `MemoryReclaimNever` is used,
+    ///   * this case is observed when:
+    ///     * the memory reclaim policy is `MemoryReclaimOnThreshold`, and
+    ///     * the utilization of active nodes has dropped a threshold due to pop and remove operations.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use orx_linked_list::*;
+    ///
+    /// let mut list = DoublyLinkedList::new();
+    ///
+    /// list.push_back('a');
+    /// let b = list.push_back('b');
+    /// list.push_back('c');
+    /// list.push_back('d');
+    ///
+    /// assert_eq!(vec!['a', 'b', 'c', 'd'], list.iter().copied().collect::<Vec<_>>());
+    ///
+    /// let x = list.insert_next_to(b, 'X').unwrap();
+    ///
+    /// assert_eq!(list.get(x), Some(&'X'));
+    /// assert_eq!(vec!['a', 'b', 'X', 'c', 'd'], list.iter().copied().collect::<Vec<_>>());
+    ///```
+    pub fn insert_next_to(
+        &mut self,
+        node_index: NodeIndex<'a, Doubly, T>,
+        value: T,
+    ) -> Result<NodeIndex<'a, Doubly, T>, NodeIndexError> {
+        self.col
+            .mutate_take((node_index, value), |x, (idx, value)| {
+                x.get_node_ref_or_error(idx).map(|node| {
+                    let back = Self::get_existing_back(&x);
+                    if node.ref_eq(back) {
+                        Self::push_back_node(&x, value)
+                    } else {
+                        Self::insert_node_next_to(&x, node, value)
+                    }
+                })
+            })
     }
 
     /// ***O(n)*** Retains only the elements specified by the predicate.
@@ -1142,21 +1690,46 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
         node.close_node_take_data(mut_key)
     }
 
-    /// Inserts the `new_value` to the list before the given `node`.
-    fn insert_node<'rf>(
-        mut_key: &DoublyMutKey<'rf, 'a, T>,
+    /// Inserts the `new_value` to the list previous to the given `node`.
+    ///
+    /// Returns the index of the new node created for the `new_value`.
+    fn insert_node_prev_to<'rf>(
+        x: &DoublyMutKey<'rf, 'a, T>,
         node: &'a Node<'a, Doubly, T>,
         new_value: T,
-    ) {
-        let new_node = mut_key.push_get_ref(new_value);
+    ) -> NodeIndex<'a, Doubly, T> {
+        let new_node = x.push_get_ref(new_value);
 
         if let Some(prev) = node.prev().get() {
-            prev.set_next(mut_key, new_node);
-            new_node.set_prev(mut_key, *prev);
+            prev.set_next(x, new_node);
+            new_node.set_prev(x, *prev);
         }
 
-        new_node.set_next(mut_key, node);
-        node.set_prev(mut_key, new_node);
+        new_node.set_next(x, node);
+        node.set_prev(x, new_node);
+
+        new_node.index(x)
+    }
+
+    /// Inserts the `new_value` to the list next to the given `node`.
+    ///
+    /// Returns the index of the new node created for the `new_value`.
+    fn insert_node_next_to<'rf>(
+        x: &DoublyMutKey<'rf, 'a, T>,
+        node: &'a Node<'a, Doubly, T>,
+        new_value: T,
+    ) -> NodeIndex<'a, Doubly, T> {
+        let new_node = x.push_get_ref(new_value);
+
+        if let Some(next) = node.next().get() {
+            next.set_prev(x, new_node);
+            new_node.set_next(x, *next);
+        }
+
+        new_node.set_prev(x, node);
+        node.set_next(x, new_node);
+
+        new_node.index(x)
     }
 
     /// ***O(n)*** Gets the node at the `at`-th position.
@@ -1186,6 +1759,49 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
             current = unsafe { current.prev().get().unwrap_unchecked() };
         }
         current
+    }
+
+    /// Pushes the `value` as the front node and returns the index to the created node.
+    fn push_front_node<'rf>(x: &MutKey<'rf, 'a, Doubly, T>, value: T) -> NodeIndex<'a, Doubly, T> {
+        match x.ends().front() {
+            Some(prior_front) => {
+                let new_front = x.push_get_ref(value);
+                new_front.set_next(x, prior_front);
+                prior_front.set_prev(x, new_front);
+                x.set_ends([Some(new_front), x.ends().back()]);
+                new_front.index(x)
+            }
+            None => Self::push_first_node(x, value),
+        }
+    }
+
+    /// Pushes the `value` as the back node and returns the index to the created node.
+    fn push_back_node<'rf>(x: &MutKey<'rf, 'a, Doubly, T>, value: T) -> NodeIndex<'a, Doubly, T> {
+        match x.ends().back() {
+            Some(prior_back) => {
+                let new_back = x.push_get_ref(value);
+                new_back.set_prev(x, prior_back);
+                prior_back.set_next(x, new_back);
+                x.set_ends([x.ends().front(), Some(new_back)]);
+                new_back.index(x)
+            }
+            None => Self::push_first_node(x, value),
+        }
+    }
+
+    /// Pops the back node and returns its `value`; returns None if the list is empty.
+    fn pop_back_node<'rf>(x: &MutKey<'rf, 'a, Doubly, T>) -> Option<T> {
+        x.ends().back().map(|prior_back| {
+            let new_back = *prior_back.prev().get();
+            let new_front = some_only_if(new_back.is_some(), x.ends().front());
+            x.set_ends([new_front, new_back]);
+
+            if let Some(back) = new_back {
+                back.clear_next(x);
+            }
+
+            prior_back.close_node_take_data(x)
+        })
     }
 }
 
@@ -1565,6 +2181,112 @@ pub(crate) mod tests {
         while !doubly.is_empty() {
             doubly.pop_front();
             Doubly::validate(doubly);
+        }
+    }
+
+    #[test]
+    fn remove() {
+        let mut wrong_collection = DoublyLinkedList::new();
+        let n = 1000;
+
+        for i in 0..n {
+            let mut doubly = DoublyLinkedList::new();
+            let mut idx = None;
+            for j in 0..n {
+                let index = doubly.push_back(j);
+                if i == j {
+                    idx = Some(index);
+                }
+            }
+            let idx = idx.expect("is some");
+            let removed = doubly.remove(idx);
+            Doubly::validate(&doubly);
+            assert_eq!(removed, Ok(i));
+
+            let list: Vec<_> = doubly.iter().copied().collect();
+            if i > 0 {
+                for (j, &elem) in list.iter().enumerate().take(i - 1) {
+                    assert_eq!(elem, j);
+                }
+            }
+            for (j, &elem) in list.iter().enumerate().skip(i) {
+                assert_eq!(elem, j + 1);
+            }
+
+            assert_eq!(
+                wrong_collection.remove(idx).err(),
+                Some(NodeIndexError::WrongCollection)
+            );
+        }
+    }
+
+    #[test]
+    fn insert_prev_to() {
+        let mut wrong_collection = DoublyLinkedList::new();
+        let n = 1000;
+
+        for i in 0..n {
+            let mut doubly = DoublyLinkedList::new();
+            let mut idx = None;
+            for j in 0..n {
+                let index = doubly.push_back(j);
+                if i == j {
+                    idx = Some(index);
+                }
+            }
+            let idx = idx.expect("is some");
+            let new_idx = doubly.insert_prev_to(idx, 10000);
+            Doubly::validate(&doubly);
+            assert_eq!(doubly.get(new_idx.expect("succeeded")), Some(&10000));
+
+            let list: Vec<_> = doubly.iter().copied().collect();
+            for (j, &elem) in list.iter().enumerate().take(i) {
+                assert_eq!(elem, j);
+            }
+            assert_eq!(list[i], 10000);
+            for (j, &elem) in list.iter().enumerate().skip(i + 1) {
+                assert_eq!(elem, j - 1);
+            }
+
+            assert_eq!(
+                wrong_collection.insert_prev_to(idx, 10000).err(),
+                Some(NodeIndexError::WrongCollection)
+            );
+        }
+    }
+
+    #[test]
+    fn insert_next_to() {
+        let mut wrong_collection = DoublyLinkedList::new();
+        let n = 1000;
+
+        for i in 0..n {
+            let mut doubly = DoublyLinkedList::new();
+            let mut idx = None;
+            for j in 0..n {
+                let index = doubly.push_back(j);
+                if i == j {
+                    idx = Some(index);
+                }
+            }
+            let idx = idx.expect("is some");
+            let new_idx = doubly.insert_next_to(idx, 10000);
+            Doubly::validate(&doubly);
+            assert_eq!(doubly.get(new_idx.expect("succeeded")), Some(&10000));
+
+            let list: Vec<_> = doubly.iter().copied().collect();
+            for (j, &elem) in list.iter().enumerate().take(i + 1) {
+                assert_eq!(elem, j);
+            }
+            assert_eq!(list[i + 1], 10000);
+            for (j, &elem) in list.iter().enumerate().skip(i + 2) {
+                assert_eq!(elem, j - 1);
+            }
+
+            assert_eq!(
+                wrong_collection.insert_next_to(idx, 10000).err(),
+                Some(NodeIndexError::WrongCollection)
+            );
         }
     }
 
