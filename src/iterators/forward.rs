@@ -1,26 +1,27 @@
+use std::iter::FusedIterator;
+
 use crate::variants::list_variant::ListVariant;
 use orx_selfref_col::{Node, NodeRefSingle, NodeRefs};
 
-pub struct IterFromFront<'iter, 'a, V, T>
+pub struct IterForward<'iter, 'a, V, T>
 where
     T: 'a,
     V: ListVariant<'a, T, Next = NodeRefSingle<'a, V, T>>,
 {
     current: Option<&'iter Node<'a, V, T>>,
-    len: usize,
 }
 
-impl<'iter, 'a, V, T> IterFromFront<'iter, 'a, V, T>
+impl<'iter, 'a, V, T> IterForward<'iter, 'a, V, T>
 where
     T: 'a,
     V: ListVariant<'a, T, Next = NodeRefSingle<'a, V, T>>,
 {
-    pub(crate) fn new(len: usize, current: Option<&'iter Node<'a, V, T>>) -> Self {
-        Self { current, len }
+    pub(crate) fn new(current: Option<&'iter Node<'a, V, T>>) -> Self {
+        Self { current }
     }
 }
 
-impl<'iter, 'a, V, T> Iterator for IterFromFront<'iter, 'a, V, T>
+impl<'iter, 'a, V, T> Iterator for IterForward<'iter, 'a, V, T>
 where
     T: 'a,
     V: ListVariant<'a, T, Next = NodeRefSingle<'a, V, T>>,
@@ -28,29 +29,22 @@ where
     type Item = &'iter T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.len > 0 {
-            self.len -= 1;
-            let current = unsafe { self.current.unwrap_unchecked() };
-            let data = unsafe { current.data().unwrap_unchecked() };
-            self.current = *current.next().get();
-            Some(data)
-        } else {
-            None
-        }
+        self.current.map(|x| {
+            let data = unsafe { x.data().unwrap_unchecked() };
+            self.current = *x.next().get();
+            data
+        })
     }
 }
 
-impl<'iter, 'a, V, T> ExactSizeIterator for IterFromFront<'iter, 'a, V, T>
+impl<'iter, 'a, V, T> FusedIterator for IterForward<'iter, 'a, V, T>
 where
     T: 'a,
-    V: ListVariant<'a, T, Next = NodeRefSingle<'a, V, T>>,
+    V: ListVariant<'a, T, Prev = NodeRefSingle<'a, V, T>>,
 {
-    fn len(&self) -> usize {
-        self.len
-    }
 }
 
-impl<'iter, 'a, V, T> Clone for IterFromFront<'iter, 'a, V, T>
+impl<'iter, 'a, V, T> Clone for IterForward<'iter, 'a, V, T>
 where
     T: 'a,
     V: ListVariant<'a, T, Next = NodeRefSingle<'a, V, T>>,
@@ -58,7 +52,6 @@ where
     fn clone(&self) -> Self {
         Self {
             current: self.current,
-            len: self.len,
         }
     }
 }
@@ -68,7 +61,9 @@ mod tests {
     use crate::{
         list::List,
         variants::{doubly::Doubly, ends::ListEnds, list_variant::ListVariant, singly::Singly},
+        DoublyLinkedList, SinglyLinkedList,
     };
+    use orx_selfref_col::NodeIndexError;
 
     fn take_list<'a, V, T>(_: List<'a, V, T>)
     where
@@ -136,27 +131,88 @@ mod tests {
     }
 
     #[test]
-    fn len() {
+    fn iter_from() {
         let mut singly: List<Singly, _> = List::default();
         let mut doubly: List<Doubly, _> = List::default();
 
+        let mut indices_singly = vec![];
+        let mut indices_doubly = vec![];
         for i in 0..100 {
-            singly.push_front(99 - i);
-            doubly.push_front(99 - i);
+            indices_singly.insert(0, singly.push_front(99 - i));
+            indices_doubly.insert(0, doubly.push_front(99 - i));
         }
 
-        let mut iter_singly = singly.iter();
-        let mut iter_doubly = doubly.iter();
-        for i in 0..100 {
-            assert_eq!(100 - i, iter_singly.len());
-            assert_eq!(100 - i, iter_doubly.len());
-
-            iter_singly.next();
-            iter_doubly.next();
+        for (start, idx) in indices_singly.iter().enumerate() {
+            let mut iter_singly = singly.iter_forward_from(*idx).expect("is okay");
+            for i in start..100 {
+                assert_eq!(Some(&i), iter_singly.next());
+            }
+            assert!(iter_singly.next().is_none());
+            assert!(iter_singly.next().is_none());
         }
 
-        assert_eq!(0, iter_singly.len());
-        assert_eq!(0, iter_doubly.len());
+        for (start, idx) in indices_doubly.iter().enumerate() {
+            let mut iter_doubly = doubly.iter_forward_from(*idx).expect("is okay");
+            for i in start..100 {
+                assert_eq!(Some(&i), iter_doubly.next());
+            }
+            assert!(iter_doubly.next().is_none());
+            assert!(iter_doubly.next().is_none());
+        }
+    }
+
+    #[test]
+    fn iter_from_wrong_index() {
+        let other_singly = SinglyLinkedList::<i32>::new();
+        let other_doubly = DoublyLinkedList::<i32>::new();
+        let mut singly: List<Singly, _> = List::default();
+        let mut doubly: List<Doubly, _> = List::default();
+
+        let mut indices_singly = vec![];
+        let mut indices_doubly = vec![];
+        for i in 0..100 {
+            indices_singly.insert(0, singly.push_front(99 - i));
+            indices_doubly.insert(0, doubly.push_front(99 - i));
+        }
+
+        // wrong collection
+        assert_eq!(
+            other_singly.iter_forward_from(indices_singly[0]).err(),
+            Some(NodeIndexError::WrongCollection)
+        );
+        assert_eq!(
+            other_doubly.iter_forward_from(indices_doubly[0]).err(),
+            Some(NodeIndexError::WrongCollection)
+        );
+
+        // remove back
+        let removed = singly.remove_at(99);
+        assert_eq!(removed, Some(99));
+        let removed = doubly.remove_at(99);
+        assert_eq!(removed, Some(99));
+
+        assert_eq!(
+            singly.iter_forward_from(indices_singly[99]).err(),
+            Some(NodeIndexError::RemovedNode)
+        );
+        assert_eq!(
+            doubly.iter_forward_from(indices_doubly[99]).err(),
+            Some(NodeIndexError::RemovedNode)
+        );
+
+        // reorganized
+        for i in 0..50 {
+            singly.remove_at(98 - i);
+            doubly.remove_at(98 - i);
+        }
+        assert_eq!(
+            singly.iter_forward_from(indices_singly[0]).err(),
+            Some(NodeIndexError::ReorganizedCollection)
+        );
+        assert_eq!(
+            doubly.iter_forward_from(indices_doubly[0]).err(),
+            Some(NodeIndexError::ReorganizedCollection)
+        );
     }
 
     #[test]

@@ -5,27 +5,44 @@
 //!
 //! An efficient and recursive singly and doubly linked list implementation.
 //!
-//! ## Variants and Time Complexity of Methods
+//! ## Variants
 //!
 //! * `type SinglyLinkedList<'a, T> = List<'a, Singly, T>;`
 //! * `type DoublyLinkedList<'a, T> = List<'a, Doubly, T>;`
 //!
 //! ## Time Complexity of Methods
 //!
-//! | Method    | Time Complexity |
-//! | -------- | ------- |
-//! | access to front and back of the list  | **O(1)**    |
-//! | push to front and back (`Doubly` only) of the list | **O(1)**     |
-//! | pop from front and back (`Doubly` only) of the list    | **O(1)** |
-//! | insert at an arbitrary position    | O(n)    |
-//! | remove from an arbitrary position    | O(n)    |
-//! | append another list to the front or back of the list    | **O(1)**    |
-//! | retain elements by a predicate    | O(n)    |
-//! | retain and collect remove elements    | O(n)    |
-//! | iteration forwards or backwards (only `Doubly`)    | O(n)    |
+//! In order to indicate the methods available only for the `Doubly` linked list, but not `Singly`, **(*d*)** indicator is used.
+//!
+//! The following is the list of methods with constant time **O(1)** time complexity.
+//!
+//! | ***O(1)*** Methods |
+//! | -------- |
+//! | `front`, `back`: access to front and back of the list  |
+//! | `get`: access to to any node with a given index |
+//! | `push_front`, `push_back`: push to front or back (*d*) of the list |
+//! | `pop_front`, `pop_back`: pop from front and back (*d*) of the list |
+//! | `insert_prev_to`, `insert_next_to`: insert a value previous or next to an existing node with a given index (*d*) |
+//! | `append_front`, `append_back`: append another list to front or back of the list |
+//! | `iter`, `iter_from_back`: create an iterator from the front or back (*d*) of the list; iterating has O(n) time complexity |
+//! | `iter_forward_from`, `iter_backward_from`: create a forward or backward (*d*) iterator from any intermediate node with a given index; iterating has O(n) time complexity |
+//!
+//! | ***O(n)*** Methods |
+//! | -------- |
+//! | `index_of`: get the index of an element, which can later be used for ***O(1)*** methods |
+//! | `contains`, `position_of`: check the existence or position of a value |
+//! | `insert_at`: insert an element to an arbitrary position of the list |
+//! | `remove_at`: remove an element from an arbitrary position of the list |
+//! | `iter`, `iter_from_back`: iterate from the front or back (*d*) of the list |
+//! | `iter_forward_from`, `iter_backward_from`: iterate in forward or backward (*d*) direction from any intermediate node with a given index |
+//! | `retain`, `retain_collect`: retain keeping elements satisfying a predicate and optionally collect removed elements |
 //!
 //!
 //! ## Examples
+//!
+//! ### Common Usage
+//!
+//! `orx_linked_list::List` provides common linked list functionalities, with a special emphasis on maintaining the recursive nature of the data structure which allows for constant time merging of lists.
 //!
 //! ```rust
 //! use orx_linked_list::*;
@@ -69,6 +86,51 @@
 //!
 //! assert!(eq(list.iter(), &[0, 2, 4]));
 //! assert!(eq(odds.iter(), &[1, 3]));
+//! ```
+//!
+//! ### `NodeIndex` Usage
+//!
+//! `NodeIndex` allows indexing into the collection in constant time with safety guarantees. The indices returned by growth methods, such as `push_back` or `append_next_to`, can be stored externally or an index for a value can be obtained in linear time with `index_of` method.
+//!
+//! ```rust
+//! use orx_linked_list::*;
+//! use orx_selfref_col::NodeIndexError;
+//!
+//! fn eq<'a, I: Iterator<Item = &'a char> + Clone>(iter: I, slice: &[char]) -> bool {
+//!     iter.clone().count() == slice.len() && iter.zip(slice.iter()).all(|(a, b)| a == b)
+//! }
+//!
+//! let mut list = DoublyLinkedList::from_iter(['a', 'b', 'c', 'd']);
+//!
+//! let x = list.index_of(&'x');
+//! assert!(x.is_none());
+//!
+//! let maybe_b = list.index_of(&'b'); // O(n)
+//! assert!(maybe_b.is_some());
+//!
+//! let b = maybe_b.unwrap();
+//!
+//! let data_b = list.get(b); // O(1)
+//! assert_eq!(data_b, Some(&'b'));
+//!
+//! // O(1) to create the iterators from the index
+//! assert!(eq(list.iter_forward_from(b).unwrap(), &['b', 'c', 'd']));
+//! assert!(eq(list.iter_backward_from(b).unwrap(), &['b', 'a']));
+//!
+//! list.insert_prev_to(b, 'X').unwrap(); // O(1)
+//! list.insert_next_to(b, 'Y').unwrap(); // O(1)
+//! assert!(eq(list.iter(), &['a', 'X', 'b', 'Y', 'c', 'd']));
+//!
+//! let removed = list.remove(b); // O(1)
+//! assert_eq!(removed, Ok('b'));
+//! assert!(eq(list.iter(), &['a', 'X', 'Y', 'c', 'd']));
+//!
+//! // not possible to wrongly use the index
+//! assert_eq!(list.get(b), None);
+//! assert_eq!(
+//!     list.get_or_error(b).err(),
+//!     Some(NodeIndexError::RemovedNode)
+//! );
 //! ```
 //!
 //! ## Internal Features

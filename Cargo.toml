@@ -1,6 +1,6 @@
 [package]
 name = "orx-linked-list"
-version = "2.0.3"
+version = "2.1.0"
 edition = "2021"
 authors = ["orxfun <orx.ugur.arikan@gmail.com>"]
 description = "An efficient and recursive singly and doubly linked list implementation."
@@ -10,7 +10,7 @@ keywords = ["linked", "list", "vec", "array", "pinned"]
 categories = ["data-structures", "rust-patterns"]
 
 [dependencies]
-orx-selfref-col = "1.1"
+orx-selfref-col = "1.2"
 orx-split-vec = "2.1"
 
 [dev-dependencies]
