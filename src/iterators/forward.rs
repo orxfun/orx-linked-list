@@ -1,7 +1,6 @@
-use std::iter::FusedIterator;
-
 use crate::variants::list_variant::ListVariant;
 use orx_selfref_col::{Node, NodeRefSingle, NodeRefs};
+use std::iter::FusedIterator;
 
 pub struct IterForward<'iter, 'a, V, T>
 where

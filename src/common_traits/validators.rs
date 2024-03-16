@@ -2,6 +2,7 @@ use crate::{
     list::List,
     variants::{doubly::Doubly, ends::ListEnds, list_variant::ListVariant, singly::Singly},
 };
+use orx_selfref_col::MemoryReclaimPolicy;
 
 impl<'a, V, T> List<'a, V, T>
 where
@@ -23,14 +24,20 @@ where
     }
 }
 
-impl<'a, T> List<'a, Singly, T> {
+impl<'a, T, M> List<'a, Singly<M>, T>
+where
+    M: MemoryReclaimPolicy,
+{
     #[cfg(test)]
     pub(crate) fn validate_list(&self) {
         self.validate_next();
     }
 }
 
-impl<'a, T> List<'a, Doubly, T> {
+impl<'a, T, M> List<'a, Doubly<M>, T>
+where
+    M: MemoryReclaimPolicy,
+{
     #[cfg(test)]
     pub(crate) fn validate_list(&self) {
         self.validate_next();
