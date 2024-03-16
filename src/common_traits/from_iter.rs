@@ -1,7 +1,11 @@
 use crate::{Doubly, List, Singly};
+use orx_selfref_col::MemoryReclaimPolicy;
 use orx_selfref_col::SelfRefCol;
 
-impl<'a, T> FromIterator<T> for List<'a, Singly, T> {
+impl<'a, T, M> FromIterator<T> for List<'a, Singly<M>, T>
+where
+    M: MemoryReclaimPolicy,
+{
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
         let mut col = SelfRefCol::from_iter(iter);
 
@@ -25,7 +29,10 @@ impl<'a, T> FromIterator<T> for List<'a, Singly, T> {
     }
 }
 
-impl<'a, T> FromIterator<T> for List<'a, Doubly, T> {
+impl<'a, T, M> FromIterator<T> for List<'a, Doubly<M>, T>
+where
+    M: MemoryReclaimPolicy,
+{
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
         let mut col = SelfRefCol::from_iter(iter);
 

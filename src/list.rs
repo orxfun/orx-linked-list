@@ -3,19 +3,24 @@ use crate::{
     option_utils::some_only_if,
     variants::{doubly::Doubly, ends::ListEnds, list_variant::ListVariant, singly::Singly},
 };
-use orx_selfref_col::{Node, NodeIndex, NodeIndexError, NodeRefs, SelfRefCol};
+use orx_selfref_col::{
+    MemoryReclaimOnThreshold, MemoryReclaimPolicy, Node, NodeDataLazyClose, NodeIndex,
+    NodeIndexError, NodeRefs, Reclaim, SelfRefCol, SelfRefColMut, Variant,
+};
 use orx_split_vec::{Recursive, SplitVec};
 
+pub(crate) type DefaultMemoryPolicy = MemoryReclaimOnThreshold<2>;
+
 /// A singly linked [`List`] allowing pushing and popping elements at the front in constant time.
-pub type SinglyLinkedList<'a, T> = List<'a, Singly, T>;
+pub type SinglyLinkedList<'a, T, M = DefaultMemoryPolicy> = List<'a, Singly<M>, T>;
 
 /// A doubly linked [`List`] allowing pushing and popping elements both at the front and the back in constant time.
-pub type DoublyLinkedList<'a, T> = List<'a, Doubly, T>;
+pub type DoublyLinkedList<'a, T, M = DefaultMemoryPolicy> = List<'a, Doubly<M>, T>;
 
 type MutKey<'rf, 'a, V, T> =
     orx_selfref_col::SelfRefColMut<'rf, 'a, V, T, SplitVec<Node<'a, V, T>, Recursive>>;
-type DoublyMutKey<'rf, 'a, T> = MutKey<'rf, 'a, Doubly, T>;
-type SinglyMutKey<'rf, 'a, T> = MutKey<'rf, 'a, Singly, T>;
+type DoublyMutKey<'rf, 'a, T, M> = MutKey<'rf, 'a, Doubly<M>, T>;
+type SinglyMutKey<'rf, 'a, T, M> = MutKey<'rf, 'a, Singly<M>, T>;
 
 /// Core structure for singly and doubly linked lists:
 /// * `type SinglyLinkedList<'a, T> = List<'a, Singly, T>;`
@@ -157,7 +162,7 @@ where
     /// ```rust
     /// use orx_linked_list::*;
     ///
-    /// let mut list = DoublyLinkedList::new();
+    /// let mut list = List::<Doubly, _>::new();
     ///
     /// assert!(list.is_empty());
     ///
@@ -179,7 +184,7 @@ where
     /// ```rust
     /// use orx_linked_list::*;
     ///
-    /// let mut list = SinglyLinkedList::new();
+    /// let mut list = List::<Singly, _>::new();
     ///
     /// assert!(list.front().is_none());
     ///
@@ -204,7 +209,7 @@ where
     /// ```rust
     /// use orx_linked_list::*;
     ///
-    /// let mut list = DoublyLinkedList::new();
+    /// let mut list = List::<Doubly, _>::new();
     ///
     /// assert!(list.back().is_none());
     ///
@@ -236,7 +241,7 @@ where
     /// ```rust
     /// use orx_linked_list::*;
     ///
-    /// let mut list = DoublyLinkedList::new();
+    /// let mut list = List::<Doubly, _>::new();
     ///
     /// list.push_front('b');
     /// list.push_back('c');
@@ -266,7 +271,7 @@ where
     /// ```rust
     /// use orx_linked_list::*;
     ///
-    /// let mut list = DoublyLinkedList::new();
+    /// let mut list = List::<Doubly, _>::new();
     ///
     /// let b = list.push_front('b');
     /// list.push_back('c');
@@ -304,7 +309,7 @@ where
     /// ```rust
     /// use orx_linked_list::*;
     ///
-    /// let mut list = DoublyLinkedList::new();
+    /// let mut list = List::<Doubly, _>::new();
     ///
     /// list.push_front('b');
     /// list.push_back('c');
@@ -399,7 +404,11 @@ where
     /// assert_eq!(Some('a'), popped);
     /// assert!(list.is_empty());
     /// ```
-    pub fn pop_front(&mut self) -> Option<T> {
+    pub fn pop_front(&mut self) -> Option<T>
+    where
+        for<'rf> SelfRefColMut<'rf, 'a, V, T, SplitVec<Node<'a, V, T>, Recursive>>:
+            Reclaim<V::Prev, V::Next>,
+    {
         self.col.mutate_take((), |x, _| Self::pop_front_node(&x))
     }
 
@@ -424,7 +433,7 @@ where
     /// ```rust
     /// use orx_linked_list::*;
     ///
-    /// let mut list = DoublyLinkedList::new();
+    /// let mut list = List::<Doubly, _>::new();
     ///
     /// let a = list.push_back('a');
     /// let b = list.push_back('b');
@@ -445,6 +454,7 @@ where
     /// assert_eq!(None, list.get(a));
     /// assert_eq!(None, list.get(b));
     /// ```
+    #[inline]
     pub fn get(&self, node_index: NodeIndex<'a, V, T>) -> Option<&T> {
         node_index.data(&self.col)
     }
@@ -468,9 +478,8 @@ where
     ///
     /// ```rust
     /// use orx_linked_list::*;
-    /// use orx_selfref_col::NodeIndexError;
     ///
-    /// let mut list = DoublyLinkedList::new();
+    /// let mut list = List::<Doubly, _>::new();
     ///
     /// let a = list.push_back('a');
     /// let b = list.push_back('b');
@@ -478,24 +487,28 @@ where
     /// assert_eq!(Ok(&'a'), list.get_or_error(a));
     /// assert_eq!(Ok(&'b'), list.get_or_error(b));
     ///
-    /// list.push_front('c');
+    /// list.push_back('c');
     /// list.push_back('d');
-    /// list.push_front('e');
+    /// list.push_back('e');
     /// list.push_back('f');
+    ///
+    /// assert_eq!(
+    ///     vec!['a', 'b', 'c', 'd', 'e', 'f'],
+    ///     list.iter().copied().collect::<Vec<_>>()
+    /// );
     ///
     /// assert_eq!(Ok(&'a'), list.get_or_error(a));
     /// assert_eq!(Ok(&'b'), list.get_or_error(b));
     ///
-    /// list.clear();
+    /// let removed = list.remove(a);
+    /// assert_eq!(removed, Ok('a'));
     ///
-    /// assert_eq!(Some(NodeIndexError::RemovedNode), list.get_or_error(a).err());
-    /// assert_eq!(Some(NodeIndexError::RemovedNode), list.get_or_error(b).err());
+    /// assert_eq!(Err(NodeIndexError::RemovedNode), list.get_or_error(a));
+    /// assert_eq!(Ok(&'b'), list.get_or_error(b));
     /// ```
+    #[inline]
     pub fn get_or_error(&self, node_index: NodeIndex<'a, V, T>) -> Result<&T, NodeIndexError> {
-        match node_index.data(&self.col) {
-            Some(data) => Ok(data),
-            None => Err(NodeIndexError::RemovedNode),
-        }
+        node_index.data_or_error(&self.col)
     }
 
     /// ***O(n)*** Performs a forward search from the front and returns the index of the first node with value equal to the given `value`.
@@ -510,7 +523,7 @@ where
     /// use orx_linked_list::*;
     /// use orx_selfref_col::NodeIndexError;
     ///
-    /// let mut list = DoublyLinkedList::from_iter(['a', 'b', 'c', 'd']);
+    /// let mut list = List::<Doubly, _>::from_iter(['a', 'b', 'c', 'd']);
     ///
     /// let x = list.index_of(&'x');
     /// assert!(x.is_none());
@@ -563,7 +576,7 @@ where
     /// ```rust
     /// use orx_linked_list::*;
     ///
-    /// let mut list = DoublyLinkedList::from_iter(['a', 'b', 'c', 'd']);
+    /// let mut list = List::<Doubly, _>::from_iter(['a', 'b', 'c', 'd']);
     ///
     /// assert!(list.contains(&'a'));
     /// assert!(!list.contains(&'x'));
@@ -589,7 +602,7 @@ where
     /// use orx_linked_list::*;
     /// use orx_selfref_col::NodeIndexError;
     ///
-    /// let mut list = DoublyLinkedList::from_iter(['a', 'b', 'c', 'd']);
+    /// let mut list = List::<Doubly, _>::from_iter(['a', 'b', 'c', 'd']);
     ///
     /// let x = list.position_of(&'x');
     /// assert_eq!(x, None);
@@ -605,6 +618,126 @@ where
             .enumerate()
             .find(|(_, x)| *x == value)
             .map(|(i, _)| i)
+    }
+
+    // memory
+    /// Returns the node utilization as a fraction of active nodes to the used nodes:
+    /// * 1.0 when there is no closed node;
+    /// * 0.0 when all used memory is used by closed nodes.
+    ///
+    /// Node utilization can be brought to 100%:
+    /// * automatically by the underlying memory policy if `MemoryReclaimOnThreshold` is used; or
+    /// * manually by calling the `reclaim_closed_nodes` method.
+    ///
+    /// It is important to note that, memory reclaim operation leads to reorganization of the nodes, which invalidates the node indices obtained before the process.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use orx_linked_list::*;
+    ///
+    /// fn float_eq(x: f32, y: f32) -> bool {
+    ///     (x - y).abs() < f32::EPSILON
+    /// }
+    ///
+    /// // MemoryReclaimOnThreshold<2> -> memory will be reclaimed when utilization is below 75%
+    /// let mut list = List::<Doubly, _>::new();
+    /// let a = list.push_back('a');
+    /// list.push_back('b');
+    /// list.push_back('c');
+    /// list.push_back('d');
+    /// list.push_back('e');
+    ///
+    /// assert!(float_eq(list.node_utilization(), 1.00)); // utilization = 5/5 = 100%
+    ///
+    /// // no reorganization; 'a' is still valid
+    /// assert_eq!(list.get_or_error(a), Ok(&'a'));
+    /// assert_eq!(list.get(a), Some(&'a'));
+    ///
+    /// _ = list.pop_back(); // leaves a hole
+    ///
+    /// assert!(float_eq(list.node_utilization(), 0.80)); // utilization = 4/5 = 80%
+    ///
+    /// // no reorganization; 'a' is still valid
+    /// assert_eq!(list.get_or_error(a), Ok(&'a'));
+    /// assert_eq!(list.get(a), Some(&'a'));
+    ///
+    /// _ = list.pop_back(); // leaves the second hole; we have utilization = 3/5 = 60%
+    ///                         // this is below the threshold 75%, and triggers reclaim
+    ///                         // we claim the two unused nodes / holes
+    ///
+    /// assert!(float_eq(list.node_utilization(), 1.00)); // utilization = 3/3 = 100%
+    ///
+    /// // nodes reorganized; 'a' is no more valid
+    /// assert_eq!(
+    ///     list.get_or_error(a),
+    ///     Err(NodeIndexError::ReorganizedCollection)
+    /// );
+    /// assert_eq!(list.get(a), None);
+    /// ```
+    #[inline]
+    pub fn node_utilization(&self) -> f32 {
+        self.col.node_utilization()
+    }
+
+    /// Manually attempts to reclaim closed nodes.
+    ///
+    /// # Safety
+    ///
+    /// It is important to note that, memory reclaim operation leads to reorganization of the nodes, which invalidates the node indices obtained before the process.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use orx_linked_list::*;
+    ///
+    /// fn float_eq(x: f32, y: f32) -> bool {
+    ///     (x - y).abs() < f32::EPSILON
+    /// }
+    ///
+    /// // MemoryReclaimNever -> memory will never be reclaimed automatically
+    /// let mut list = List::<Doubly<MemoryReclaimNever>, _>::new();
+    /// let a = list.push_back('a');
+    /// list.push_back('b');
+    /// list.push_back('c');
+    /// list.push_back('d');
+    /// list.push_back('e');
+    ///
+    /// assert!(float_eq(list.node_utilization(), 1.00)); // utilization = 5/5 = 100%
+    ///
+    /// // no reorganization; 'a' is still valid
+    /// assert_eq!(list.get_or_error(a), Ok(&'a'));
+    /// assert_eq!(list.get(a), Some(&'a'));
+    ///
+    /// _ = list.pop_back(); // leaves a hole
+    /// _ = list.pop_back(); // leaves the second hole
+    /// _ = list.pop_back(); // leaves the third hole
+    ///
+    /// assert!(float_eq(list.node_utilization(), 0.40)); // utilization = 2/5 = 40%
+    ///
+    /// // still no reorganization; 'a' is and will always be valid unless we manually reclaim
+    /// assert_eq!(list.get_or_error(a), Ok(&'a'));
+    /// assert_eq!(list.get(a), Some(&'a'));
+    ///
+    /// list.reclaim_closed_nodes();
+    ///
+    /// // we can manually reclaim memory any time we want to maximize utilization
+    /// assert!(float_eq(list.node_utilization(), 1.00)); // utilization = 2/2 = 100%
+    ///
+    /// // we are still protected by list & index validation
+    /// // nodes reorganized; 'a' is no more valid, we cannot wrongly use the index
+    /// assert_eq!(
+    ///     list.get_or_error(a),
+    ///     Err(NodeIndexError::ReorganizedCollection)
+    /// );
+    /// assert_eq!(list.get(a), None);
+    /// ```
+    pub fn reclaim_closed_nodes(&mut self)
+    where
+        for<'rf> SelfRefColMut<'rf, 'a, V, T, SplitVec<Node<'a, V, T>, Recursive>>:
+            Reclaim<V::Prev, V::Next>,
+    {
+        self.col.reclaim_closed_nodes()
     }
 
     // helpers
@@ -646,7 +779,12 @@ where
     }
 
     /// Pops the front node and returns its `value`; returns None if the list is empty.
-    fn pop_front_node<'rf>(x: &MutKey<'rf, 'a, V, T>) -> Option<T> {
+    fn pop_front_node<'rf>(x: &MutKey<'rf, 'a, V, T>) -> Option<T>
+    where
+        V: Variant<'a, T, Storage = NodeDataLazyClose<T>>,
+        SelfRefColMut<'rf, 'a, V, T, SplitVec<Node<'a, V, T>, Recursive>>:
+            Reclaim<V::Prev, V::Next>,
+    {
         x.ends().front().map(|prior_front| {
             let new_front = *prior_front.next().get();
             let new_back = some_only_if(new_front.is_some(), x.ends().back());
@@ -661,7 +799,10 @@ where
     }
 }
 
-impl<'a, T: 'a> List<'a, Singly, T> {
+impl<'a, T: 'a, M> List<'a, Singly<M>, T>
+where
+    M: MemoryReclaimPolicy,
+{
     // mut
 
     /// ***O(1)*** Pushes the `value` to the `front` of the list.
@@ -683,7 +824,7 @@ impl<'a, T: 'a> List<'a, Singly, T> {
     /// assert_eq!(Some('b'), popped);
     /// assert_eq!(Some(&'a'), list.front());
     /// ```
-    pub fn push_front(&mut self, value: T) -> NodeIndex<'a, Singly, T> {
+    pub fn push_front(&mut self, value: T) -> NodeIndex<'a, Singly<M>, T> {
         self.col
             .mutate_take(value, |x, value| match x.ends().front() {
                 Some(prior_front) => {
@@ -842,7 +983,7 @@ impl<'a, T: 'a> List<'a, Singly, T> {
     /// list.insert_at(1, 'x');
     /// assert_eq!(&['a', 'x', 'b', 'c'], list.iter().copied().collect::<Vec<_>>().as_slice());
     ///```
-    pub fn insert_at(&mut self, at: usize, value: T) -> NodeIndex<'a, Singly, T> {
+    pub fn insert_at(&mut self, at: usize, value: T) -> NodeIndex<'a, Singly<M>, T> {
         assert!(at <= self.len(), "out of bounds");
         match at {
             0 => self.push_front(value),
@@ -877,7 +1018,7 @@ impl<'a, T: 'a> List<'a, Singly, T> {
     /// ```rust
     /// use orx_linked_list::*;
     ///
-    /// let mut list = SinglyLinkedList::from_iter([0, 1, 2, 3, 4]);
+    /// let mut list = List::<Singly, _>::from_iter([0, 1, 2, 3, 4]);
     ///
     /// list.retain(&|x| *x % 2 == 0);
     ///
@@ -904,7 +1045,7 @@ impl<'a, T: 'a> List<'a, Singly, T> {
     /// ```rust
     /// use orx_linked_list::*;
     ///
-    /// let mut list = SinglyLinkedList::from_iter([0, 1, 2, 3, 4]);
+    /// let mut list = List::<Singly, _>::from_iter([0, 1, 2, 3, 4]);
     ///
     /// let mut odds = vec![];
     /// let mut collect = |x| odds.push(x);
@@ -922,11 +1063,14 @@ impl<'a, T: 'a> List<'a, Singly, T> {
         Predicate: Fn(&T) -> bool,
         Collect: FnMut(T),
     {
-        fn remove<'a, T>(
-            mut_key: &SinglyMutKey<'_, 'a, T>,
-            prev: Option<&'a Node<'a, Singly, T>>,
-            node_to_remove: &'a Node<'a, Singly, T>,
-        ) -> T {
+        fn remove<'a, T, M>(
+            mut_key: &SinglyMutKey<'_, 'a, T, M>,
+            prev: Option<&'a Node<'a, Singly<M>, T>>,
+            node_to_remove: &'a Node<'a, Singly<M>, T>,
+        ) -> T
+        where
+            M: MemoryReclaimPolicy,
+        {
             if let Some(prev) = prev {
                 prev.set_next(mut_key, *node_to_remove.next().get());
             }
@@ -981,10 +1125,11 @@ impl<'a, T: 'a> List<'a, Singly, T> {
     /// # Panics
     ///
     /// Panics if `self.len() < 2` and/or `at == 0`.
+    #[allow(clippy::type_complexity)]
     fn get_prev_and_current_at<'rf>(
-        mut_key: &SinglyMutKey<'rf, 'a, T>,
+        mut_key: &SinglyMutKey<'rf, 'a, T, M>,
         at: usize,
-    ) -> (&'a Node<'a, Singly, T>, &'a Node<'a, Singly, T>) {
+    ) -> (&'a Node<'a, Singly<M>, T>, &'a Node<'a, Singly<M>, T>) {
         let mut prev = unsafe { mut_key.ends().front().unwrap_unchecked() };
         let mut current = unsafe { prev.next().get().unwrap_unchecked() };
         for _ in 1..at {
@@ -996,7 +1141,10 @@ impl<'a, T: 'a> List<'a, Singly, T> {
     }
 }
 
-impl<'a, T: 'a> List<'a, Doubly, T> {
+impl<'a, T: 'a, M> List<'a, Doubly<M>, T>
+where
+    M: MemoryReclaimPolicy,
+{
     // get
     /// ***O(n)*** Performs a backward search from the back and returns the index of the first node with value equal to the given `value`.
     ///
@@ -1010,7 +1158,7 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// use orx_linked_list::*;
     /// use orx_selfref_col::NodeIndexError;
     ///
-    /// let mut list = DoublyLinkedList::from_iter(['a', 'b', 'c', 'd']);
+    /// let mut list = List::<Doubly, _>::from_iter(['a', 'b', 'c', 'd']);
     ///
     /// let x = list.index_of_from_back(&'x');
     /// assert!(x.is_none());
@@ -1038,7 +1186,7 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// assert_eq!(list.get(b), None);
     /// assert_eq!(list.get_or_error(b).err(), Some(NodeIndexError::RemovedNode));
     /// ```
-    pub fn index_of_from_back(&self, value: &T) -> Option<NodeIndex<'a, Doubly, T>>
+    pub fn index_of_from_back(&self, value: &T) -> Option<NodeIndex<'a, Doubly<M>, T>>
     where
         T: PartialEq,
     {
@@ -1063,7 +1211,7 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// ```rust
     /// use orx_linked_list::*;
     ///
-    /// let mut list = DoublyLinkedList::from_iter(['a', 'b', 'c', 'd']);
+    /// let mut list = List::<Doubly, _>::from_iter(['a', 'b', 'c', 'd']);
     ///
     /// assert!(list.contains_from_back(&'a'));
     /// assert!(!list.contains_from_back(&'x'));
@@ -1095,7 +1243,7 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// assert_eq!(Some(&'a'), iter.next());
     /// assert!(iter.next().is_none());
     /// ```
-    pub fn iter_from_back(&self) -> IterBackward<'_, 'a, Doubly, T> {
+    pub fn iter_from_back(&self) -> IterBackward<'_, 'a, Doubly<M>, T> {
         IterBackward::new(self.col.ends().back())
     }
 
@@ -1112,7 +1260,7 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// ```rust
     /// use orx_linked_list::*;
     ///
-    /// let mut list = DoublyLinkedList::new();
+    /// let mut list = List::<Doubly, _>::new();
     ///
     /// let b = list.push_front('b');
     /// list.push_back('c');
@@ -1131,8 +1279,8 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// ```
     pub fn iter_backward_from(
         &self,
-        node_index: NodeIndex<'a, Doubly, T>,
-    ) -> Result<IterBackward<'_, 'a, Doubly, T>, NodeIndexError> {
+        node_index: NodeIndex<'a, Doubly<M>, T>,
+    ) -> Result<IterBackward<'_, 'a, Doubly<M>, T>, NodeIndexError> {
         match node_index.invalidity_reason_for_collection(&self.col) {
             None => Ok(IterBackward::new(Some(unsafe {
                 node_index.as_ref_unchecked()
@@ -1160,7 +1308,7 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// assert_eq!(Some('b'), popped);
     /// assert_eq!(Some(&'a'), list.front());
     /// ```
-    pub fn push_front(&mut self, value: T) -> NodeIndex<'a, Doubly, T> {
+    pub fn push_front(&mut self, value: T) -> NodeIndex<'a, Doubly<M>, T> {
         self.col
             .mutate_take(value, |x, value| Self::push_front_node(&x, value))
     }
@@ -1184,7 +1332,7 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// assert_eq!(Some('b'), popped);
     /// assert_eq!(Some(&'a'), list.back());
     /// ```
-    pub fn push_back(&mut self, value: T) -> NodeIndex<'a, Doubly, T> {
+    pub fn push_back(&mut self, value: T) -> NodeIndex<'a, Doubly<M>, T> {
         self.col
             .mutate_take(value, |x, value| Self::push_back_node(&x, value))
     }
@@ -1375,7 +1523,7 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// use orx_linked_list::*;
     /// use orx_selfref_col::NodeIndexError;
     ///
-    /// let mut list = DoublyLinkedList::new();
+    /// let mut list = List::<Doubly, _>::new();
     ///
     /// list.push_back('a');
     /// let b = list.push_back('b');
@@ -1394,7 +1542,7 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// assert_eq!(vec!['a', 'c', 'd'], list.iter().copied().collect::<Vec<_>>());
     ///```
     #[allow(clippy::missing_panics_doc)]
-    pub fn remove(&mut self, node_index: NodeIndex<'a, Doubly, T>) -> Result<T, NodeIndexError> {
+    pub fn remove(&mut self, node_index: NodeIndex<'a, Doubly<M>, T>) -> Result<T, NodeIndexError> {
         self.col.mutate_take(node_index, |x, idx| {
             x.get_node_ref_or_error(idx).map(|node| {
                 if node.ref_eq(Self::get_existing_front(&x)) {
@@ -1434,7 +1582,7 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// list.insert_at(1, 'x');
     /// assert_eq!(&['a', 'x', 'b', 'c'], list.iter().copied().collect::<Vec<_>>().as_slice());
     ///```
-    pub fn insert_at(&mut self, at: usize, value: T) -> NodeIndex<'a, Doubly, T> {
+    pub fn insert_at(&mut self, at: usize, value: T) -> NodeIndex<'a, Doubly<M>, T> {
         assert!(at <= self.len(), "out of bounds");
         match at {
             0 => self.push_front(value),
@@ -1478,7 +1626,7 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// ```rust
     /// use orx_linked_list::*;
     ///
-    /// let mut list = DoublyLinkedList::new();
+    /// let mut list = List::<Doubly, _>::new();
     ///
     /// list.push_back('a');
     /// let b = list.push_back('b');
@@ -1494,9 +1642,9 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     ///```
     pub fn insert_prev_to(
         &mut self,
-        node_index: NodeIndex<'a, Doubly, T>,
+        node_index: NodeIndex<'a, Doubly<M>, T>,
         value: T,
-    ) -> Result<NodeIndex<'a, Doubly, T>, NodeIndexError> {
+    ) -> Result<NodeIndex<'a, Doubly<M>, T>, NodeIndexError> {
         self.col
             .mutate_take((node_index, value), |x, (idx, value)| {
                 x.get_node_ref_or_error(idx).map(|node| {
@@ -1531,7 +1679,7 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// ```rust
     /// use orx_linked_list::*;
     ///
-    /// let mut list = DoublyLinkedList::new();
+    /// let mut list = List::<Doubly, _>::new();
     ///
     /// list.push_back('a');
     /// let b = list.push_back('b');
@@ -1547,9 +1695,9 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     ///```
     pub fn insert_next_to(
         &mut self,
-        node_index: NodeIndex<'a, Doubly, T>,
+        node_index: NodeIndex<'a, Doubly<M>, T>,
         value: T,
-    ) -> Result<NodeIndex<'a, Doubly, T>, NodeIndexError> {
+    ) -> Result<NodeIndex<'a, Doubly<M>, T>, NodeIndexError> {
         self.col
             .mutate_take((node_index, value), |x, (idx, value)| {
                 x.get_node_ref_or_error(idx).map(|node| {
@@ -1577,7 +1725,7 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// ```rust
     /// use orx_linked_list::*;
     ///
-    /// let mut list = DoublyLinkedList::from_iter([0, 1, 2, 3, 4]);
+    /// let mut list = List::<Doubly, _>::from_iter([0, 1, 2, 3, 4]);
     ///
     /// list.retain(&|x| *x % 2 == 0);
     ///
@@ -1604,7 +1752,7 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// ```rust
     /// use orx_linked_list::*;
     ///
-    /// let mut list = DoublyLinkedList::from_iter([0, 1, 2, 3, 4]);
+    /// let mut list = List::<Doubly, _>::from_iter([0, 1, 2, 3, 4]);
     ///
     /// let mut odds = vec![];
     /// let mut collect = |x| odds.push(x);
@@ -1622,7 +1770,13 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
         Predicate: Fn(&T) -> bool,
         Collect: FnMut(T),
     {
-        fn remove<'a, T>(mut_key: &DoublyMutKey<'_, 'a, T>, node: &'a Node<'a, Doubly, T>) -> T {
+        fn remove<'a, T, M>(
+            mut_key: &DoublyMutKey<'_, 'a, T, M>,
+            node: &'a Node<'a, Doubly<M>, T>,
+        ) -> T
+        where
+            M: MemoryReclaimPolicy,
+        {
             if let Some(next) = node.next().get() {
                 next.set_prev(mut_key, *node.prev().get());
             }
@@ -1678,7 +1832,10 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
 
     // helpers
     /// Removes the `node` from the list, repairs the links and returns the removed value.
-    fn remove_node<'rf>(mut_key: &DoublyMutKey<'rf, 'a, T>, node: &'a Node<'a, Doubly, T>) -> T {
+    fn remove_node<'rf>(
+        mut_key: &DoublyMutKey<'rf, 'a, T, M>,
+        node: &'a Node<'a, Doubly<M>, T>,
+    ) -> T {
         if let Some(next) = node.next().get() {
             next.set_prev(mut_key, *node.prev().get());
         }
@@ -1694,10 +1851,10 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     ///
     /// Returns the index of the new node created for the `new_value`.
     fn insert_node_prev_to<'rf>(
-        x: &DoublyMutKey<'rf, 'a, T>,
-        node: &'a Node<'a, Doubly, T>,
+        x: &DoublyMutKey<'rf, 'a, T, M>,
+        node: &'a Node<'a, Doubly<M>, T>,
         new_value: T,
-    ) -> NodeIndex<'a, Doubly, T> {
+    ) -> NodeIndex<'a, Doubly<M>, T> {
         let new_node = x.push_get_ref(new_value);
 
         if let Some(prev) = node.prev().get() {
@@ -1715,10 +1872,10 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     ///
     /// Returns the index of the new node created for the `new_value`.
     fn insert_node_next_to<'rf>(
-        x: &DoublyMutKey<'rf, 'a, T>,
-        node: &'a Node<'a, Doubly, T>,
+        x: &DoublyMutKey<'rf, 'a, T, M>,
+        node: &'a Node<'a, Doubly<M>, T>,
         new_value: T,
-    ) -> NodeIndex<'a, Doubly, T> {
+    ) -> NodeIndex<'a, Doubly<M>, T> {
         let new_node = x.push_get_ref(new_value);
 
         if let Some(next) = node.next().get() {
@@ -1737,7 +1894,10 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     /// # Panics
     ///
     /// Panics if `self.is_empty()`.
-    fn get_node_at<'rf>(mut_key: &DoublyMutKey<'rf, 'a, T>, at: usize) -> &'a Node<'a, Doubly, T> {
+    fn get_node_at<'rf>(
+        mut_key: &DoublyMutKey<'rf, 'a, T, M>,
+        at: usize,
+    ) -> &'a Node<'a, Doubly<M>, T> {
         let mut current = unsafe { mut_key.ends().front().unwrap_unchecked() };
         for _ in 0..at {
             current = unsafe { current.next().get().unwrap_unchecked() };
@@ -1751,9 +1911,9 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     ///
     /// Panics if `self.is_empty()`.
     fn get_node_at_from_back<'rf>(
-        mut_key: &DoublyMutKey<'rf, 'a, T>,
+        mut_key: &DoublyMutKey<'rf, 'a, T, M>,
         at_from_back: usize,
-    ) -> &'a Node<'a, Doubly, T> {
+    ) -> &'a Node<'a, Doubly<M>, T> {
         let mut current = unsafe { mut_key.ends().back().unwrap_unchecked() };
         for _ in 0..at_from_back {
             current = unsafe { current.prev().get().unwrap_unchecked() };
@@ -1762,7 +1922,10 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     }
 
     /// Pushes the `value` as the front node and returns the index to the created node.
-    fn push_front_node<'rf>(x: &MutKey<'rf, 'a, Doubly, T>, value: T) -> NodeIndex<'a, Doubly, T> {
+    fn push_front_node<'rf>(
+        x: &MutKey<'rf, 'a, Doubly<M>, T>,
+        value: T,
+    ) -> NodeIndex<'a, Doubly<M>, T> {
         match x.ends().front() {
             Some(prior_front) => {
                 let new_front = x.push_get_ref(value);
@@ -1776,7 +1939,10 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     }
 
     /// Pushes the `value` as the back node and returns the index to the created node.
-    fn push_back_node<'rf>(x: &MutKey<'rf, 'a, Doubly, T>, value: T) -> NodeIndex<'a, Doubly, T> {
+    fn push_back_node<'rf>(
+        x: &MutKey<'rf, 'a, Doubly<M>, T>,
+        value: T,
+    ) -> NodeIndex<'a, Doubly<M>, T> {
         match x.ends().back() {
             Some(prior_back) => {
                 let new_back = x.push_get_ref(value);
@@ -1790,7 +1956,7 @@ impl<'a, T: 'a> List<'a, Doubly, T> {
     }
 
     /// Pops the back node and returns its `value`; returns None if the list is empty.
-    fn pop_back_node<'rf>(x: &MutKey<'rf, 'a, Doubly, T>) -> Option<T> {
+    fn pop_back_node<'rf>(x: &MutKey<'rf, 'a, Doubly<M>, T>) -> Option<T> {
         x.ends().back().map(|prior_back| {
             let new_back = *prior_back.prev().get();
             let new_front = some_only_if(new_back.is_some(), x.ends().front());
@@ -1918,7 +2084,7 @@ pub(crate) mod tests {
 
     #[test]
     fn singly_back() {
-        let mut singly = SinglyLinkedList::new();
+        let mut singly = SinglyLinkedList::<_, MemoryReclaimOnThreshold<2>>::new();
         assert_empty_list(&singly);
 
         singly.push_front('x');
@@ -2186,7 +2352,7 @@ pub(crate) mod tests {
 
     #[test]
     fn remove() {
-        let mut wrong_collection = DoublyLinkedList::new();
+        let mut wrong_collection = DoublyLinkedList::<_, MemoryReclaimOnThreshold<2>>::new();
         let n = 1000;
 
         for i in 0..n {
@@ -2222,7 +2388,7 @@ pub(crate) mod tests {
 
     #[test]
     fn insert_prev_to() {
-        let mut wrong_collection = DoublyLinkedList::new();
+        let mut wrong_collection = DoublyLinkedList::<_, MemoryReclaimOnThreshold<2>>::new();
         let n = 1000;
 
         for i in 0..n {
@@ -2257,7 +2423,7 @@ pub(crate) mod tests {
 
     #[test]
     fn insert_next_to() {
-        let mut wrong_collection = DoublyLinkedList::new();
+        let mut wrong_collection = DoublyLinkedList::<_, MemoryReclaimOnThreshold<2>>::new();
         let n = 1000;
 
         for i in 0..n {
@@ -2609,5 +2775,163 @@ pub(crate) mod tests {
             assert_eq!(front, singly.front());
             assert_eq!(back, singly.back());
         }
+    }
+
+    #[test]
+    fn eee() {
+        use crate::*;
+
+        fn float_eq(x: f32, y: f32) -> bool {
+            (x - y).abs() < f32::EPSILON
+        }
+
+        // MemoryReclaimOnThreshold<2> -> memory will be reclaimed when utilization is below 75%
+        let mut list = List::<Doubly, _>::new();
+        let a = list.push_back('a');
+        list.push_back('b');
+        list.push_back('c');
+        list.push_back('d');
+        list.push_back('e');
+
+        assert!(float_eq(list.node_utilization(), 1.00)); // utilization = 5/5 = 100%
+
+        // no reorganization; 'a' is still valid
+        assert_eq!(list.get_or_error(a), Ok(&'a'));
+        assert_eq!(list.get(a), Some(&'a'));
+
+        _ = list.pop_back(); // leaves a hole
+
+        assert!(float_eq(list.node_utilization(), 0.80)); // utilization = 4/5 = 80%
+
+        // no reorganization; 'a' is still valid
+        assert_eq!(list.get_or_error(a), Ok(&'a'));
+        assert_eq!(list.get(a), Some(&'a'));
+
+        _ = list.pop_back(); // leaves the second hole; we have utilization = 3/5 = 60%
+                             // this is below the threshold 75%, and triggers reclaim
+                             // we claim the two unused nodes / holes
+
+        assert!(float_eq(list.node_utilization(), 1.00)); // utilization = 3/3 = 100%
+
+        // nodes reorganized; 'a' is no more valid
+        assert_eq!(
+            list.get_or_error(a),
+            Err(NodeIndexError::ReorganizedCollection)
+        );
+        assert_eq!(list.get(a), None);
+
+        // re-obtain the index
+        let a = list.index_of(&'a').unwrap();
+        assert_eq!(list.get_or_error(a), Ok(&'a'));
+        assert_eq!(list.get(a), Some(&'a'));
+    }
+
+    #[test]
+    fn fff() {
+        use crate::*;
+
+        fn float_eq(x: f32, y: f32) -> bool {
+            (x - y).abs() < f32::EPSILON
+        }
+
+        // MemoryReclaimNever -> memory will never be reclaimed automatically
+        let mut list = List::<Doubly<MemoryReclaimNever>, _>::new();
+        let a = list.push_back('a');
+        list.push_back('b');
+        list.push_back('c');
+        list.push_back('d');
+        list.push_back('e');
+
+        assert!(float_eq(list.node_utilization(), 1.00)); // utilization = 5/5 = 100%
+
+        // no reorganization; 'a' is still valid
+        assert_eq!(list.get_or_error(a), Ok(&'a'));
+        assert_eq!(list.get(a), Some(&'a'));
+
+        _ = list.pop_back(); // leaves a hole
+        _ = list.pop_back(); // leaves the second hole
+        _ = list.pop_back(); // leaves the third hole
+
+        assert!(float_eq(list.node_utilization(), 0.40)); // utilization = 2/5 = 40%
+
+        // still no reorganization; 'a' is and will always be valid unless we manually reclaim
+        assert_eq!(list.get_or_error(a), Ok(&'a'));
+        assert_eq!(list.get(a), Some(&'a'));
+
+        list.reclaim_closed_nodes();
+
+        // we can manually reclaim memory any time we want to maximize utilization
+        assert!(float_eq(list.node_utilization(), 1.00)); // utilization = 2/2 = 100%
+
+        // we are still protected by list & index validation
+        // nodes reorganized; 'a' is no more valid, we cannot wrongly use the index
+        assert_eq!(
+            list.get_or_error(a),
+            Err(NodeIndexError::ReorganizedCollection)
+        );
+        assert_eq!(list.get(a), None);
+
+        // re-obtain the index
+        let a = list.index_of(&'a').unwrap();
+        assert_eq!(list.get_or_error(a), Ok(&'a'));
+        assert_eq!(list.get(a), Some(&'a'));
+    }
+
+    #[test]
+    fn zzz() {
+        fn eq<'a, I: Iterator<Item = &'a char> + Clone>(iter: I, slice: &[char]) -> bool {
+            iter.clone().count() == slice.len() && iter.zip(slice.iter()).all(|(a, b)| a == b)
+        }
+
+        let mut list = List::<Doubly, _>::from_iter(['a', 'b', 'c', 'd']);
+
+        let x = list.index_of(&'x');
+        assert!(x.is_none());
+
+        let maybe_b = list.index_of(&'b'); // O(n)
+        assert!(maybe_b.is_some());
+
+        let b = maybe_b.unwrap();
+
+        let data_b = list.get(b); // O(1)
+        assert_eq!(data_b, Some(&'b'));
+
+        // O(1) to create the iterators from the index
+        assert!(eq(list.iter_forward_from(b).unwrap(), &['b', 'c', 'd']));
+        assert!(eq(list.iter_backward_from(b).unwrap(), &['b', 'a']));
+
+        list.insert_prev_to(b, 'X').unwrap(); // O(1)
+        list.insert_next_to(b, 'Y').unwrap(); // O(1)
+        assert!(eq(list.iter(), &['a', 'X', 'b', 'Y', 'c', 'd']));
+
+        let removed = list.remove(b); // O(1)
+        assert_eq!(removed, Ok('b'));
+        assert!(eq(list.iter(), &['a', 'X', 'Y', 'c', 'd']));
+
+        // not possible to wrongly use the index
+        assert_eq!(list.get(b), None);
+        assert_eq!(
+            list.get_or_error(b).err(),
+            Some(NodeIndexError::RemovedNode)
+        );
+
+        // indices can also be stored on insertion
+        let mut list = List::<Doubly, _>::from_iter(['a', 'b', 'c', 'd']);
+
+        let x = list.push_back('x'); // grab index of x in O(1) on insertion
+
+        _ = list.push_back('e');
+        _ = list.push_back('f');
+        assert!(eq(list.iter(), &['a', 'b', 'c', 'd', 'x', 'e', 'f']));
+
+        let data_x = list.get(x); // O(1)
+        assert_eq!(data_x, Some(&'x'));
+
+        list.insert_prev_to(x, 'w').unwrap(); // O(1)
+        list.insert_next_to(x, 'y').unwrap(); // O(1)
+        assert!(eq(
+            list.iter(),
+            &['a', 'b', 'c', 'd', 'w', 'x', 'y', 'e', 'f']
+        ));
     }
 }

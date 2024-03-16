@@ -1,17 +1,21 @@
 use super::{ends::ListEnds, list_variant::ListVariant};
+use crate::list::DefaultMemoryPolicy;
 use orx_selfref_col::{
-    MemoryReclaimOnThreshold, Node, NodeDataLazyClose, NodeRefSingle, NodeRefs, NodeRefsArray,
-    Variant,
+    MemoryReclaimPolicy, Node, NodeDataLazyClose, NodeRefSingle, NodeRefs, NodeRefsArray, Variant,
 };
+use std::marker::PhantomData;
 
-pub type EndsDoubly<'a, T> = NodeRefsArray<'a, 2, Doubly, T>;
+pub type EndsDoubly<'a, T, M> = NodeRefsArray<'a, 2, Doubly<M>, T>;
 
-impl<'a, T> ListEnds<'a, Doubly, T> for EndsDoubly<'a, T> {
-    fn front(&self) -> Option<&'a Node<'a, Doubly, T>> {
+impl<'a, T, M> ListEnds<'a, Doubly<M>, T> for EndsDoubly<'a, T, M>
+where
+    M: 'a + MemoryReclaimPolicy,
+{
+    fn front(&self) -> Option<&'a Node<'a, Doubly<M>, T>> {
         self.get()[0]
     }
 
-    fn back(&self) -> Option<&'a Node<'a, Doubly, T>> {
+    fn back(&self) -> Option<&'a Node<'a, Doubly<M>, T>> {
         self.get()[1]
     }
 }
@@ -22,11 +26,14 @@ impl<'a, T> ListEnds<'a, Doubly, T> for EndsDoubly<'a, T> {
 /// * It is possible to iterate from the `front` to the `back` of the list with `iter` method;
 /// and from the `back` to the `front` with `iter_from_back` method.
 #[derive(Clone, Copy, Debug)]
-pub struct Doubly;
+pub struct Doubly<M: MemoryReclaimPolicy = DefaultMemoryPolicy> {
+    phantom: PhantomData<M>,
+}
 
-impl<'a, T> Variant<'a, T> for Doubly
+impl<'a, T, M> Variant<'a, T> for Doubly<M>
 where
     T: 'a,
+    M: 'a + MemoryReclaimPolicy,
 {
     type Storage = NodeDataLazyClose<T>;
 
@@ -34,15 +41,20 @@ where
 
     type Next = NodeRefSingle<'a, Self, T>;
 
-    type Ends = EndsDoubly<'a, T>;
+    type Ends = EndsDoubly<'a, T, M>;
 
-    type MemoryReclaim = MemoryReclaimOnThreshold<2>;
+    type MemoryReclaim = M;
 }
 
-impl<'a, T> ListVariant<'a, T> for Doubly
+impl<'a, T, M> ListVariant<'a, T> for Doubly<M>
 where
     T: 'a,
+    M: 'a + MemoryReclaimPolicy,
 {
+    type PrevNode = NodeRefSingle<'a, Self, T>;
+
+    type NextNode = NodeRefSingle<'a, Self, T>;
+
     #[cfg(test)]
     fn validate(list: &crate::list::List<'a, Self, T>)
     where

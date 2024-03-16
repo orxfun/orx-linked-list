@@ -2,11 +2,13 @@ use crate::{
     list::List,
     variants::{doubly::Doubly, singly::Singly},
 };
+use orx_selfref_col::MemoryReclaimPolicy;
 use std::fmt::Debug;
 
-impl<'a, T> Debug for List<'a, Singly, T>
+impl<'a, T, M> Debug for List<'a, Singly<M>, T>
 where
     T: Debug,
+    M: MemoryReclaimPolicy,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("SinglyLinkedList")
@@ -17,9 +19,10 @@ where
     }
 }
 
-impl<'a, T> Debug for List<'a, Doubly, T>
+impl<'a, T, M> Debug for List<'a, Doubly<M>, T>
 where
     T: Debug,
+    M: 'a + MemoryReclaimPolicy,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("DoublyLinkedList")

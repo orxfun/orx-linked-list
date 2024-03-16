@@ -1,4 +1,4 @@
-use orx_selfref_col::{NodeDataLazyClose, NodeRefSingle, NodeRefsArray, Variant};
+use orx_selfref_col::{NodeDataLazyClose, NodeRefSingle, NodeRefs, NodeRefsArray, Variant};
 
 pub trait ListVariant<'a, T>:
     Variant<
@@ -12,6 +12,9 @@ where
     Self: 'a,
     T: 'a,
 {
+    type PrevNode: NodeRefs<'a, Self, T>;
+    type NextNode: NodeRefs<'a, Self, T>;
+
     #[cfg(test)]
     fn validate(list: &crate::list::List<'a, Self, T>)
     where
