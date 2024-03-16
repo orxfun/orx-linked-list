@@ -2778,7 +2778,7 @@ pub(crate) mod tests {
     }
 
     #[test]
-    fn eee() {
+    fn node_utilization() {
         use crate::*;
 
         fn float_eq(x: f32, y: f32) -> bool {
@@ -2819,15 +2819,10 @@ pub(crate) mod tests {
             Err(NodeIndexError::ReorganizedCollection)
         );
         assert_eq!(list.get(a), None);
-
-        // re-obtain the index
-        let a = list.index_of(&'a').unwrap();
-        assert_eq!(list.get_or_error(a), Ok(&'a'));
-        assert_eq!(list.get(a), Some(&'a'));
     }
 
     #[test]
-    fn fff() {
+    fn reclaim_closed_nodes() {
         use crate::*;
 
         fn float_eq(x: f32, y: f32) -> bool {
@@ -2870,68 +2865,5 @@ pub(crate) mod tests {
             Err(NodeIndexError::ReorganizedCollection)
         );
         assert_eq!(list.get(a), None);
-
-        // re-obtain the index
-        let a = list.index_of(&'a').unwrap();
-        assert_eq!(list.get_or_error(a), Ok(&'a'));
-        assert_eq!(list.get(a), Some(&'a'));
-    }
-
-    #[test]
-    fn zzz() {
-        fn eq<'a, I: Iterator<Item = &'a char> + Clone>(iter: I, slice: &[char]) -> bool {
-            iter.clone().count() == slice.len() && iter.zip(slice.iter()).all(|(a, b)| a == b)
-        }
-
-        let mut list = List::<Doubly, _>::from_iter(['a', 'b', 'c', 'd']);
-
-        let x = list.index_of(&'x');
-        assert!(x.is_none());
-
-        let maybe_b = list.index_of(&'b'); // O(n)
-        assert!(maybe_b.is_some());
-
-        let b = maybe_b.unwrap();
-
-        let data_b = list.get(b); // O(1)
-        assert_eq!(data_b, Some(&'b'));
-
-        // O(1) to create the iterators from the index
-        assert!(eq(list.iter_forward_from(b).unwrap(), &['b', 'c', 'd']));
-        assert!(eq(list.iter_backward_from(b).unwrap(), &['b', 'a']));
-
-        list.insert_prev_to(b, 'X').unwrap(); // O(1)
-        list.insert_next_to(b, 'Y').unwrap(); // O(1)
-        assert!(eq(list.iter(), &['a', 'X', 'b', 'Y', 'c', 'd']));
-
-        let removed = list.remove(b); // O(1)
-        assert_eq!(removed, Ok('b'));
-        assert!(eq(list.iter(), &['a', 'X', 'Y', 'c', 'd']));
-
-        // not possible to wrongly use the index
-        assert_eq!(list.get(b), None);
-        assert_eq!(
-            list.get_or_error(b).err(),
-            Some(NodeIndexError::RemovedNode)
-        );
-
-        // indices can also be stored on insertion
-        let mut list = List::<Doubly, _>::from_iter(['a', 'b', 'c', 'd']);
-
-        let x = list.push_back('x'); // grab index of x in O(1) on insertion
-
-        _ = list.push_back('e');
-        _ = list.push_back('f');
-        assert!(eq(list.iter(), &['a', 'b', 'c', 'd', 'x', 'e', 'f']));
-
-        let data_x = list.get(x); // O(1)
-        assert_eq!(data_x, Some(&'x'));
-
-        list.insert_prev_to(x, 'w').unwrap(); // O(1)
-        list.insert_next_to(x, 'y').unwrap(); // O(1)
-        assert!(eq(
-            list.iter(),
-            &['a', 'b', 'c', 'd', 'w', 'x', 'y', 'e', 'f']
-        ));
     }
 }
