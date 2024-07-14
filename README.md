@@ -325,6 +325,10 @@ This benchmark compares time performance of iteration through the `iter` method.
 
 <img src="https://raw.githubusercontent.com/orxfun/orx-linked-list/main/docs/img/iter.PNG" alt="https://raw.githubusercontent.com/orxfun/orx-linked-list/main/docs/img/iter.PNG" />
 
+## Contributing
+
+Contributions are welcome! If you notice an error, have a question or think something could be improved, please open an [issue](https://github.com/orxfun/orx-linked-list/issues/new) or create a PR.
+
 ## License
 
 This library is licensed under MIT license. See LICENSE for details.
