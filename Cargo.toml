@@ -1,27 +1,31 @@
 [package]
 name = "orx-linked-list"
-version = "2.7.0"
+version = "3.0.0"
 edition = "2021"
 authors = ["orxfun <orx.ugur.arikan@gmail.com>"]
-description = "An efficient and recursive singly and doubly linked list implementation."
+description = "A linked list implementation with unique features and an extended list of constant time methods providing high performance traversals and mutations."
 license = "MIT"
 repository = "https://github.com/orxfun/orx-linked-list/"
-keywords = ["linked", "list", "vec", "array", "pinned"]
-categories = ["data-structures", "rust-patterns"]
+keywords = ["linked", "list", "doubly", "singly", "pinned"]
+categories = ["data-structures", "rust-patterns", "no-std"]
 
 [dependencies]
-orx-pseudo-default = "1.2"
-orx-pinned-vec = "3.3"
-orx-split-vec = "3.3"
-orx-selfref-col = "1.8"
-
+orx-pseudo-default = { version = "1.4", default-features = false }
+orx-pinned-vec = "3.9"
+orx-split-vec = "3.9"
+orx-selfref-col = "2.0"
 
 [dev-dependencies]
-rand = "0.8"
-rand_chacha = "0.3"
-criterion = { version = "0.5", features = ["html_reports"] }
-test-case = "3.3"
+clap = { version = "4.5.17", features = ["derive"] }
+criterion = "0.5"
+rand = "0.8.5"
+rand_chacha = "0.3.1"
+test-case = "3.3.1"
+
+[features]
+default = ["validation"]
+validation = []
 
 [[bench]]
-name = "mutation_ends"
+name = "doubly_shuffling_around"
 harness = false
