@@ -16,7 +16,6 @@ mod common_traits;
 mod consuming;
 mod get;
 mod get_doubly;
-mod get_singly;
 mod idx_doubly;
 mod idx_singly;
 mod linear;
