@@ -71,7 +71,7 @@ Linked lists are all about traversal. And hence, the linked list, specifically t
 * [`iter_backward_from(idx: &DoublyIdx<T>)`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.iter_backward_from) iterates forward starting from the node with the given index to the front
 * [`ring_iter(pivot_idx: &DoublyIdx<T>)`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.ring_iter) iterates forward starting from the pivot node with the given index until the node before the pivot node, linking back to the front and giving the list the **circular behavior**
 * [`iter_links()`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.iter_links) iterates over the links of the list
-* [`iter_x()`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.iter_x) iterates over elements in an arbitrary order, which is often faster when the order is not required
+* [`iter_x()`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyList.html#method.iter_x) iterates over elements in an arbitrary order, which is often faster when the order is not required
 
 As typical, above-mentioned methods have the "_mut" suffixed versions for iterating over mutable references.
 
@@ -117,7 +117,7 @@ assert_eq!(res, [3, 4, 5, 0, 1, 2]);
 
 Due to the feature of the [`Recursive`](https://docs.rs/orx-split-vec/3.8.0/orx_split_vec/struct.Recursive.html) growth strategy of the underlying SplitVec that allows merging vectors and the nature of linked lists, appending two lists is a constant time operation.
 
-See [`append_front`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyList.html#method.append_front) and [`iter_back`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyList.html#method.append_back).
+See [`append_front`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyList.html#method.append_front) and [`append_back`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyList.html#method.append_back).
 
 <details>
 <summary style="font-weight:bold;">Example</summary>
@@ -326,7 +326,7 @@ This crate aims to overcome the concerns with the following approach:
 
 ▶ There is also <ins>no choice</ins> between a `VecDeque` and a linked list. VecDeque is very efficient when we need a double ended queue. However, we need a linked list when we need lots of mutations in the sequence and positions of elements. They solve different problems.
 
-For instance, a `DoublyList` with indices is a better fit for a problem where we will continuously mutate positions of elements in a collection, moving them around. A very common use case is due to the classical traveling salesman problem where we keep changing positions of cities with the aim to find shorter and shorter tours.
+For instance, a `DoublyList` with indices is a better fit for a problem where we will continuously mutate positions of elements in a collection, moving them around. A very common use case occurs due to the classical traveling salesman problem where we keep changing positions of cities with the aim to find shorter and shorter tours.
 
 See the example in [tour_mutations.rs](https://github.com/orxfun/orx-linked-list/blob/main/examples/tour_mutations.rs).
 
@@ -364,7 +364,7 @@ impl TourLinkedList {
 }
 ```
 
-Although clear from the worst time complexity of the implementations, [doubly_shuffling_around.rs](https://github.com/orxfun/orx-linked-list/blob/main/benches/doubly_shuffling_around.rs) benchmark demonstrates the dramatic difference. At each setting, we perform 10k `insert_after` moves with tours of different lengths. The following table summarizes the required time in macro-seconds for each setting.
+Although clear from the worst time complexity of the implementations, [doubly_shuffling_around.rs](https://github.com/orxfun/orx-linked-list/blob/main/benches/doubly_shuffling_around.rs) benchmark demonstrates the dramatic difference. At each setting, we perform 10k `insert_after` moves with tours of different lengths. The following table summarizes the required time in microseconds for each setting.
 
 | num_cities | DoublyList | Vec       |
 |------------|------------|-----------|
@@ -379,26 +379,26 @@ Although clear from the worst time complexity of the implementations, [doubly_sh
 
 As mentioned, node indices are associated with elements rather than positions.
 * The linked list can provide safe access through node indices due to the fact that the underlying storage is a [`SplitVec`](https://crates.io/crates/orx-split-vec) which implements [`PinnedVec`](https://crates.io/crates/orx-pinned-vec), keeping the memory positions of its elements unchanged, unless they are explicitly changed.
-* Therefore, the list is able to know if a node index is pointing to a valid memory position belonging to itself. Therefore, we are not allowed use a node index created from one list on another list:
+* Therefore, the list is able to know if a node index is pointing to a valid memory position belonging to itself, and prevents to use a node index created from one list on another list:
   * `get`, `is_valid`, `idx_err` returns None, false and `NodeIdxErr::OutOfBounds`, respectively.
 * Further, when an element is removed from the list, its position is not immediately filled by other elements. Therefore, the index still points to the correct memory position and the list is able to know that the element is removed.
   * `get`, `is_valid`, `idx_err` returns None, false and `NodeIdxErr::RemovedNode`, respectively.
 
-Clearly, such a memory policy might leave gaps in the storage and lead to low utilization of memory. However, the lists are self-organizing as follows:
+Clearly, such a memory policy leaves gaps in the storage and utilization of memory becomes important. Therefore, the linked lists are self-organizing as follows:
 * Whenever an element is removed, the utilization of nodes is checked. Node utilization is the ratio of active nodes to occupied nodes.
 * Whenever the utilization falls below a certain threshold (75% by default), positions of closed nodes are reclaimed and utilization is brought back to 100%.
 
 When, a node reorganization is triggered, node indices collected beforehand become invalid. The linked lists, however, have a means to know that the node index is now invalid by comparing the so called memory states of the index and list. If we attempt to use a node index after the list is reorganized and the index is invalidated, we safely get an error:
   * `get`, `is_valid`, `idx_err` returns None, false and `NodeIdxErr::ReorganizedCollection`, respectively.
 
-**In summary, we can always make sure whether or not using a node index is safe and allowed. Further, we can never have an unchecked / unsafe access to elements that we are not supposed to.**
+*In summary, we can make sure whether or not using a node index is safe. Further, we cannot have an unchecked / unsafe access to elements that we are not supposed to.*
 
-On the other hand, it sounds inconvenient that the indices can implicitly be invalidated. However, the situation is actually not complicated or unpredictable.
+It sounds inconvenient that the indices can implicitly be invalidated. The situation, however, is not complicated or unpredictable.
 * First, we know that growth can never cause reorganization; only removals can trigger it.
 * Second, we have the lazy versions of the lists which will never automatically reorganize nodes. Collected indices will always be valid unless we explicitly call `reclaim_closed_nodes`.
-* Third, it is a free operation to switch between auto-reclaim and lazy-reclaim modes.
+* Third, it is free to transform between auto-reclaim and lazy-reclaim modes.
 
-**Therefore, we can have full control on the valid lifetime of our indices.**
+*Therefore, we can have full control on the valid lifetime of our indices.*
 
 <details>
 <summary style="font-weight:bold;">Controlling Validity of Node Indices</summary>

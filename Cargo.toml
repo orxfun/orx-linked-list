@@ -1,6 +1,6 @@
 [package]
 name = "orx-linked-list"
-version = "3.0.0"
+version = "3.0.1"
 edition = "2021"
 authors = ["orxfun <orx.ugur.arikan@gmail.com>"]
 description = "A linked list implementation with unique features and an extended list of constant time methods providing high performance traversals and mutations."
