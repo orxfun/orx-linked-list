@@ -3,327 +3,500 @@
 [![orx-linked-list crate](https://img.shields.io/crates/v/orx-linked-list.svg)](https://crates.io/crates/orx-linked-list)
 [![orx-linked-list documentation](https://docs.rs/orx-linked-list/badge.svg)](https://docs.rs/orx-linked-list)
 
-An efficient and recursive singly and doubly linked list implementation.
+A linked list implementation with unique features and an extended list of constant time methods providing high performance traversals and mutations.
 
-* *efficient*: Please see <a href="#section-benchmarks">benchmarks</a> section for performance reports of common linked list operations. Furthermore, `List` implementation emphasizes safe constant time access and mutations through usage of `NodeIndex`.
-* *singly or doubly*: This is a generic parameter of the `List`. As expected, `Doubly` allows for more operations than `Singly`; however, it keeps two references per node rather than one.
-* *recursive*: `List` allows creating a list by combining two lists in constant time.
+Both doubly and singly lists are provided as generic variants of the core struct `List`. It is sufficient to know the four variants:
+* [`DoublyList`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyList.html) and [`SinglyList`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.SinglyList.html)
+* [`DoublyListLazy`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyListLazy.html) and [`SinglyListLazy`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.SinglyListLazy.html) -> lazy suffix corresponds to lazy memory reclaim and will be explained in the indices section.
 
+Some notable features are as follows.
 
-## Variants
+## Efficiency
 
-* **`List<Variant, T>`** where `T` is the type of elements:
-  * **`List<Singly, T>`**: is the singly linked list, where each node holds a reference to the next node.
-    * This is equivalent to `List<Singly<MemoryReclaimOnThreshold<2>>, T>`.
-    * The alternative memory policy is `List<Singly<MemoryReclaimNever>, T>`.
-  * **`List<Doubly, T>`**: is the doubly linked list, where each node holds references to the previous and next nodes.
-    * This is equivalent to `List<Doubly<MemoryReclaimOnThreshold<2>>, T>`.
-    * The alternative memory policy is `List<Doubly<MemoryReclaimNever>, T>`.
+Link lists are self organizing to keep the nodes close to each other to benefit from cache locality. Further, it uses safe direct references without an additional indirection to traverse through the nodes.
 
-*For possible memory management policies, please see <a href="#section-advanced">advanced usage</a> section.*
+We observe in benchmarks that `DoublyList` is significantly faster than the standard linked list.
 
-## Time Complexity of Methods
+<details>
+<summary style="font-weight:bold;">A. Mutation At Ends</summary>
 
-In order to indicate the methods available only for the `Doubly` linked list, but not `Singly`, **(*d*)** indicator is used.
+In [doubly_mutation_ends.rs](https://github.com/orxfun/orx-linked-list/blob/main/benches/doubly_mutation_ends.rs) benchmark, we first push elements to a linked list until it reaches a particular length. Then, we call
+- `push_back`
+- `push_front`
+- `pop_back`
+- `pop_front`
 
-The following is the list of methods with constant time **O(1)** time complexity.
+in a random alternating order. We observe that `DoublyList` is around **40%** faster than `std::collections::LinkedList`.
 
-| ***O(1)*** Methods |
-| -------- |
-| **`front`, `back`**: access to front and back of the list  |
-| **`get`**: access to to any node with a given index |
-| **`push_front`, `push_back`**: push to front or back (*d*) of the list |
-| **`pop_front`, `pop_back`**: pop from front and back (*d*) of the list |
-| **`insert_prev_to`, `insert_next_to`**: insert a value previous or next to an existing node with a given index (*d*) |
-| **`append_front`, `append_back`**: append another list to front or back of the list |
-| **`iter`, `iter_from_back`**: create an iterator from the front or back (*d*) of the list; iterating has O(n) time complexity |
-| **`iter_forward_from`, `iter_backward_from`**: create a forward or backward (*d*) iterator from any intermediate node with a given index; iterating has O(n) time complexity |
-
-| ***O(n)*** Methods |
-| -------- |
-| **`index_of`**: get the index of an element, which can later be used for ***O(1)*** methods |
-| **`contains`, `position_of`**: check the existence or position of a value |
-| **`insert_at`**: insert an element to an arbitrary position of the list |
-| **`remove_at`**: remove an element from an arbitrary position of the list |
-| **`iter`, `iter_from_back`**: iterate from the front or back (*d*) of the list |
-| **`iter_forward_from`, `iter_backward_from`**: iterate in forward or backward (*d*) direction from any intermediate node with a given index |
-| **`retain`, `retain_collect`**: retain keeping elements satisfying a predicate and optionally collect removed elements |
-
-
-## Examples
-
-### Common Usage
-
-`orx_linked_list::List` provides common linked list functionalities, with a special emphasis on maintaining the recursive nature of the data structure which allows for constant time merging of lists.
+The following example demonstrates the simple usage of the list with mutation at its ends.
 
 ```rust
 use orx_linked_list::*;
 
-fn eq<'a, I: Iterator<Item = &'a u32> + Clone>(iter: I, slice: &[u32]) -> bool {
-    iter.clone().count() == slice.len() && iter.zip(slice.iter()).all(|(a, b)| a == b)
-}
+let mut list = DoublyList::new();
+list.push_front('b');
+list.push_back('c');
+list.push_front('a');
+list.push_back('d');
 
-let _list: List<Singly, u32> = List::new();
-let _list: List<Doubly, u32> = List::new();
+assert!(list.eq_to_iter_vals(['a', 'b', 'c', 'd']));
 
-let mut list = List::<Doubly, _>::from_iter([3, 4, 5]);
-assert_eq!(list.front(), Some(&3));
-assert_eq!(list.back(), Some(&5));
-assert!(eq(list.iter(), &[3, 4, 5]));
-assert!(eq(list.iter_from_back(), &[5, 4, 3]));
+assert_eq!(list.pop_back(), Some('d'));
+assert_eq!(list.pop_front(), Some('a'));
 
-assert_eq!(list.pop_front(), Some(3));
-assert_eq!(list.pop_back(), Some(5));
+assert_eq!(list.front(), Some(&'b'));
+assert_eq!(list.back(), Some(&'c'));
+assert_eq!(list.len(), 2);
+```
 
-list.push_back(5);
-list.push_front(3);
-assert!(eq(list.iter(), &[3, 4, 5]));
+</details>
 
-let other = List::<Doubly, _>::from_iter([6, 7, 8, 9]);
-list.append_back(other);
-assert!(eq(list.iter(), &[3, 4, 5, 6, 7, 8, 9]));
+<details>
+<summary style="font-weight:bold;">B. Iteration</summary>
 
-let other = List::<Doubly, _>::from_iter([0, 1, 2]);
+In [doubly_iter.rs](https://github.com/orxfun/orx-linked-list/blob/main/benches/doubly_iter.rs) benchmark, we create a linked list with insertions to the back and front of the list in a random order. Then, we `iter()` over the nodes and apply a map-reduce over the elements.
+
+We observe that `DoublyList` iteration is around **25 times** faster than that with `std::collections::LinkedList`.
+
+The significance of improvement can further be increased by using `DoublyList::iter_x()` instead, which iterates over the elements in an arbitrary order. Unordered iteration is not suitable for all use cases. Most reductions or applying a mutation to each element are a couple of common examples. When the use case allows, unordered iteration further provides significant speed up.
+
+</details>
+
+## Iterations
+
+Linked lists are all about traversal. And hence, the linked list, specifically the `DoublyList`, provides various useful ways to iterate over the data:
+* [`iter()`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.iter) iterates from front to back of the list
+* `iter().rev()` iterates from back to front
+* [`iter_from(idx: &DoublyIdx<T>)`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.iter_from) iterates forward starting from the node with the given index to the back
+* [`iter_backward_from(idx: &DoublyIdx<T>)`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.iter_backward_from) iterates forward starting from the node with the given index to the front
+* [`ring_iter(pivot_idx: &DoublyIdx<T>)`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.ring_iter) iterates forward starting from the pivot node with the given index until the node before the pivot node, linking back to the front and giving the list the **circular behavior**
+* [`iter_links()`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.iter_links) iterates over the links of the list
+* [`iter_x()`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.iter_x) iterates over elements in an arbitrary order, which is often faster when the order is not required
+
+As typical, above-mentioned methods have the "_mut" suffixed versions for iterating over mutable references.
+
+<details>
+<summary style="font-weight:bold;">Example</summary>
+
+```rust
+use orx_linked_list::*;
+
+let list: DoublyList<_> = (0..6).collect();
+
+let res = list.iter().copied().collect::<Vec<_>>();
+assert_eq!(res, [0, 1, 2, 3, 4, 5]);
+
+let res = list.iter().rev().copied().collect::<Vec<_>>();
+assert_eq!(res, [5, 4, 3, 2, 1, 0]);
+
+let res = list.iter_links().map(|(a, b)| (*a, *b)).collect::<Vec<_>>();
+assert_eq!(res, [(0, 1), (1, 2), (2, 3), (3, 4), (4, 5)]);
+
+let res = list.iter_x().copied().collect::<Vec<_>>();
+assert_eq!(res, [0, 1, 2, 3, 4, 5]); // deterministic but arbitrary order
+
+// using indices (see the indices section for details)
+let idx: Vec<_> = list.indices().collect();
+
+let res = list.iter_from(&idx[3]).copied().collect::<Vec<_>>();
+assert_eq!(res, [3, 4, 5]);
+
+let res = list
+    .iter_backward_from(&idx[3])
+    .copied()
+    .collect::<Vec<_>>();
+assert_eq!(res, [3, 2, 1, 0]);
+
+let res = list.ring_iter(&idx[3]).copied().collect::<Vec<_>>();
+assert_eq!(res, [3, 4, 5, 0, 1, 2]);
+
+```
+</details>
+
+## Zero-Cost Append
+
+Due to the feature of the [`Recursive`](https://docs.rs/orx-split-vec/3.8.0/orx_split_vec/struct.Recursive.html) growth strategy of the underlying SplitVec that allows merging vectors and the nature of linked lists, appending two lists is a constant time operation.
+
+See [`append_front`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyList.html#method.append_front) and [`iter_back`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyList.html#method.append_back).
+
+<details>
+<summary style="font-weight:bold;">Example</summary>
+
+```rust
+use orx_linked_list::*;
+
+let mut list = DoublyList::new();
+list.push_front('b');
+list.push_front('a');
+list.push_back('c');
+
+let other = DoublyList::from_iter(['d', 'e'].into_iter());
+
 list.append_front(other);
-assert!(eq(list.iter(), &[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
-
-list.retain(&|x| x < &5);
-assert!(eq(list.iter(), &[0, 1, 2, 3, 4]));
-
-let mut odds = vec![];
-let mut collect_odds = |x| odds.push(x);
-list.retain_collect(&|x| x % 2 == 0, &mut collect_odds);
-
-assert!(eq(list.iter(), &[0, 2, 4]));
-assert!(eq(odds.iter(), &[1, 3]));
+assert!(list.eq_to_iter_vals(['d', 'e', 'a', 'b', 'c']));
 ```
+</details>
 
-### `NodeIndex` Usage
 
-`NodeIndex` allows indexing into the collection in constant time with safety guarantees. The indices returned by growth methods, such as `push_back` or `append_next_to`, can be stored externally. Otherwise, an index for a value can be searched and obtained in linear time with `index_of` method. You may see below that these indices enable constant time access and mutation methods.
+## Node Indices
+
+[`DoublyIdx<T>`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyIdx.html) and [`SinglyIdx<T>`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.SinglyIdx.html) are the node indices for doubly and singly linked lists, respectively.
+
+A node index is analogous to `usize` for a slice (`&[T]`) in the following:
+* It provides constant time access to any element in the list.
+
+It differs from `usize` for a slice due to the following:
+* `usize` represents a position of the slice. Say we have the slice `['a', 'b', 'c']`. Currently, index **0** points to element `a`. However, if we swap the first and third elements, index **0** will now be pointing to `c` because the `usize` represents a position on the slice.
+* A node index represents the element it is created for. Say we now have a list `['a', 'b', 'c']` instead and `idx_a` is the index of the first element. It will always be pointing to this element no matter how many times we change its position, its value, etc.
+
+Knowing the index of an element enables a large number of constant time operations. Below is a toy example to demonstrate how the index represents an element rather than a position, and illustrates some of the possible O(1) methods using it.
+
+<details>
+<summary style="font-weight:bold;">Example</summary>
 
 ```rust
 use orx_linked_list::*;
 
-fn eq<'a, I: Iterator<Item = &'a char> + Clone>(iter: I, slice: &[char]) -> bool {
-    iter.clone().count() == slice.len() && iter.zip(slice.iter()).all(|(a, b)| a == b)
-}
+let mut list = DoublyList::new();
 
-let mut list = List::<Doubly, _>::from_iter(['a', 'b', 'c', 'd']);
-
-let x = list.index_of(&'x');
-assert!(x.is_none());
-
-let maybe_b = list.index_of(&'b'); // O(n)
-assert!(maybe_b.is_some());
-
-let b = maybe_b.unwrap();
-
-let data_b = list.get(b); // O(1)
-assert_eq!(data_b, Some(&'b'));
-
-// O(1) to create the iterators from the index
-assert!(eq(list.iter_forward_from(b).unwrap(), &['b', 'c', 'd']));
-assert!(eq(list.iter_backward_from(b).unwrap(), &['b', 'a']));
-
-list.insert_prev_to(b, 'X').unwrap(); // O(1)
-list.insert_next_to(b, 'Y').unwrap(); // O(1)
-assert!(eq(list.iter(), &['a', 'X', 'b', 'Y', 'c', 'd']));
-
-let removed = list.remove(b); // O(1)
-assert_eq!(removed, Ok('b'));
-assert!(eq(list.iter(), &['a', 'X', 'Y', 'c', 'd']));
-
-// not possible to wrongly use the index
-assert_eq!(list.get(b), None);
-assert_eq!(
-    list.get_or_error(b).err(),
-    Some(NodeIndexError::RemovedNode)
-);
-
-// indices can also be stored on insertion
-let mut list = List::<Doubly, _>::from_iter(['a', 'b', 'c', 'd']);
-
-let x = list.push_back('x'); // grab index of x in O(1) on insertion
-
-_ = list.push_back('e');
-_ = list.push_back('f');
-assert!(eq(list.iter(), &['a', 'b', 'c', 'd', 'x', 'e', 'f']));
-
-let data_x = list.get(x); // O(1)
-assert_eq!(data_x, Some(&'x'));
-
-list.insert_prev_to(x, 'w').unwrap(); // O(1)
-list.insert_next_to(x, 'y').unwrap(); // O(1)
-assert!(eq(list.iter(), &['a', 'b', 'c', 'd', 'w', 'x', 'y', 'e', 'f']));
-```
-
-<div id="section-advanced"></div>
-
-### Advanced Usage
-
-`NodeIndex` is useful in overcoming the major drawback of linked lists that it requires O(n) time to reach the location to apply the O(1) mutation. With holding the required `NodeIndex`, these mutations can be achieved in O(1). However, in order to use these constant time methods, the node index must be valid.
-
-There are three possible reasons why a node index can be invalid and using it in relevant methods returns `NodeIndexError`:
-- **a.** We are using the `NodeIndex` on a different `List`.
-- **b.** We are using the `NodeIndex` while the corresponding element is removed from the `List`.
-- **c.** `List` executed a memory reclaim under the hood in order to improve memory utilization.
-
-Notice that **a** and **b** are obviously mistakes, and hence, receiving an error is straightforward. Actually, we can see that using a `NodeIndex` on a `List` is much safer than using a `usize` on a `Vec`, as we are not protected against these mistakes in standard vector.
-
-However, **c** is completely related with underlying memory management of the `List`. There are two available policies, which are set as the generic argument of both `Singly` and `Doubly`:
-* `MemoryReclaimOnThreshold<D>`
-* `MemoryReclaimNever`
-
-#### Default Policy: `MemoryReclaimOnThreshold<2>`
-
-Adding elements to the `List` leads the underlying storage to grow, as expected. On the other hand, removing elements from the list leaves holes in the corresponding positions. In other words, the values are taken out but the memory location where the value is taken out is not immediately used for new elements.
-
-The `MemoryReclaimOnThreshold<D>` policy automatically reclaims these holes whenever the utilization falls below a threshold. The threshold is a function of the constant generic parameter `D`. Specifically, memory of closed nodes will be reclaimed whenever the ratio of closed nodes to all nodes exceeds one over `2^D`.
-* when `D = 0`: memory will be reclaimed when utilization is below 0.00% (equivalent to never).
-* when `D = 1`: memory will be reclaimed when utilization is below 50.00%.
-* when `D = 2`: memory will be reclaimed when utilization is below 75.00%.
-* when `D = 3`: memory will be reclaimed when utilization is below 87.50%.
-* ...
-
-Underlying `PinnedVec` does not reallocate on memory reclaim operations. Instead, it efficiently moves around the elements within already claimed memory to fill the gaps and repairs the links among the nodes. However, since the positions of the elements will be moved, already obtained `NodeIndex`es might potentially be pointing to wrong positions.
-* Fortunately, `NodeIndex` is aware of this operation. Therefore, it is **not** possible to wrongly use the index. If we obtain a node index, then the list reclaims memory, and then we try to use this node index on this list, we receive `NodeIndexError::ReorganizedCollection`.
-* Unfortunately, the `NodeIndex` now is not useful. All we can do is re-obtain the index by a linear search with methods such as `index_of`.
-
-```rust
-use orx_linked_list::*;
-
-fn float_eq(x: f32, y: f32) -> bool {
-    (x - y).abs() < f32::EPSILON
-}
-
-// MemoryReclaimOnThreshold<2> -> memory will be reclaimed when utilization is below 75%
-let mut list = List::<Doubly, _>::new();
-let a = list.push_back('a');
-list.push_back('b');
 list.push_back('c');
-list.push_back('d');
-list.push_back('e');
+list.push_front('b');
+let idx = list.push_front('a');
+let idx_d = list.push_back('d');
+assert!(list.eq_to_iter_vals(['a', 'b', 'c', 'd']));
 
-assert!(float_eq(list.node_utilization(), 1.00)); // utilization = 5/5 = 100%
+// O(1) access / mutate its value
+assert_eq!(list.get(&idx), Some(&'a'));
+*list.get_mut(&idx).unwrap() = 'o';
+list[&idx] = 'X';
+assert_eq!(list[&idx], 'X');
+assert!(list.eq_to_iter_vals(['X', 'b', 'c', 'd']));
 
-// no reorganization; 'a' is still valid
-assert_eq!(list.get_or_error(a), Ok(&'a'));
-assert_eq!(list.get(a), Some(&'a'));
+// O(1) move it around
+list.move_to_back(&idx);
+assert!(list.eq_to_iter_vals(['b', 'c', 'd', 'X']));
 
-_ = list.pop_back(); // leaves a hole
+list.move_prev_to(&idx, &idx_d);
+assert!(list.eq_to_iter_vals(['b', 'c', 'X', 'd']));
 
-assert!(float_eq(list.node_utilization(), 0.80)); // utilization = 4/5 = 80%
+// O(1) start iterators from it
+let res = list.iter_from(&idx).copied().collect::<Vec<_>>();
+assert_eq!(res, ['X', 'd']);
 
-// no reorganization; 'a' is still valid
-assert_eq!(list.get_or_error(a), Ok(&'a'));
-assert_eq!(list.get(a), Some(&'a'));
+let res = list.iter_backward_from(&idx).copied().collect::<Vec<_>>();
+assert_eq!(res, ['X', 'c', 'b']);
 
-_ = list.pop_back(); // leaves the second hole; we have utilization = 3/5 = 60%
-                      // this is below the threshold 75%, and triggers reclaim
-                      // we claim the two unused nodes / holes
+let res = list.ring_iter(&idx).copied().collect::<Vec<_>>();
+assert_eq!(res, ['X', 'd', 'b', 'c']);
 
-assert!(float_eq(list.node_utilization(), 1.00)); // utilization = 3/3 = 100%
+// O(1) insert elements relative to it
+list.insert_prev_to(&idx, '>');
+list.insert_next_to(&idx, '<');
+assert!(list.eq_to_iter_vals(['b', 'c', '>', 'X', '<', 'd']));
 
-// nodes reorganized; 'a' is no more valid
-assert_eq!(
-    list.get_or_error(a),
-    Err(NodeIndexError::ReorganizedCollection)
-);
-assert_eq!(list.get(a), None);
+// O(1) remove it
+let x = list.remove(&idx);
+assert_eq!(x, 'X');
+assert!(list.eq_to_iter_vals(['b', 'c', '>', '<', 'd']));
 
-// re-obtain the index
-let a = list.index_of(&'a').unwrap();
-assert_eq!(list.get_or_error(a), Ok(&'a'));
-assert_eq!(list.get(a), Some(&'a'));
+// what happens to the index if the element is removed?
+assert_eq!(list.get(&idx), None); // `get` safely returns None
+
+// O(1) we can query its state
+assert_eq!(list.is_valid(&idx), false);
+assert_eq!(list.idx_err(&idx), Some(NodeIdxError::RemovedNode));
+
+// list[&idx] = 'Y'; // panics!
 ```
+</details>
 
-#### Alternative Policy: `MemoryReclaimNever`
+### How to get Node Indices
 
-However, it is possible to make sure that the node indices will always be valid, unless we manually invalidate them, by simply eliminating the case **c**. Setting the memory reclaim policy to `MemoryReclaimNever` guarantees that there will be no automatic or implicit memory reorganizations:
-* use `List<Singly<MemoryReclaimNever>, T>` instead of `List<Singly, T>`, or
-* use `List<Doubly<MemoryReclaimNever>, T>` instead of `List<Doubly, T>`.
+Each method adding an element to the list returns the index created for that particular node.
 
-The drawback of this approach is that memory utilization can be low if there is a large number of pop or remove operations. However, `List` gives caller the control to manage memory by the following two methods:
-* `List::node_utilization(&self) -> f32` method can be used to see the ratio of number of active/utilized nodes to the number of used nodes. The caller can decide when to take action by the following.
-* `List::reclaim_closed_nodes(&mut self)` method can be used to manually run memory reclaim operation which will bring `node_utilization` to 100% while invalidating already created node indices.
+<details>
+<summary style="font-weight:bold;">push & insert</summary>
 
 ```rust
 use orx_linked_list::*;
 
-fn float_eq(x: f32, y: f32) -> bool {
-    (x - y).abs() < f32::EPSILON
+let mut list = DoublyList::new();
+
+let c = list.push_back('c');
+let b = list.push_front('b');
+let a = list.insert_prev_to(&b, 'a');
+let d = list.insert_next_to(&c, 'd');
+assert!(list.eq_to_iter_vals(['a', 'b', 'c', 'd']));
+
+let values = [list[&a], list[&b], list[&c], list[&d]];
+assert_eq!(values, ['a', 'b', 'c', 'd']);
+```
+
+</details>
+
+Alternatively, we can collect all indices at once using the [`indices`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.indices) method.
+
+<details>
+<summary style="font-weight:bold;">indices()</summary>
+
+```rust
+use orx_linked_list::*;
+
+let mut list = DoublyList::new();
+
+list.push_back('c');
+list.push_front('b');
+list.push_front('a');
+list.push_back('d');
+assert!(list.eq_to_iter_vals(['a', 'b', 'c', 'd']));
+
+let idx: Vec<_> = list.indices().collect();
+
+assert_eq!(list[&idx[2]], 'c');
+assert_eq!(list.remove(&idx[1]), 'b');
+assert_eq!(list.remove(&idx[3]), 'd');
+
+assert!(list.eq_to_iter_vals(['a', 'c']));
+```
+
+</details>
+
+### Constant Time Methods
+
+Traditionally, linked lists provide constant time access to the ends of the list, and allows mutations pushing to and popping from the front and the back (when doubly). Using the node indices, the following methods can also be performed in **O(1)** time:
+* accessing (reading or writing) a particular element ([`get`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyEnds.html#method.get), [`get_mut`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyEndsMut.html#method.get_mut))
+* accessing (reading or writing) a the previous or next of a particular element ([`next_of`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyEnds.html#method.next_of), [`prev_of`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyEnds.html#method.prev_of), [`next_mut_of`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyEndsMut.html#method.next_mut_of), [`prev_mut_of`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyEndsMut.html#method.prev_mut_of))
+* starting iterators from a particular element ([`iter_from`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.iter_from), [`iter_backward_from`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.iter_backward_from), [`ring_iter`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.ring_iter), [`iter_mut_from`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterableMut.html#method.iter_mut_from), [`iter_mut_backward_from`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterableMut.html#method.iter_mut_backward_from), [`ring_iter_mut`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterableMut.html#method.ring_iter_mut))
+* moving an element to the ends ([`move_to_front`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyEndsMut.html#method.move_to_front), [`move_to_back`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyEndsMut.html#method.move_to_back))
+* moving an element to previous or next to another element ([`move_next_to`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyEndsMut.html#method.move_next_to), [`move_prev_to`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyEndsMut.html#method.move_prev_to))
+* inserting new elements relative to a particular element ([`insert_next_to`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyList.html#method.insert_next_to), [`insert_prev_to`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyList.html#method.insert_prev_to))
+* removing a particular element ([`remove`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyList.html#method.remove))
+
+### Slices
+
+Indices enable slicing the list, which in turns behaves as a list reflecting its recursive nature.
+
+<details>
+<summary style="font-weight:bold;">slice</summary>
+
+```rust
+use orx_linked_list::*;
+
+let mut list: DoublyList<_> = (0..6).collect();
+let idx: Vec<_> = list.indices().collect();
+
+assert!(list.eq_to_iter_vals([0, 1, 2, 3, 4, 5]));
+
+// slice
+let slice = list.slice(&idx[1]..&idx[4]);
+
+assert!(slice.eq_to_iter_vals([1, 2, 3]));
+assert_eq!(slice.front(), Some(&1));
+assert_eq!(slice.back(), Some(&3));
+assert_eq!(slice.iter().copied().collect::<Vec<_>>(), [1, 2, 3]);
+assert_eq!(slice.iter().rev().copied().collect::<Vec<_>>(), [3, 2, 1]);
+
+// slice-mut
+let mut slice = list.slice_mut(&idx[1]..&idx[4]);
+for x in slice.iter_mut() {
+    *x += 10;
+}
+assert!(slice.eq_to_iter_vals([11, 12, 13]));
+
+slice.move_to_front(&idx[2]);
+assert!(slice.eq_to_iter_vals([12, 11, 13]));
+
+*slice.back_mut().unwrap() = 42;
+
+assert!(list.eq_to_iter_vals([0, 12, 11, 42, 4, 5]));
+```
+</details>
+
+### Efficiency of Constant Time Mutations (Example)
+
+How important are the additional O(1) methods?
+* In this talk [here](https://www.youtube.com/watch?v=YQs6IC-vgmo), Bjarne Stroustrup explains why we should avoid linked list. The talk nicely summarizes the trouble of achieving the appealing constant time mutation promise of linked list. Further, additional memory requirement due to the storage of links or pointers is mentioned.
+* Likewise, there exists the following note in the documentation of the `std::collections::LinkedList`: "It is almost always better to use Vec or VecDeque because array-based containers are generally faster, more memory efficient, and make better use of CPU cache."
+
+This crate aims to overcome the concerns with the following approach:
+* Underlying nodes of the list are stored in fragments of contagious storages. Further, the list is self organizing to keep the nodes dense, rather than scattered in memory. Therefore, it aims to benefit from cache locality.
+* Provides a safe node index support which allows us to jump to any element in constant time, and hence, be able to take benefit from mutating links, and hence the sequence, in constant time.
+
+▶ Actually, there is <ins>no choice</ins> between a `Vec` and a linked list. They are rarely interchangeable, and when they are, Vec must be the right structure.
+
+▶ There is also <ins>no choice</ins> between a `VecDeque` and a linked list. VecDeque is very efficient when we need a double ended queue. However, we need a linked list when we need lots of mutations in the sequence and positions of elements. They solve different problems.
+
+For instance, a `DoublyList` with indices is a better fit for a problem where we will continuously mutate positions of elements in a collection, moving them around. A very common use case is due to the classical traveling salesman problem where we keep changing positions of cities with the aim to find shorter and shorter tours.
+
+See the example in [tour_mutations.rs](https://github.com/orxfun/orx-linked-list/blob/main/examples/tour_mutations.rs).
+
+`cargo run --release --example tour_mutations -- --num-cities 10000 --num-moves 10000`
+
+The challenge is as follows:
+* We have a tour of n cities with ids 0..n.
+* We have an algorithm that searches for and yields improving moves (not included in the benchmark).
+* In the data structure representing the tour, we are required to implement `fn insert_after(&mut self, city: usize, city_to_succeed: usize)` method which is required to move the *city* after the *city_to_succeed*.
+
+Although this seems like a primitive operation, it is challenging to implement with a standard vector. Details of an attempt can be found in the example. In brief, one way or the other, it is not clear how to avoid the O(n) time complexity of the update.
+
+With a combination of `DoublyList` and indices; on the other hand, the method can be very conveniently implemented and it leads to a constant time update. Linked list is the naturally fitting tool for this task. The complete implementation is as follows:
+
+```rust
+use orx_linked_list::*;
+
+struct City {
+    id: usize,
+    name: String,
+    coordinates: [i32; 2],
 }
 
-// MemoryReclaimNever -> memory will never be reclaimed automatically
-let mut list = List::<Doubly<MemoryReclaimNever>, _>::new();
-let a = list.push_back('a');
-list.push_back('b');
-list.push_back('c');
-list.push_back('d');
-list.push_back('e');
+struct TourLinkedList {
+    cities: DoublyList<City>,
+    idx: Vec<DoublyIdx<City>>,
+}
 
-assert!(float_eq(list.node_utilization(), 1.00)); // utilization = 5/5 = 100%
+impl TourLinkedList {
+    fn insert_after(&mut self, city: usize, city_to_succeed: usize) {
+        let a = &self.idx[city];
+        let b = &self.idx[city_to_succeed];
+        self.cities.move_next_to(&a, &b);
+    }
+}
+```
 
-// no reorganization; 'a' is still valid
-assert_eq!(list.get_or_error(a), Ok(&'a'));
-assert_eq!(list.get(a), Some(&'a'));
+Although clear from the worst time complexity of the implementations, [doubly_shuffling_around.rs](https://github.com/orxfun/orx-linked-list/blob/main/benches/doubly_shuffling_around.rs) benchmark demonstrates the dramatic difference. At each setting, we perform 10k `insert_after` moves with tours of different lengths. The following table summarizes the required time in macro-seconds for each setting.
 
-_ = list.pop_back(); // leaves a hole
-_ = list.pop_back(); // leaves the second hole
-_ = list.pop_back(); // leaves the third hole
+| num_cities | DoublyList | Vec       |
+|------------|------------|-----------|
+| 10         | 113        | 233       |
+| 100        | 152        | 834       |
+| 1,000      | 239        | 5,637     |
+| 10,000     | 885        | 84,890    |
+| 100,000    | 7,791      | 1,227,500 |
+||||
 
-assert!(float_eq(list.node_utilization(), 0.40)); // utilization = 2/5 = 40%
+### Memory & Safety
 
-// still no reorganization; 'a' is and will always be valid unless we manually reclaim
-assert_eq!(list.get_or_error(a), Ok(&'a'));
-assert_eq!(list.get(a), Some(&'a'));
+As mentioned, node indices are associated with elements rather than positions.
+* The linked list can provide safe access through node indices due to the fact that the underlying storage is a [`SplitVec`](https://crates.io/crates/orx-split-vec) which implements [`PinnedVec`](https://crates.io/crates/orx-pinned-vec), keeping the memory positions of its elements unchanged, unless they are explicitly changed.
+* Therefore, the list is able to know if a node index is pointing to a valid memory position belonging to itself. Therefore, we are not allowed use a node index created from one list on another list:
+  * `get`, `is_valid`, `idx_err` returns None, false and `NodeIdxErr::OutOfBounds`, respectively.
+* Further, when an element is removed from the list, its position is not immediately filled by other elements. Therefore, the index still points to the correct memory position and the list is able to know that the element is removed.
+  * `get`, `is_valid`, `idx_err` returns None, false and `NodeIdxErr::RemovedNode`, respectively.
 
+Clearly, such a memory policy might leave gaps in the storage and lead to low utilization of memory. However, the lists are self-organizing as follows:
+* Whenever an element is removed, the utilization of nodes is checked. Node utilization is the ratio of active nodes to occupied nodes.
+* Whenever the utilization falls below a certain threshold (75% by default), positions of closed nodes are reclaimed and utilization is brought back to 100%.
+
+When, a node reorganization is triggered, node indices collected beforehand become invalid. The linked lists, however, have a means to know that the node index is now invalid by comparing the so called memory states of the index and list. If we attempt to use a node index after the list is reorganized and the index is invalidated, we safely get an error:
+  * `get`, `is_valid`, `idx_err` returns None, false and `NodeIdxErr::ReorganizedCollection`, respectively.
+
+**In summary, we can always make sure whether or not using a node index is safe and allowed. Further, we can never have an unchecked / unsafe access to elements that we are not supposed to.**
+
+On the other hand, it sounds inconvenient that the indices can implicitly be invalidated. However, the situation is actually not complicated or unpredictable.
+* First, we know that growth can never cause reorganization; only removals can trigger it.
+* Second, we have the lazy versions of the lists which will never automatically reorganize nodes. Collected indices will always be valid unless we explicitly call `reclaim_closed_nodes`.
+* Third, it is a free operation to switch between auto-reclaim and lazy-reclaim modes.
+
+**Therefore, we can have full control on the valid lifetime of our indices.**
+
+<details>
+<summary style="font-weight:bold;">Controlling Validity of Node Indices</summary>
+
+```rust
+use orx_linked_list::*;
+
+// default -> auto-reclaim mode
+let mut list: DoublyList<_> = DoublyList::new();
+
+// mutate the list in auto-reclaim-mode
+for i in 0..60 {
+    list.push_back(i);
+}
+
+// the following removals will lead to one implicit/auto
+// node reclaims operation keeping node utilization high
+for i in 0..20 {
+    match i % 2 == 0 {
+        true => list.pop_front(),
+        false => list.pop_back(),
+    };
+}
+assert_eq!(list.len(), 40);
+
+// collect indices
+let idx: Vec<_> = list.indices().collect();
+assert_eq!(idx.len(), 40);
+
+// shift to lazy-reclaim mode to make sure that the indices stay valid
+let mut list: DoublyListLazy<_> = list.into_lazy_reclaim();
+
+// mutate & move things around
+for i in 0..list.len() {
+    match i % 3 {
+        0 => list.move_to_front(&idx[i]),
+        1 => {
+            let j = (i + 1) % list.len();
+            list.move_next_to(&idx[i], &idx[j]);
+        }
+        _ => list[&idx[i]] *= 2,
+    }
+}
+
+// pop half of the nodes -> no reorganization
+for i in 0..(list.len() / 2) {
+    match i % 2 == 0 {
+        true => list.pop_back(),
+        false => list.pop_front(),
+    };
+}
+
+// remove 10 more by indices -> no reorganization
+let mut num_removed = 0;
+for idx in &idx {
+    // if not yet removed
+    if list.is_valid(&idx) {
+        list.remove(&idx);
+        num_removed += 1;
+        if num_removed == 10 {
+            break;
+        }
+    }
+}
+
+// we now must have 40 - 20 - 10 = 10 elements in the list
+assert_eq!(list.len(), 10);
+
+// but pointers of 40 of the original indices are still valid
+// despite all removals, the nodes are never reorganized!
+assert_eq!(idx.len(), 40);
+
+// * 10 of them are pointing to remaining elements
+// * 30 of them are pointing to gaps
+let num_active = idx.iter().filter(|x| list.is_valid(x)).count();
+let num_removed = idx
+    .iter()
+    .filter(|x| list.idx_err(x) == Some(NodeIdxError::RemovedNode))
+    .count();
+assert_eq!(num_active, 10);
+assert_eq!(num_removed, 30);
+
+// now that we completed heavy mutations on sequence, we can reclaim removed nodes
 list.reclaim_closed_nodes();
 
-// we can manually reclaim memory any time we want to maximize utilization
-assert!(float_eq(list.node_utilization(), 1.00)); // utilization = 2/2 = 100%
+// this explicitly invalidates all indices
+let num_valid_indices = idx.iter().filter(|x| list.is_valid(x)).count();
+assert_eq!(num_valid_indices, 0);
 
-// we are still protected by list & index validation
-// nodes reorganized; 'a' is no more valid, we cannot wrongly use the index
-assert_eq!(
-    list.get_or_error(a),
-    Err(NodeIndexError::ReorganizedCollection)
-);
-assert_eq!(list.get(a), None);
+// and brings utilization to 100%
+let utilization = list.node_utilization();
+assert_eq!(utilization.num_active_nodes, 10);
+assert_eq!(utilization.num_closed_nodes, 0);
 
-// re-obtain the index
-let a = list.index_of(&'a').unwrap();
-assert_eq!(list.get_or_error(a), Ok(&'a'));
-assert_eq!(list.get(a), Some(&'a'));
+// now we can switch back to the auto-reclaim mode
+let list = list.into_auto_reclaim();
 ```
-
-## Internal Features
-
-`orx_linked_list::List` makes use of the safety guarantees and efficiency features of [SelfRefCol](https://crates.io/crates/orx-selfref-col).
-* `SelfRefCol` constructs its safety guarantees around the fact that all references will be among elements of the same collection. By preventing bringing in external references or leaking out references, it is safe to build the self referential collection with **regular `&` references**.
-* With careful encapsulation, `SelfRefCol` prevents passing in external references to the list and leaking within list node references to outside. Once this is established, it provides methods to easily mutate inter list node references. These features allowed a very convenient implementation of the linked list in this crate with almost no use of the `unsafe` keyword, no read or writes through pointers and no access by indices. Compared to the `std::collections::LinkedList` implementation, it can be observed that `orx_linked_list::List` is a much **higher level implementation**.
-* Furthermore, `orx_linked_list::List` is **significantly faster** than the standard linked list. One of the main reasons for this is the feature of `SelfRefCol` keeping all close to each other rather than at arbitrary locations in memory which leads to a better cache locality.
-
-<div id="section-benchmarks"></div>
-
-## Benchmarks
-
-### Mutation Ends
-
-*You may see the benchmark at [benches/mutation_ends.rs](https://github.com/orxfun/orx-linked-list/blob/main/benches/mutation_ends.rs).*
-
-This benchmark compares time performance of calls to `push_front`, `push_back`, `pop_front` and `pop_back` methods.
-
-<img src="https://raw.githubusercontent.com/orxfun/orx-linked-list/main/docs/img/bench_mutation_ends.PNG" alt="https://raw.githubusercontent.com/orxfun/orx-linked-list/main/docs/img/bench_mutation_ends.PNG" />
-
-### Iteration
-
-*You may see the benchmark at [benches/iter.rs](https://github.com/orxfun/orx-linked-list/blob/main/benches/iter.rs).*
-
-This benchmark compares time performance of iteration through the `iter` method.
-
-<img src="https://raw.githubusercontent.com/orxfun/orx-linked-list/main/docs/img/iter.PNG" alt="https://raw.githubusercontent.com/orxfun/orx-linked-list/main/docs/img/iter.PNG" />
+</details>
 
 ## Contributing
 
