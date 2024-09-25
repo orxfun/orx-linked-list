@@ -1,10 +1,12 @@
 use crate::{list::helper_traits::HasSinglyEnds, type_aliases::IDX_ERR, Singly, SinglyIdx};
-use orx_selfref_col::{MemoryPolicy, NodeIdxError};
+use orx_pinned_vec::PinnedVec;
+use orx_selfref_col::{MemoryPolicy, Node, NodeIdxError};
 
 /// A list or view having a single end: front.
-pub trait SinglyEnds<T, M>: HasSinglyEnds<T, M>
+pub trait SinglyEnds<T, M, P>: HasSinglyEnds<T, M, P>
 where
     M: MemoryPolicy<Singly<T>>,
+    P: PinnedVec<Node<Singly<T>>>,
 {
     /// ***O(1)*** Returns a reference to the front of the list.
     ///
@@ -29,6 +31,7 @@ where
     fn front<'a>(&'a self) -> Option<&'a T>
     where
         M: 'a,
+        P: 'a,
     {
         self.ends()
             .get()
@@ -336,6 +339,7 @@ where
     fn get<'a>(&'a self, idx: &SinglyIdx<T>) -> Option<&T>
     where
         M: 'a,
+        P: 'a,
     {
         self.col().node_from_idx(idx).and_then(|n| n.data())
     }
@@ -446,6 +450,7 @@ where
     fn try_get<'a>(&'a self, idx: &SinglyIdx<T>) -> Result<&T, NodeIdxError>
     where
         M: 'a,
+        P: 'a,
     {
         self.col()
             .try_node_from_idx(idx)
@@ -517,14 +522,16 @@ where
     fn next_of<'a>(&'a self, idx: &SinglyIdx<T>) -> Option<&T>
     where
         M: 'a,
+        P: 'a,
     {
         self.next_idx_of(idx).and_then(|i| self.get(&i))
     }
 }
 
-impl<L, T, M> SinglyEnds<T, M> for L
+impl<L, T, M, P> SinglyEnds<T, M, P> for L
 where
-    L: HasSinglyEnds<T, M>,
+    L: HasSinglyEnds<T, M, P>,
     M: MemoryPolicy<Singly<T>>,
+    P: PinnedVec<Node<Singly<T>>>,
 {
 }

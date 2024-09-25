@@ -1,19 +1,26 @@
-use crate::{type_aliases::PinVec, Doubly};
+use crate::Doubly;
 use core::iter::FusedIterator;
-use orx_selfref_col::{CoreCol, NodePtr};
+use orx_pinned_vec::PinnedVec;
+use orx_selfref_col::{CoreCol, Node, NodePtr};
 
 /// An ordered iterator over pointers to the elements of the doubly linked list.
 ///
 /// Can be created by calling the `iter_ptr` method.
-pub struct DoublyIterPtr<'a, T> {
-    pub(crate) col: &'a CoreCol<Doubly<T>, PinVec<Doubly<T>>>,
+pub struct DoublyIterPtr<'a, T, P>
+where
+    P: PinnedVec<Node<Doubly<T>>>,
+{
+    pub(crate) col: &'a CoreCol<Doubly<T>, P>,
     current: Option<NodePtr<Doubly<T>>>,
     current_back: Option<NodePtr<Doubly<T>>>,
 }
 
-impl<'a, T> DoublyIterPtr<'a, T> {
+impl<'a, T, P> DoublyIterPtr<'a, T, P>
+where
+    P: PinnedVec<Node<Doubly<T>>>,
+{
     pub(crate) fn new(
-        col: &'a CoreCol<Doubly<T>, PinVec<Doubly<T>>>,
+        col: &'a CoreCol<Doubly<T>, P>,
         current: Option<NodePtr<Doubly<T>>>,
         current_back: Option<NodePtr<Doubly<T>>>,
     ) -> Self {
@@ -30,7 +37,10 @@ impl<'a, T> DoublyIterPtr<'a, T> {
     }
 }
 
-impl<'a, T> Iterator for DoublyIterPtr<'a, T> {
+impl<'a, T, P> Iterator for DoublyIterPtr<'a, T, P>
+where
+    P: PinnedVec<Node<Doubly<T>>>,
+{
     type Item = NodePtr<Doubly<T>>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -49,7 +59,10 @@ impl<'a, T> Iterator for DoublyIterPtr<'a, T> {
     }
 }
 
-impl<'a, T> DoubleEndedIterator for DoublyIterPtr<'a, T> {
+impl<'a, T, P> DoubleEndedIterator for DoublyIterPtr<'a, T, P>
+where
+    P: PinnedVec<Node<Doubly<T>>>,
+{
     fn next_back(&mut self) -> Option<Self::Item> {
         match &self.current_back {
             Some(p) => {
@@ -67,9 +80,12 @@ impl<'a, T> DoubleEndedIterator for DoublyIterPtr<'a, T> {
     }
 }
 
-impl<'a, T> FusedIterator for DoublyIterPtr<'a, T> {}
+impl<'a, T, P> FusedIterator for DoublyIterPtr<'a, T, P> where P: PinnedVec<Node<Doubly<T>>> {}
 
-impl<'a, T> Clone for DoublyIterPtr<'a, T> {
+impl<'a, T, P> Clone for DoublyIterPtr<'a, T, P>
+where
+    P: PinnedVec<Node<Doubly<T>>>,
+{
     fn clone(&self) -> Self {
         Self {
             col: self.col,

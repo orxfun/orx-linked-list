@@ -2,12 +2,14 @@ use crate::{
     iter::SinglyIterMut, list::helper_traits::HasSinglyEndsMut, type_aliases::OOB, Singly,
     SinglyIdx,
 };
-use orx_selfref_col::MemoryPolicy;
+use orx_pinned_vec::PinnedVec;
+use orx_selfref_col::{MemoryPolicy, Node};
 
 /// Iterator methods for Singly linked lists.
-pub trait SinglyIterableMut<T, M>: HasSinglyEndsMut<T, M>
+pub trait SinglyIterableMut<T, M, P>: HasSinglyEndsMut<T, M, P>
 where
     M: MemoryPolicy<Singly<T>>,
+    P: PinnedVec<Node<Singly<T>>>,
     Self: Sized,
 {
     /// Returns a double-ended iterator of mutable references to elements of the list from front to back.
@@ -30,7 +32,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([40, 41, 42]));
     /// ```
-    fn iter_mut<'a>(&'a mut self) -> SinglyIterMut<T>
+    fn iter_mut<'a>(&'a mut self) -> SinglyIterMut<T, P>
     where
         M: 'a,
     {
@@ -68,7 +70,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([0, 11, 12, 13]));
     /// ```
-    fn iter_mut_from<'a>(&'a mut self, idx: &SinglyIdx<T>) -> SinglyIterMut<T>
+    fn iter_mut_from<'a>(&'a mut self, idx: &SinglyIdx<T>) -> SinglyIterMut<T, P>
     where
         M: 'a,
     {
@@ -77,9 +79,10 @@ where
     }
 }
 
-impl<L, T, M> SinglyIterableMut<T, M> for L
+impl<L, T, M, P> SinglyIterableMut<T, M, P> for L
 where
-    L: HasSinglyEndsMut<T, M>,
+    L: HasSinglyEndsMut<T, M, P>,
     M: MemoryPolicy<Singly<T>>,
+    P: PinnedVec<Node<Singly<T>>>,
 {
 }

@@ -1,16 +1,22 @@
 use super::doubly_iter_ptr::DoublyIterPtr;
-use crate::{type_aliases::PinVec, Doubly};
+use crate::Doubly;
 use core::iter::FusedIterator;
-use orx_selfref_col::{CoreCol, NodePtr};
+use orx_pinned_vec::PinnedVec;
+use orx_selfref_col::{CoreCol, Node, NodePtr};
 
 /// An ordered iterator over elements of the doubly linked list.
 ///
 /// Can be created by calling the `iter` method.
-pub struct DoublyIter<'a, T>(DoublyIterPtr<'a, T>);
+pub struct DoublyIter<'a, T, P>(DoublyIterPtr<'a, T, P>)
+where
+    P: PinnedVec<Node<Doubly<T>>>;
 
-impl<'a, T> DoublyIter<'a, T> {
+impl<'a, T, P> DoublyIter<'a, T, P>
+where
+    P: PinnedVec<Node<Doubly<T>>>,
+{
     pub(crate) fn new(
-        col: &'a CoreCol<Doubly<T>, PinVec<Doubly<T>>>,
+        col: &'a CoreCol<Doubly<T>, P>,
         current: Option<NodePtr<Doubly<T>>>,
         current_back: Option<NodePtr<Doubly<T>>>,
     ) -> Self {
@@ -18,7 +24,10 @@ impl<'a, T> DoublyIter<'a, T> {
     }
 }
 
-impl<'a, T> Iterator for DoublyIter<'a, T> {
+impl<'a, T, P> Iterator for DoublyIter<'a, T, P>
+where
+    P: PinnedVec<Node<Doubly<T>>>,
+{
     type Item = &'a T;
 
     #[inline(always)]
@@ -29,7 +38,10 @@ impl<'a, T> Iterator for DoublyIter<'a, T> {
     }
 }
 
-impl<'a, T> DoubleEndedIterator for DoublyIter<'a, T> {
+impl<'a, T, P> DoubleEndedIterator for DoublyIter<'a, T, P>
+where
+    P: PinnedVec<Node<Doubly<T>>>,
+{
     #[inline(always)]
     fn next_back(&mut self) -> Option<Self::Item> {
         self.0
@@ -38,9 +50,12 @@ impl<'a, T> DoubleEndedIterator for DoublyIter<'a, T> {
     }
 }
 
-impl<'a, T> FusedIterator for DoublyIter<'a, T> {}
+impl<'a, T, P> FusedIterator for DoublyIter<'a, T, P> where P: PinnedVec<Node<Doubly<T>>> {}
 
-impl<'a, T> Clone for DoublyIter<'a, T> {
+impl<'a, T, P> Clone for DoublyIter<'a, T, P>
+where
+    P: PinnedVec<Node<Doubly<T>>>,
+{
     fn clone(&self) -> Self {
         Self(self.0.clone())
     }

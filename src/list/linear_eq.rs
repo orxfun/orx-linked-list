@@ -1,12 +1,14 @@
 use crate::{Doubly, DoublyIdx, DoublyIterable, List, Singly, SinglyIdx, SinglyIterable};
-use orx_selfref_col::{MemoryPolicy, NodeIdx};
+use orx_pinned_vec::PinnedVec;
+use orx_selfref_col::{MemoryPolicy, Node, NodeIdx};
 
 // both
 
-impl<T, M> List<Singly<T>, M>
+impl<T, M, P> List<Singly<T>, M, P>
 where
     M: MemoryPolicy<Singly<T>>,
     T: PartialEq,
+    P: PinnedVec<Node<Singly<T>>>,
 {
     /// ***O(n)*** Performs a forward search from the front and returns the index of the first node with value equal to the given `value`.
     ///
@@ -102,10 +104,11 @@ where
 
 // doubly
 
-impl<T, M> List<Doubly<T>, M>
+impl<T, M, P> List<Doubly<T>, M, P>
 where
     M: MemoryPolicy<Doubly<T>>,
     T: PartialEq,
+    P: PinnedVec<Node<Doubly<T>>>,
 {
     /// ***O(n)*** Performs a forward search from the front and returns the index of the first node with value equal to the given `value`.
     ///

@@ -1,11 +1,13 @@
 use crate::{type_aliases::OOB, Doubly, DoublyIterable, List, Singly, SinglyIterable};
-use orx_selfref_col::{MemoryPolicy, NodeIdx};
+use orx_pinned_vec::PinnedVec;
+use orx_selfref_col::{MemoryPolicy, Node, NodeIdx};
 
 // singly
 
-impl<T, M> List<Singly<T>, M>
+impl<T, M, P> List<Singly<T>, M, P>
 where
     M: MemoryPolicy<Singly<T>>,
+    P: PinnedVec<Node<Singly<T>>>,
 {
     /// ***O(n)*** Inserts the given `value` at the `position`-th element of the list.
     ///
@@ -107,9 +109,10 @@ where
 
 // doubly
 
-impl<T, M> List<Doubly<T>, M>
+impl<T, M, P> List<Doubly<T>, M, P>
 where
     M: MemoryPolicy<Doubly<T>>,
+    P: PinnedVec<Node<Doubly<T>>>,
 {
     /// ***O(n)*** Inserts the given `value` at the `position`-th element of the list.
     ///

@@ -1,9 +1,11 @@
 use crate::{variant::Doubly, List};
-use orx_selfref_col::MemoryPolicy;
+use orx_pinned_vec::PinnedVec;
+use orx_selfref_col::{MemoryPolicy, Node};
 
-impl<T, M> Extend<T> for List<Doubly<T>, M>
+impl<T, M, P> Extend<T> for List<Doubly<T>, M, P>
 where
     M: MemoryPolicy<Doubly<T>>,
+    P: PinnedVec<Node<Doubly<T>>>,
 {
     fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
         for x in iter {
@@ -12,9 +14,10 @@ where
     }
 }
 
-impl<'a, T: Clone, M> Extend<&'a T> for List<Doubly<T>, M>
+impl<'a, T: Clone, M, P> Extend<&'a T> for List<Doubly<T>, M, P>
 where
     M: MemoryPolicy<Doubly<T>>,
+    P: PinnedVec<Node<Doubly<T>>>,
 {
     fn extend<I: IntoIterator<Item = &'a T>>(&mut self, iter: I) {
         for x in iter {

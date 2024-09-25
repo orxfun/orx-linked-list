@@ -1,12 +1,13 @@
 use super::List;
 use crate::variant::ListVariant;
 use orx_pinned_vec::PinnedVec;
-use orx_selfref_col::{MemoryPolicy, MemoryState, Utilization};
+use orx_selfref_col::{MemoryPolicy, MemoryState, Node, Utilization};
 
-impl<V, M> List<V, M>
+impl<V, M, P> List<V, M, P>
 where
     V: ListVariant,
     M: MemoryPolicy<V>,
+    P: PinnedVec<Node<V>>,
 {
     /// ***O(1)*** Returns the number of elements in the list.
     ///

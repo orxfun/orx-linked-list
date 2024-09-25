@@ -3,12 +3,14 @@ use crate::{
     type_aliases::{BACK_IDX, FRONT_IDX, IDX_ERR},
     Doubly, DoublyIdx,
 };
-use orx_selfref_col::{MemoryPolicy, NodeIdxError};
+use orx_pinned_vec::PinnedVec;
+use orx_selfref_col::{MemoryPolicy, Node, NodeIdxError};
 
 /// A list or view having two ends: front and back.
-pub trait DoublyEnds<T, M>: HasDoublyEnds<T, M>
+pub trait DoublyEnds<T, M, P>: HasDoublyEnds<T, M, P>
 where
     M: MemoryPolicy<Doubly<T>>,
+    P: PinnedVec<Node<Doubly<T>>>,
 {
     /// ***O(1)*** Returns a reference to the front of the list.
     ///
@@ -33,6 +35,7 @@ where
     fn front<'a>(&'a self) -> Option<&'a T>
     where
         M: 'a,
+        P: 'a,
     {
         self.ends()
             .get(FRONT_IDX)
@@ -65,6 +68,7 @@ where
     fn back<'a>(&'a self) -> Option<&'a T>
     where
         M: 'a,
+        P: 'a,
     {
         self.ends()
             .get(BACK_IDX)
@@ -372,6 +376,7 @@ where
     fn get<'a>(&'a self, idx: &DoublyIdx<T>) -> Option<&T>
     where
         M: 'a,
+        P: 'a,
     {
         self.col().node_from_idx(idx).and_then(|n| n.data())
     }
@@ -482,6 +487,7 @@ where
     fn try_get<'a>(&'a self, idx: &DoublyIdx<T>) -> Result<&T, NodeIdxError>
     where
         M: 'a,
+        P: 'a,
     {
         self.col()
             .try_node_from_idx(idx)
@@ -553,6 +559,7 @@ where
     fn next_of<'a>(&'a self, idx: &DoublyIdx<T>) -> Option<&T>
     where
         M: 'a,
+        P: 'a,
     {
         self.next_idx_of(idx).and_then(|i| self.get(&i))
     }
@@ -619,14 +626,16 @@ where
     fn prev_of<'a>(&'a self, idx: &DoublyIdx<T>) -> Option<&T>
     where
         M: 'a,
+        P: 'a,
     {
         self.prev_idx_of(idx).and_then(|i| self.get(&i))
     }
 }
 
-impl<L, T, M> DoublyEnds<T, M> for L
+impl<L, T, M, P> DoublyEnds<T, M, P> for L
 where
-    L: HasDoublyEnds<T, M>,
+    L: HasDoublyEnds<T, M, P>,
     M: MemoryPolicy<Doubly<T>>,
+    P: PinnedVec<Node<Doubly<T>>>,
 {
 }

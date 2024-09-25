@@ -1,11 +1,13 @@
 use super::SinglyEnds;
 use crate::{list::helper_traits::HasSinglyEndsMut, Singly, SinglyIdx};
-use orx_selfref_col::{MemoryPolicy, NodeIdxError};
+use orx_pinned_vec::PinnedVec;
+use orx_selfref_col::{MemoryPolicy, Node, NodeIdxError};
 
 /// A list or view having a single end: front.
-pub trait SinglyEndsMut<T, M>: HasSinglyEndsMut<T, M> + SinglyEnds<T, M>
+pub trait SinglyEndsMut<T, M, P>: HasSinglyEndsMut<T, M, P> + SinglyEnds<T, M, P>
 where
     M: MemoryPolicy<Singly<T>>,
+    P: PinnedVec<Node<Singly<T>>>,
 {
     /// ***O(1)*** Returns a mutable reference to the front of the list,
     /// returns None if the list is empty.
@@ -29,6 +31,7 @@ where
     fn front_mut<'a>(&'a mut self) -> Option<&'a mut T>
     where
         M: 'a,
+        P: 'a,
     {
         self.ends_mut()
             .get()
@@ -145,6 +148,7 @@ where
     fn get_mut<'a>(&'a mut self, idx: &SinglyIdx<T>) -> Option<&mut T>
     where
         M: 'a,
+        P: 'a,
     {
         self.col_mut()
             .node_mut_from_idx(idx)
@@ -261,6 +265,7 @@ where
     fn try_get_mut<'a>(&'a mut self, idx: &SinglyIdx<T>) -> Result<&mut T, NodeIdxError>
     where
         M: 'a,
+        P: 'a,
     {
         self.col_mut()
             .try_node_mut_from_idx(idx)
@@ -299,14 +304,16 @@ where
     fn next_mut_of<'a>(&'a mut self, idx: &SinglyIdx<T>) -> Option<&mut T>
     where
         M: 'a,
+        P: 'a,
     {
         self.next_idx_of(idx).and_then(|i| self.get_mut(&i))
     }
 }
 
-impl<L, T, M> SinglyEndsMut<T, M> for L
+impl<L, T, M, P> SinglyEndsMut<T, M, P> for L
 where
-    L: HasSinglyEndsMut<T, M>,
+    L: HasSinglyEndsMut<T, M, P>,
     M: MemoryPolicy<Singly<T>>,
+    P: PinnedVec<Node<Singly<T>>>,
 {
 }
