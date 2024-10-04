@@ -1,22 +1,28 @@
-use crate::{type_aliases::PinVec, Doubly};
-use core::iter::FusedIterator;
-use orx_selfref_col::{CoreCol, NodePtr};
-
 use super::DoublyIterMut;
+use crate::Doubly;
+use core::iter::FusedIterator;
+use orx_pinned_vec::PinnedVec;
+use orx_selfref_col::{CoreCol, Node, NodePtr};
 
 /// An ordered iterator mutable references to elements of the doubly linked list.
 ///
 /// Can be created by calling the `iter_mut` method.
-pub struct DoublyIterMutChain<'a, T> {
-    iter: DoublyIterMut<'a, T>,
+pub struct DoublyIterMutChain<'a, T, P>
+where
+    P: PinnedVec<Node<Doubly<T>>>,
+{
+    iter: DoublyIterMut<'a, T, P>,
     second_front: Option<NodePtr<Doubly<T>>>,
     second_back: Option<NodePtr<Doubly<T>>>,
     consumed_first: bool,
 }
 
-impl<'a, T> DoublyIterMutChain<'a, T> {
+impl<'a, T, P> DoublyIterMutChain<'a, T, P>
+where
+    P: PinnedVec<Node<Doubly<T>>>,
+{
     pub(crate) fn new(
-        col: &'a mut CoreCol<Doubly<T>, PinVec<Doubly<T>>>,
+        col: &'a mut CoreCol<Doubly<T>, P>,
         first: [Option<NodePtr<Doubly<T>>>; 2],
         second: [Option<NodePtr<Doubly<T>>>; 2],
     ) -> Self {
@@ -31,7 +37,10 @@ impl<'a, T> DoublyIterMutChain<'a, T> {
     }
 }
 
-impl<'a, T> Iterator for DoublyIterMutChain<'a, T> {
+impl<'a, T, P> Iterator for DoublyIterMutChain<'a, T, P>
+where
+    P: PinnedVec<Node<Doubly<T>>>,
+{
     type Item = &'a mut T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -50,4 +59,4 @@ impl<'a, T> Iterator for DoublyIterMutChain<'a, T> {
     }
 }
 
-impl<'a, T> FusedIterator for DoublyIterMutChain<'a, T> {}
+impl<'a, T, P> FusedIterator for DoublyIterMutChain<'a, T, P> where P: PinnedVec<Node<Doubly<T>>> {}

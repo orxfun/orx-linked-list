@@ -10,7 +10,7 @@ use orx_split_vec::{Recursive, SplitVec};
 #[allow(type_alias_bounds)]
 pub(crate) type DefaultMemory<V: ListVariant> = MemoryReclaimOnThreshold<2, V, V::Reclaimer>;
 
-pub(crate) type PinVec<V> = SplitVec<Node<V>, Recursive>;
+pub(crate) type DefaultPinVec<V> = SplitVec<Node<V>, Recursive>;
 
 pub(crate) const FRONT_IDX: usize = 0;
 pub(crate) const BACK_IDX: usize = 1;
@@ -34,7 +34,7 @@ pub(crate) const IDX_ERR: &str = "invalid index";
 /// [`SinglyEndsMut`]: crate::SinglyEndsMut
 /// [`SinglyIterable`]: crate::SinglyIterable
 /// [`SinglyIterableMut`]: crate::SinglyIterableMut
-pub type SinglyList<T> = List<Singly<T>, DefaultMemory<Singly<T>>>;
+pub type SinglyList<T, P = DefaultPinVec<Singly<T>>> = List<Singly<T>, DefaultMemory<Singly<T>>, P>;
 
 /// A doubly linked list with default memory reclaim policy:
 /// * nodes hold a reference to the next element, and a reference to the previous;
@@ -50,7 +50,7 @@ pub type SinglyList<T> = List<Singly<T>, DefaultMemory<Singly<T>>>;
 /// [`DoublyEndsMut`]: crate::DoublyEndsMut
 /// [`DoublyIterable`]: crate::DoublyIterable
 /// [`DoublyIterableMut`]: crate::DoublyIterableMut
-pub type DoublyList<T> = List<Doubly<T>, DefaultMemory<Doubly<T>>>;
+pub type DoublyList<T, P = DefaultPinVec<Doubly<T>>> = List<Doubly<T>, DefaultMemory<Doubly<T>>, P>;
 
 /// A singly linked list with lazy memory reclaim policy:
 /// * nodes hold a reference to the next element, but not to the previous;
@@ -67,7 +67,7 @@ pub type DoublyList<T> = List<Doubly<T>, DefaultMemory<Doubly<T>>>;
 /// [`SinglyEndsMut`]: crate::SinglyEndsMut
 /// [`SinglyIterable`]: crate::SinglyIterable
 /// [`SinglyIterableMut`]: crate::SinglyIterableMut
-pub type SinglyListLazy<T> = List<Singly<T>, MemoryReclaimNever>;
+pub type SinglyListLazy<T, P = DefaultPinVec<Singly<T>>> = List<Singly<T>, MemoryReclaimNever, P>;
 
 /// A doubly linked list with lazy memory reclaim policy:
 /// * nodes hold a reference to the next element, and a reference to the previous;
@@ -84,7 +84,7 @@ pub type SinglyListLazy<T> = List<Singly<T>, MemoryReclaimNever>;
 /// [`DoublyEndsMut`]: crate::DoublyEndsMut
 /// [`DoublyIterable`]: crate::DoublyIterable
 /// [`DoublyIterableMut`]: crate::DoublyIterableMut
-pub type DoublyListLazy<T> = List<Doubly<T>, MemoryReclaimNever>;
+pub type DoublyListLazy<T, P = DefaultPinVec<Doubly<T>>> = List<Doubly<T>, MemoryReclaimNever, P>;
 
 /// A singly linked list with custom memory reclaim on threshold policy:
 /// * nodes hold a reference to the next element, but not to the previous;
@@ -106,8 +106,11 @@ pub type DoublyListLazy<T> = List<Doubly<T>, MemoryReclaimNever>;
 /// [`SinglyEndsMut`]: crate::SinglyEndsMut
 /// [`SinglyIterable`]: crate::SinglyIterable
 /// [`SinglyIterableMut`]: crate::SinglyIterableMut
-pub type SinglyListThreshold<const D: usize, T> =
-    List<Singly<T>, MemoryReclaimOnThreshold<D, Singly<T>, <Singly<T> as ListVariant>::Reclaimer>>;
+pub type SinglyListThreshold<const D: usize, T, P = DefaultPinVec<Singly<T>>> = List<
+    Singly<T>,
+    MemoryReclaimOnThreshold<D, Singly<T>, <Singly<T> as ListVariant>::Reclaimer>,
+    P,
+>;
 
 /// A doubly linked list with lazy memory reclaim policy:
 /// * nodes hold a reference to the next element, and a reference to the previous;
@@ -129,8 +132,11 @@ pub type SinglyListThreshold<const D: usize, T> =
 /// [`DoublyEndsMut`]: crate::DoublyEndsMut
 /// [`DoublyIterable`]: crate::DoublyIterable
 /// [`DoublyIterableMut`]: crate::DoublyIterableMut
-pub type DoublyListThreshold<const D: usize, T> =
-    List<Doubly<T>, MemoryReclaimOnThreshold<D, Doubly<T>, <Doubly<T> as ListVariant>::Reclaimer>>;
+pub type DoublyListThreshold<const D: usize, T, P = DefaultPinVec<Doubly<T>>> = List<
+    Doubly<T>,
+    MemoryReclaimOnThreshold<D, Doubly<T>, <Doubly<T> as ListVariant>::Reclaimer>,
+    P,
+>;
 
 /// An index to an element on a singly linked list which allows safe and constant time access.
 pub type SinglyIdx<T> = NodeIdx<Singly<T>>;

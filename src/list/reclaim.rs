@@ -1,12 +1,13 @@
 use super::List;
 use crate::variant::ListVariant;
 use orx_pinned_vec::PinnedVec;
-use orx_selfref_col::{MemoryPolicy, MemoryReclaimer, MemoryState};
+use orx_selfref_col::{MemoryPolicy, MemoryReclaimer, MemoryState, Node};
 
-impl<V, M> List<V, M>
+impl<V, M, P> List<V, M, P>
 where
     V: ListVariant,
     M: MemoryPolicy<V>,
+    P: PinnedVec<Node<V>>,
 {
     /// Manually attempts to reclaim closed nodes.
     ///

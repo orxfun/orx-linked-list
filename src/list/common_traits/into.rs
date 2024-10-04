@@ -1,37 +1,41 @@
 use crate::{
-    variant::ListVariant, DoublyList, DoublyListLazy, DoublyListThreshold, List, SinglyList,
-    SinglyListLazy, SinglyListThreshold,
+    variant::ListVariant, Doubly, DoublyList, DoublyListLazy, DoublyListThreshold, List, Singly,
+    SinglyList, SinglyListLazy, SinglyListThreshold,
 };
-use orx_selfref_col::{MemoryReclaimNever, MemoryReclaimOnThreshold, MemoryReclaimer};
+use orx_pinned_vec::PinnedVec;
+use orx_selfref_col::{MemoryReclaimNever, MemoryReclaimOnThreshold, MemoryReclaimer, Node};
 
-impl<const D: usize, R, V> From<List<V, MemoryReclaimNever>>
-    for List<V, MemoryReclaimOnThreshold<D, V, R>>
+impl<const D: usize, R, V, P> From<List<V, MemoryReclaimNever, P>>
+    for List<V, MemoryReclaimOnThreshold<D, V, R>, P>
 where
     V: ListVariant,
     R: MemoryReclaimer<V>,
+    P: PinnedVec<Node<V>>,
 {
-    fn from(value: List<V, MemoryReclaimNever>) -> Self {
+    fn from(value: List<V, MemoryReclaimNever, P>) -> Self {
         Self(value.0.into())
     }
 }
 
-impl<const D: usize, R, V> From<List<V, MemoryReclaimOnThreshold<D, V, R>>>
-    for List<V, MemoryReclaimNever>
+impl<const D: usize, R, V, P> From<List<V, MemoryReclaimOnThreshold<D, V, R>, P>>
+    for List<V, MemoryReclaimNever, P>
 where
     V: ListVariant,
     R: MemoryReclaimer<V>,
+    P: PinnedVec<Node<V>>,
 {
-    fn from(value: List<V, MemoryReclaimOnThreshold<D, V, R>>) -> Self {
+    fn from(value: List<V, MemoryReclaimOnThreshold<D, V, R>, P>) -> Self {
         Self(value.0.into())
     }
 }
 
 // transitions
 
-impl<const D: usize, R, V> List<V, MemoryReclaimOnThreshold<D, V, R>>
+impl<const D: usize, R, V, P> List<V, MemoryReclaimOnThreshold<D, V, R>, P>
 where
     V: ListVariant,
     R: MemoryReclaimer<V>,
+    P: PinnedVec<Node<V>>,
 {
     /// Transforms the list into lazy memory reclaim mode, such as:
     /// * `DoublyList` is transformed into `DoublyListLazy`
@@ -117,12 +121,15 @@ where
     /// assert_eq!(list.get(&idx[0]), Some(&'c'));
     /// assert_eq!(list.get(&idx[1]), Some(&'a'));
     /// ```
-    pub fn into_lazy_reclaim(self) -> List<V, MemoryReclaimNever> {
+    pub fn into_lazy_reclaim(self) -> List<V, MemoryReclaimNever, P> {
         self.into()
     }
 }
 
-impl<T> DoublyListLazy<T> {
+impl<T, P> DoublyListLazy<T, P>
+where
+    P: PinnedVec<Node<Doubly<T>>>,
+{
     /// Transforms the list into auto memory reclaim mode, such as:
     /// * `DoublyListLazy` is transformed into `DoublyList`
     /// * `SinglyListLazy` is transformed into `SinglyList`
@@ -206,7 +213,7 @@ impl<T> DoublyListLazy<T> {
     /// assert_eq!(list.get(&idx[0]), Some(&'c'));
     /// assert_eq!(list.get(&idx[1]), Some(&'a'));
     /// ```
-    pub fn into_auto_reclaim(self) -> DoublyList<T> {
+    pub fn into_auto_reclaim(self) -> DoublyList<T, P> {
         self.into()
     }
 
@@ -293,12 +300,15 @@ impl<T> DoublyListLazy<T> {
     /// assert_eq!(list.get(&idx[0]), Some(&'c'));
     /// assert_eq!(list.get(&idx[1]), Some(&'a'));
     /// ```
-    pub fn into_auto_reclaim_with_threshold<const D: usize>(self) -> DoublyListThreshold<D, T> {
+    pub fn into_auto_reclaim_with_threshold<const D: usize>(self) -> DoublyListThreshold<D, T, P> {
         self.into()
     }
 }
 
-impl<T> SinglyListLazy<T> {
+impl<T, P> SinglyListLazy<T, P>
+where
+    P: PinnedVec<Node<Singly<T>>>,
+{
     /// Transforms the list into auto memory reclaim mode, such as:
     /// * `DoublyListLazy` is transformed into `DoublyList`
     /// * `SinglyListLazy` is transformed into `SinglyList`
@@ -382,7 +392,7 @@ impl<T> SinglyListLazy<T> {
     /// assert_eq!(list.get(&idx[0]), Some(&'c'));
     /// assert_eq!(list.get(&idx[1]), Some(&'a'));
     /// ```
-    pub fn into_auto_reclaim(self) -> SinglyList<T> {
+    pub fn into_auto_reclaim(self) -> SinglyList<T, P> {
         self.into()
     }
 
@@ -469,7 +479,7 @@ impl<T> SinglyListLazy<T> {
     /// assert_eq!(list.get(&idx[0]), Some(&'c'));
     /// assert_eq!(list.get(&idx[1]), Some(&'a'));
     /// ```
-    pub fn into_auto_reclaim_with_threshold<const D: usize>(self) -> SinglyListThreshold<D, T> {
+    pub fn into_auto_reclaim_with_threshold<const D: usize>(self) -> SinglyListThreshold<D, T, P> {
         self.into()
     }
 }

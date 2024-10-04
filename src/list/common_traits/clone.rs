@@ -1,22 +1,25 @@
 use crate::{variant::Doubly, DoublyIterable, List, Singly, SinglyIterable};
-use orx_selfref_col::MemoryPolicy;
+use orx_pinned_vec::PinnedVec;
+use orx_selfref_col::{MemoryPolicy, Node};
 
-impl<T: Clone, M> Clone for List<Singly<T>, M>
+use super::from_iter::{doubly_from_iter, singly_from_iter};
+
+impl<T: Clone, M, P> Clone for List<Singly<T>, M, P>
 where
     M: MemoryPolicy<Singly<T>>,
-    List<Singly<T>, M>: Default,
+    P: PinnedVec<Node<Singly<T>>> + Default,
 {
     fn clone(&self) -> Self {
-        self.iter().cloned().collect()
+        singly_from_iter(self.iter().cloned())
     }
 }
 
-impl<T: Clone, M> Clone for List<Doubly<T>, M>
+impl<T: Clone, M, P> Clone for List<Doubly<T>, M, P>
 where
     M: MemoryPolicy<Doubly<T>>,
-    List<Doubly<T>, M>: Default,
+    P: PinnedVec<Node<Doubly<T>>> + Default,
 {
     fn clone(&self) -> Self {
-        self.iter().cloned().collect()
+        doubly_from_iter(self.iter().cloned())
     }
 }

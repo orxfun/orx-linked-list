@@ -1,10 +1,12 @@
 use super::List;
 use crate::{iter::SinglyIterMut, variant::Singly, SinglyIdx};
-use orx_selfref_col::{MemoryPolicy, NodeIdx, Refs};
+use orx_pinned_vec::PinnedVec;
+use orx_selfref_col::{MemoryPolicy, Node, NodeIdx, Refs};
 
-impl<T, M> List<Singly<T>, M>
+impl<T, M, P> List<Singly<T>, M, P>
 where
     M: MemoryPolicy<Singly<T>>,
+    P: PinnedVec<Node<Singly<T>>>,
 {
     /// ***O(1)*** Sets value of `front` of the list as `new_front` and:
     /// * returns value of the front element;
@@ -116,7 +118,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([40, 41, 42]));
     /// ```
-    pub fn iter_mut(&mut self) -> SinglyIterMut<T> {
+    pub fn iter_mut(&mut self) -> SinglyIterMut<T, P> {
         SinglyIterMut::new_old(&mut self.0)
     }
 }

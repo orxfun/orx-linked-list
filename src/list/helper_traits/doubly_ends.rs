@@ -4,12 +4,14 @@ use crate::{
     Doubly, DoublyIdx,
 };
 use core::ops::RangeBounds;
-use orx_selfref_col::{MemoryPolicy, NodeIdxError, NodePtr, Refs, Variant};
+use orx_pinned_vec::PinnedVec;
+use orx_selfref_col::{MemoryPolicy, Node, NodeIdxError, NodePtr, Refs, Variant};
 
 /// Lists and views with owned ends.
-pub trait HasDoublyEnds<T, M>: HasCol<Doubly<T>, M>
+pub trait HasDoublyEnds<T, M, P>: HasCol<Doubly<T>, M, P>
 where
     M: MemoryPolicy<Doubly<T>>,
+    P: PinnedVec<Node<Doubly<T>>>,
 {
     /// Returns a reference to the ends of the linked list.
     fn ends(&self) -> &<Doubly<T> as Variant>::Ends;
@@ -84,9 +86,10 @@ where
 }
 
 /// Lists and views with owned mutable ends.
-pub trait HasDoublyEndsMut<T, M>: HasColMut<Doubly<T>, M> + HasDoublyEnds<T, M>
+pub trait HasDoublyEndsMut<T, M, P>: HasColMut<Doubly<T>, M, P> + HasDoublyEnds<T, M, P>
 where
     M: MemoryPolicy<Doubly<T>>,
+    P: PinnedVec<Node<Doubly<T>>>,
 {
     /// Returns a mutable reference to the ends of the linked list.
     fn ends_mut(&mut self) -> &mut <Doubly<T> as Variant>::Ends;

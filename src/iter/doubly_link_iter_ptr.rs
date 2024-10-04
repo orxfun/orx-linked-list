@@ -1,21 +1,28 @@
-use crate::{type_aliases::PinVec, Doubly};
+use crate::Doubly;
 use core::iter::FusedIterator;
-use orx_selfref_col::{CoreCol, NodePtr};
+use orx_pinned_vec::PinnedVec;
+use orx_selfref_col::{CoreCol, Node, NodePtr};
 
 pub(super) type PairPtr<T> = (NodePtr<Doubly<T>>, NodePtr<Doubly<T>>);
 
 /// An ordered iterator over pointers to the links of the doubly linked list.
 ///
 /// Can be created by calling the `link_iter_ptr` method.
-pub struct DoublyLinkIterPtr<'a, T> {
-    pub(crate) col: &'a CoreCol<Doubly<T>, PinVec<Doubly<T>>>,
+pub struct DoublyLinkIterPtr<'a, T, P>
+where
+    P: PinnedVec<Node<Doubly<T>>>,
+{
+    pub(crate) col: &'a CoreCol<Doubly<T>, P>,
     current: Option<PairPtr<T>>,
     current_back: Option<NodePtr<Doubly<T>>>,
 }
 
-impl<'a, T> DoublyLinkIterPtr<'a, T> {
+impl<'a, T, P> DoublyLinkIterPtr<'a, T, P>
+where
+    P: PinnedVec<Node<Doubly<T>>>,
+{
     pub(crate) fn new(
-        col: &'a CoreCol<Doubly<T>, PinVec<Doubly<T>>>,
+        col: &'a CoreCol<Doubly<T>, P>,
         current: Option<PairPtr<T>>,
         current_back: Option<NodePtr<Doubly<T>>>,
     ) -> Self {
@@ -32,7 +39,10 @@ impl<'a, T> DoublyLinkIterPtr<'a, T> {
     }
 }
 
-impl<'a, T> Iterator for DoublyLinkIterPtr<'a, T> {
+impl<'a, T, P> Iterator for DoublyLinkIterPtr<'a, T, P>
+where
+    P: PinnedVec<Node<Doubly<T>>>,
+{
     type Item = PairPtr<T>;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -56,9 +66,12 @@ impl<'a, T> Iterator for DoublyLinkIterPtr<'a, T> {
     }
 }
 
-impl<'a, T> FusedIterator for DoublyLinkIterPtr<'a, T> {}
+impl<'a, T, P> FusedIterator for DoublyLinkIterPtr<'a, T, P> where P: PinnedVec<Node<Doubly<T>>> {}
 
-impl<'a, T> Clone for DoublyLinkIterPtr<'a, T> {
+impl<'a, T, P> Clone for DoublyLinkIterPtr<'a, T, P>
+where
+    P: PinnedVec<Node<Doubly<T>>>,
+{
     fn clone(&self) -> Self {
         Self {
             col: self.col,

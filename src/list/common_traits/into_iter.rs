@@ -3,15 +3,17 @@ use crate::{
     variant::Doubly,
     List, Singly,
 };
-use orx_selfref_col::MemoryPolicy;
+use orx_pinned_vec::PinnedVec;
+use orx_selfref_col::{MemoryPolicy, Node};
 
-impl<T, M> IntoIterator for List<Singly<T>, M>
+impl<T, M, P> IntoIterator for List<Singly<T>, M, P>
 where
     M: MemoryPolicy<Singly<T>>,
+    P: PinnedVec<Node<Singly<T>>>,
 {
     type Item = T;
 
-    type IntoIter = SinglyIterOwned<T>;
+    type IntoIter = SinglyIterOwned<T, P>;
 
     /// Returns a consuming forward iterator to owned elements of the list from front to back.
     ///
@@ -39,13 +41,14 @@ where
     }
 }
 
-impl<T, M> IntoIterator for List<Doubly<T>, M>
+impl<T, M, P> IntoIterator for List<Doubly<T>, M, P>
 where
     M: MemoryPolicy<Doubly<T>>,
+    P: PinnedVec<Node<Doubly<T>>>,
 {
     type Item = T;
 
-    type IntoIter = DoublyIterOwned<T>;
+    type IntoIter = DoublyIterOwned<T, P>;
 
     /// Returns a consuming forward iterator to owned elements of the list from front to back.
     ///

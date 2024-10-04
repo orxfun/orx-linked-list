@@ -5,12 +5,14 @@ use crate::{
     Doubly, DoublyIdx,
 };
 use core::iter::Rev;
-use orx_selfref_col::MemoryPolicy;
+use orx_pinned_vec::PinnedVec;
+use orx_selfref_col::{MemoryPolicy, Node};
 
 /// Iterator methods for doubly linked lists.
-pub trait DoublyIterableMut<T, M>: HasDoublyEndsMut<T, M>
+pub trait DoublyIterableMut<T, M, P>: HasDoublyEndsMut<T, M, P>
 where
     M: MemoryPolicy<Doubly<T>>,
+    P: PinnedVec<Node<Doubly<T>>>,
     Self: Sized,
 {
     /// Returns a double-ended iterator of mutable references to elements of the list from front to back.
@@ -33,7 +35,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([40, 41, 42]));
     /// ```
-    fn iter_mut<'a>(&'a mut self) -> DoublyIterMut<T>
+    fn iter_mut<'a>(&'a mut self) -> DoublyIterMut<T, P>
     where
         M: 'a,
     {
@@ -72,7 +74,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([0, 1, 12, 13]));
     /// ```
-    fn iter_mut_from<'a>(&'a mut self, idx: &DoublyIdx<T>) -> DoublyIterMut<T>
+    fn iter_mut_from<'a>(&'a mut self, idx: &DoublyIdx<T>) -> DoublyIterMut<T, P>
     where
         M: 'a,
     {
@@ -109,7 +111,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([10, 11, 12, 3]));
     /// ```
-    fn iter_mut_backward_from<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Rev<DoublyIterMut<T>>
+    fn iter_mut_backward_from<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Rev<DoublyIterMut<T, P>>
     where
         M: 'a,
     {
@@ -154,7 +156,7 @@ where
     /// scan(list.ring_iter_mut(&idx[3]));
     /// assert!(list.eq_to_iter_vals([7, 8, 10, 3, 7]));
     /// ```
-    fn ring_iter_mut<'a>(&'a mut self, pivot_idx: &DoublyIdx<T>) -> DoublyIterMutChain<'a, T>
+    fn ring_iter_mut<'a>(&'a mut self, pivot_idx: &DoublyIdx<T>) -> DoublyIterMutChain<'a, T, P>
     where
         M: 'a,
     {
@@ -174,9 +176,10 @@ where
     }
 }
 
-impl<L, T, M> DoublyIterableMut<T, M> for L
+impl<L, T, M, P> DoublyIterableMut<T, M, P> for L
 where
-    L: HasDoublyEndsMut<T, M>,
+    L: HasDoublyEndsMut<T, M, P>,
     M: MemoryPolicy<Doubly<T>>,
+    P: PinnedVec<Node<Doubly<T>>>,
 {
 }

@@ -1,20 +1,23 @@
 use crate::{
     iter::{DoublyIter, DoublyIterPtr, DoublyLinkIter},
     list::helper_traits::HasDoublyEnds,
+    pointers::DoublyPtr,
     type_aliases::{BACK_IDX, FRONT_IDX, OOB},
     Doubly, DoublyIdx,
 };
 use core::iter::{Chain, Rev};
-use orx_selfref_col::MemoryPolicy;
+use orx_pinned_vec::PinnedVec;
+use orx_selfref_col::{MemoryPolicy, Node};
 
 /// Iterator methods for doubly linked lists.
-pub trait DoublyIterable<T, M>: HasDoublyEnds<T, M>
+pub trait DoublyIterable<T, M, P>: HasDoublyEnds<T, M, P>
 where
     M: MemoryPolicy<Doubly<T>>,
+    P: PinnedVec<Node<Doubly<T>>>,
     Self: Sized,
 {
     /// Returns a double-ended iterator of pointers to the elements of the list from front to back.
-    fn iter_ptr<'a>(&'a self) -> DoublyIterPtr<T>
+    fn iter_ptr<'a>(&'a self) -> DoublyIterPtr<T, P>
     where
         M: 'a,
     {
@@ -61,7 +64,7 @@ where
     /// assert_eq!(Some(&'c'), iter.next());
     /// assert!(iter.next().is_none());
     /// ```
-    fn iter<'a>(&'a self) -> DoublyIter<T>
+    fn iter<'a>(&'a self) -> DoublyIter<T, P>
     where
         M: 'a,
     {
@@ -88,7 +91,7 @@ where
     ///
     /// assert_eq!(iter.next(), None);
     /// ```
-    fn iter_links<'a>(&'a self) -> DoublyLinkIter<'a, T>
+    fn iter_links<'a>(&'a self) -> DoublyLinkIter<'a, T, P>
     where
         M: 'a,
     {
@@ -136,9 +139,23 @@ where
     where
         M: 'a,
         T: 'a,
+        P: 'a,
     {
         let s = self.col().memory_state();
         self.iter_ptr().map(move |ptr| DoublyIdx::new(s, &ptr))
+    }
+
+    /// Returns an iterator of pointers to the elements of the list.
+    ///
+    /// Similar to indices, pointers are used to enable constant time access to any place of the list.
+    /// They are thinner; however, have only some of the safety guarantees that indices have.
+    fn pointers<'a>(&'a self) -> impl Iterator<Item = DoublyPtr<T>>
+    where
+        M: 'a,
+        T: 'a,
+        P: 'a,
+    {
+        self.iter_ptr()
     }
 
     // idx
@@ -179,7 +196,7 @@ where
     fn ring_iter<'a>(
         &'a self,
         pivot_idx: &DoublyIdx<T>,
-    ) -> Chain<DoublyIter<'a, T>, DoublyIter<'a, T>>
+    ) -> Chain<DoublyIter<'a, T, P>, DoublyIter<'a, T, P>>
     where
         M: 'a,
     {
@@ -224,7 +241,7 @@ where
     /// assert_eq!(iter.next(), Some(&3));
     /// assert_eq!(iter.next(), None);
     /// ```
-    fn iter_from<'a>(&'a self, idx: &DoublyIdx<T>) -> DoublyIter<T>
+    fn iter_from<'a>(&'a self, idx: &DoublyIdx<T>) -> DoublyIter<T, P>
     where
         M: 'a,
     {
@@ -259,7 +276,7 @@ where
     /// assert_eq!(iter.next(), Some(&0));
     /// assert_eq!(iter.next(), None);
     /// ```
-    fn iter_backward_from<'a>(&'a self, idx: &DoublyIdx<T>) -> Rev<DoublyIter<T>>
+    fn iter_backward_from<'a>(&'a self, idx: &DoublyIdx<T>) -> Rev<DoublyIter<T, P>>
     where
         M: 'a,
     {
@@ -292,7 +309,7 @@ where
     ///
     /// assert_eq!(iter.next(), None);
     /// ```
-    fn iter_links_from<'a>(&'a self, idx: &DoublyIdx<T>) -> DoublyLinkIter<'a, T>
+    fn iter_links_from<'a>(&'a self, idx: &DoublyIdx<T>) -> DoublyLinkIter<'a, T, P>
     where
         M: 'a,
     {
@@ -351,7 +368,7 @@ where
         T: std::fmt::Display,
     {
         use alloc::string::ToString;
-        use orx_pinned_vec::PinnedVec;
+
         self.col()
             .nodes()
             .iter()
@@ -380,7 +397,6 @@ where
         T: std::fmt::Display,
     {
         use alloc::string::ToString;
-        use orx_pinned_vec::PinnedVec;
 
         self.col()
             .nodes()
@@ -403,7 +419,6 @@ where
         T: std::fmt::Display,
     {
         use alloc::string::ToString;
-        use orx_pinned_vec::PinnedVec;
 
         self.col()
             .nodes()
@@ -419,9 +434,10 @@ where
     }
 }
 
-impl<L, T, M> DoublyIterable<T, M> for L
+impl<L, T, M, P> DoublyIterable<T, M, P> for L
 where
-    L: HasDoublyEnds<T, M>,
+    P: PinnedVec<Node<Doubly<T>>>,
+    L: HasDoublyEnds<T, M, P>,
     M: MemoryPolicy<Doubly<T>>,
 {
 }

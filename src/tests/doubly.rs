@@ -10,10 +10,11 @@ use orx_selfref_col::{MemoryPolicy, Node, NodePtr};
 
 type PtrAndNode<'a, T> = (NodePtr<Doubly<T>>, &'a Node<Doubly<T>>);
 
-impl<T, M> List<Doubly<T>, M>
+impl<T, M, P> List<Doubly<T>, M, P>
 where
     M: MemoryPolicy<Doubly<T>>,
     T: Debug + PartialEq + Eq,
+    P: PinnedVec<Node<Doubly<T>>>,
 {
     /// A debugging method that performs internal structural test on the list and panics if it is in an invalid state.
     ///

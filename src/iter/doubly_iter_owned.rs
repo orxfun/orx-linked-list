@@ -1,18 +1,25 @@
-use crate::{type_aliases::PinVec, Doubly};
+use crate::Doubly;
 use core::iter::FusedIterator;
-use orx_selfref_col::{CoreCol, NodePtr};
+use orx_pinned_vec::PinnedVec;
+use orx_selfref_col::{CoreCol, Node, NodePtr};
 
 /// An ordered consuming iterator of the doubly linked list.
 ///
 /// Can be created by calling the `into_iter` method.
-pub struct DoublyIterOwned<T> {
-    col: CoreCol<Doubly<T>, PinVec<Doubly<T>>>,
+pub struct DoublyIterOwned<T, P>
+where
+    P: PinnedVec<Node<Doubly<T>>>,
+{
+    col: CoreCol<Doubly<T>, P>,
     current: Option<NodePtr<Doubly<T>>>,
     current_back: Option<NodePtr<Doubly<T>>>,
 }
 
-impl<T> DoublyIterOwned<T> {
-    pub(crate) fn new(col: CoreCol<Doubly<T>, PinVec<Doubly<T>>>) -> Self {
+impl<T, P> DoublyIterOwned<T, P>
+where
+    P: PinnedVec<Node<Doubly<T>>>,
+{
+    pub(crate) fn new(col: CoreCol<Doubly<T>, P>) -> Self {
         let current = col.ends().get(0);
         let current_back = col.ends().get(1);
         Self {
@@ -28,7 +35,10 @@ impl<T> DoublyIterOwned<T> {
     }
 }
 
-impl<T> Iterator for DoublyIterOwned<T> {
+impl<T, P> Iterator for DoublyIterOwned<T, P>
+where
+    P: PinnedVec<Node<Doubly<T>>>,
+{
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -47,7 +57,10 @@ impl<T> Iterator for DoublyIterOwned<T> {
     }
 }
 
-impl<T> DoubleEndedIterator for DoublyIterOwned<T> {
+impl<T, P> DoubleEndedIterator for DoublyIterOwned<T, P>
+where
+    P: PinnedVec<Node<Doubly<T>>>,
+{
     fn next_back(&mut self) -> Option<Self::Item> {
         match &self.current_back {
             Some(p) => {
@@ -64,4 +77,4 @@ impl<T> DoubleEndedIterator for DoublyIterOwned<T> {
     }
 }
 
-impl<T> FusedIterator for DoublyIterOwned<T> {}
+impl<T, P> FusedIterator for DoublyIterOwned<T, P> where P: PinnedVec<Node<Doubly<T>>> {}

@@ -3,12 +3,14 @@ use crate::{
     type_aliases::{BACK_IDX, FRONT_IDX, IDX_ERR, OOB},
     Doubly, DoublyEnds, DoublyIdx,
 };
-use orx_selfref_col::{MemoryPolicy, NodeIdx, NodeIdxError};
+use orx_pinned_vec::PinnedVec;
+use orx_selfref_col::{MemoryPolicy, Node, NodeIdx, NodeIdxError};
 
 /// A list or view having a single end: front.
-pub trait DoublyEndsMut<T, M>: HasDoublyEndsMut<T, M> + DoublyEnds<T, M>
+pub trait DoublyEndsMut<T, M, P>: HasDoublyEndsMut<T, M, P> + DoublyEnds<T, M, P>
 where
     M: MemoryPolicy<Doubly<T>>,
+    P: PinnedVec<Node<Doubly<T>>>,
 {
     /// ***O(1)*** Returns a mutable reference to the front of the list,
     /// returns None if the list is empty.
@@ -32,6 +34,7 @@ where
     fn front_mut<'a>(&'a mut self) -> Option<&'a mut T>
     where
         M: 'a,
+        P: 'a,
     {
         self.ends_mut()
             .get(FRONT_IDX)
@@ -60,6 +63,7 @@ where
     fn back_mut<'a>(&'a mut self) -> Option<&'a mut T>
     where
         M: 'a,
+        P: 'a,
     {
         self.ends_mut()
             .get(BACK_IDX)
@@ -176,6 +180,7 @@ where
     fn get_mut<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Option<&mut T>
     where
         M: 'a,
+        P: 'a,
     {
         self.col_mut()
             .node_mut_from_idx(idx)
@@ -292,6 +297,7 @@ where
     fn try_get_mut<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Result<&mut T, NodeIdxError>
     where
         M: 'a,
+        P: 'a,
     {
         self.col_mut()
             .try_node_mut_from_idx(idx)
@@ -330,6 +336,7 @@ where
     fn next_mut_of<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Option<&mut T>
     where
         M: 'a,
+        P: 'a,
     {
         self.next_idx_of(idx).and_then(|i| self.get_mut(&i))
     }
@@ -363,6 +370,7 @@ where
     fn prev_mut_of<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Option<&mut T>
     where
         M: 'a,
+        P: 'a,
     {
         self.prev_idx_of(idx).and_then(|i| self.get_mut(&i))
     }
@@ -999,9 +1007,10 @@ where
     }
 }
 
-impl<L, T, M> DoublyEndsMut<T, M> for L
+impl<L, T, M, P> DoublyEndsMut<T, M, P> for L
 where
-    L: HasDoublyEndsMut<T, M>,
+    L: HasDoublyEndsMut<T, M, P>,
     M: MemoryPolicy<Doubly<T>>,
+    P: PinnedVec<Node<Doubly<T>>>,
 {
 }

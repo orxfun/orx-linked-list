@@ -144,7 +144,7 @@ fn timed<R, F: FnOnce() -> R>(run: F) -> (R, u128) {
     (result, ms)
 }
 
-/// Simple program to greet a person
+/// Program demonstrating different tour representations.
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {

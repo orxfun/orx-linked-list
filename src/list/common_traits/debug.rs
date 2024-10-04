@@ -1,11 +1,13 @@
 use crate::{variant::Doubly, DoublyIterable, List, Singly, SinglyIterable};
 use core::fmt::Debug;
-use orx_selfref_col::MemoryPolicy;
+use orx_pinned_vec::PinnedVec;
+use orx_selfref_col::{MemoryPolicy, Node};
 
-impl<T: Debug, M> Debug for List<Singly<T>, M>
+impl<T: Debug, M, P> Debug for List<Singly<T>, M, P>
 where
     M: MemoryPolicy<Singly<T>>,
-    List<Singly<T>, M>: Default,
+    P: PinnedVec<Node<Singly<T>>>,
+    List<Singly<T>, M, P>: Default,
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "[")?;
@@ -22,10 +24,11 @@ where
     }
 }
 
-impl<T: Debug, M> Debug for List<Doubly<T>, M>
+impl<T: Debug, M, P> Debug for List<Doubly<T>, M, P>
 where
     M: MemoryPolicy<Doubly<T>>,
-    List<Doubly<T>, M>: Default,
+    P: PinnedVec<Node<Doubly<T>>>,
+    List<Doubly<T>, M, P>: Default,
 {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "[")?;

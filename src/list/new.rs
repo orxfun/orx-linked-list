@@ -1,8 +1,11 @@
 use crate::{
-    list::List, DoublyList, DoublyListLazy, DoublyListThreshold, SinglyList, SinglyListLazy,
-    SinglyListThreshold,
+    list::List, variant::ListVariant, DoublyList, DoublyListLazy, DoublyListThreshold, SinglyList,
+    SinglyListLazy, SinglyListThreshold,
 };
-use orx_selfref_col::SelfRefCol;
+use orx_fixed_vec::FixedVec;
+use orx_pinned_vec::PinnedVec;
+use orx_selfref_col::{MemoryPolicy, Node, Refs, SelfRefCol};
+use orx_split_vec::{Doubling, Linear, Recursive, SplitVec};
 
 // singly
 
@@ -83,5 +86,69 @@ impl<T> DoublyListLazy<T> {
 impl<T> Default for DoublyListLazy<T> {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+// pinned-vec variants
+
+impl<V, M, P> List<V, M, P>
+where
+    V: ListVariant,
+    M: MemoryPolicy<V>,
+    P: PinnedVec<Node<V>>,
+{
+    fn from_empty_pinned_vec(nodes: P) -> Self {
+        assert!(nodes.is_empty());
+        let ends = V::Ends::empty();
+        let col = SelfRefCol::from((nodes, ends));
+        Self(col)
+    }
+}
+
+impl<V, M> List<V, M, FixedVec<Node<V>>>
+where
+    V: ListVariant,
+    M: MemoryPolicy<V>,
+{
+    /// Creates a linked list that uses a [`FixedVec<T>`]((https://docs.rs/orx-fixed-vec/latest/orx_fixed_vec/)) as the underlying storage.
+    pub fn with_fixed_capacity(fixed_capacity: usize) -> Self {
+        Self::from_empty_pinned_vec(FixedVec::new(fixed_capacity))
+    }
+}
+
+impl<V, M> List<V, M, SplitVec<Node<V>, Doubling>>
+where
+    V: ListVariant,
+    M: MemoryPolicy<V>,
+{
+    /// Creates a linked list that uses a [`SplitVec<T, Doubling>`](https://docs.rs/orx-split-vec/latest/orx_split_vec/struct.Doubling.html) as the underlying storage.
+    pub fn with_doubling_growth() -> Self {
+        Self::from_empty_pinned_vec(SplitVec::with_doubling_growth())
+    }
+}
+
+impl<V, M> List<V, M, SplitVec<Node<V>, Recursive>>
+where
+    V: ListVariant,
+    M: MemoryPolicy<V>,
+{
+    /// Creates a linked list that uses a [`SplitVec<T, Recursive>`](https://docs.rs/orx-split-vec/latest/orx_split_vec/struct.Recursive.html) as the underlying storage.
+    pub fn with_recursive_growth() -> Self {
+        Self::from_empty_pinned_vec(SplitVec::with_recursive_growth())
+    }
+}
+
+impl<V, M> List<V, M, SplitVec<Node<V>, Linear>>
+where
+    V: ListVariant,
+    M: MemoryPolicy<V>,
+{
+    /// Creates a linked list that uses a [`SplitVec<T, Linear>`](https://docs.rs/orx-split-vec/latest/orx_split_vec/struct.Linear.html) as the underlying storage.
+    ///
+    /// Each fragment will have a capacity of 2 ^ constant_fragment_capacity_exponent.
+    pub fn with_linear_growth(constant_fragment_capacity_exponent: usize) -> Self {
+        Self::from_empty_pinned_vec(SplitVec::with_linear_growth(
+            constant_fragment_capacity_exponent,
+        ))
     }
 }

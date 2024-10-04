@@ -1,19 +1,22 @@
 use crate::{
     iter::{SinglyIter, SinglyIterPtr},
     list::helper_traits::HasSinglyEnds,
+    pointers::SinglyPtr,
     type_aliases::OOB,
     Singly, SinglyIdx,
 };
-use orx_selfref_col::MemoryPolicy;
+use orx_selfref_col::{MemoryPolicy, Node};
+use orx_split_vec::PinnedVec;
 
 /// Iterator methods for Singly linked lists.
-pub trait SinglyIterable<T, M>: HasSinglyEnds<T, M>
+pub trait SinglyIterable<T, M, P>: HasSinglyEnds<T, M, P>
 where
     M: MemoryPolicy<Singly<T>>,
+    P: PinnedVec<Node<Singly<T>>>,
     Self: Sized,
 {
     /// Returns a double-ended iterator of pointers to the elements of the list from front to back.
-    fn iter_ptr<'a>(&'a self) -> SinglyIterPtr<T>
+    fn iter_ptr<'a>(&'a self) -> SinglyIterPtr<T, P>
     where
         M: 'a,
     {
@@ -42,7 +45,7 @@ where
     /// assert_eq!(Some(&'c'), iter.next());
     /// assert!(iter.next().is_none());
     /// ```
-    fn iter<'a>(&'a self) -> SinglyIter<T>
+    fn iter<'a>(&'a self) -> SinglyIter<T, P>
     where
         M: 'a,
     {
@@ -77,9 +80,23 @@ where
     where
         M: 'a,
         T: 'a,
+        P: 'a,
     {
         let s = self.col().memory_state();
         self.iter_ptr().map(move |ptr| SinglyIdx::new(s, &ptr))
+    }
+
+    /// Returns an iterator of pointers to the elements of the list.
+    ///
+    /// Similar to indices, pointers are used to enable constant time access to any place of the list.
+    /// They are thinner; however, have only some of the safety guarantees that indices have.
+    fn pointers<'a>(&'a self) -> impl Iterator<Item = SinglyPtr<T>>
+    where
+        M: 'a,
+        T: 'a,
+        P: 'a,
+    {
+        self.iter_ptr()
     }
 
     // idx
@@ -110,7 +127,7 @@ where
     /// assert_eq!(iter.next(), Some(&3));
     /// assert_eq!(iter.next(), None);
     /// ```
-    fn iter_from<'a>(&'a self, idx: &SinglyIdx<T>) -> SinglyIter<T>
+    fn iter_from<'a>(&'a self, idx: &SinglyIdx<T>) -> SinglyIter<T, P>
     where
         M: 'a,
     {
@@ -166,7 +183,6 @@ where
         T: std::fmt::Display,
     {
         use alloc::string::ToString;
-        use orx_pinned_vec::PinnedVec;
 
         self.col()
             .nodes()
@@ -196,7 +212,6 @@ where
         T: std::fmt::Display,
     {
         use alloc::string::ToString;
-        use orx_pinned_vec::PinnedVec;
 
         self.col()
             .nodes()
@@ -212,9 +227,10 @@ where
     }
 }
 
-impl<L, T, M> SinglyIterable<T, M> for L
+impl<L, T, M, P> SinglyIterable<T, M, P> for L
 where
-    L: HasSinglyEnds<T, M>,
+    L: HasSinglyEnds<T, M, P>,
     M: MemoryPolicy<Singly<T>>,
+    P: PinnedVec<Node<Singly<T>>>,
 {
 }
