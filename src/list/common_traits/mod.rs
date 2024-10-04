@@ -1,5 +1,6 @@
 mod clone;
 mod debug;
+mod eq;
 mod extend;
 mod from_iter;
 mod index;

@@ -1,6 +1,7 @@
 use crate::{
     iter::{DoublyIter, DoublyIterPtr, DoublyLinkIter},
     list::helper_traits::HasDoublyEnds,
+    pointers::DoublyPtr,
     type_aliases::{BACK_IDX, FRONT_IDX, OOB},
     Doubly, DoublyIdx,
 };
@@ -142,6 +143,19 @@ where
     {
         let s = self.col().memory_state();
         self.iter_ptr().map(move |ptr| DoublyIdx::new(s, &ptr))
+    }
+
+    /// Returns an iterator of pointers to the elements of the list.
+    ///
+    /// Similar to indices, pointers are used to enable constant time access to any place of the list.
+    /// They are thinner; however, have only some of the safety guarantees that indices have.
+    fn pointers<'a>(&'a self) -> impl Iterator<Item = DoublyPtr<T>>
+    where
+        M: 'a,
+        T: 'a,
+        P: 'a,
+    {
+        self.iter_ptr()
     }
 
     // idx

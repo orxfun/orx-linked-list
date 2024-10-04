@@ -98,7 +98,7 @@ where
     P: PinnedVec<Node<V>>,
 {
     fn from_empty_pinned_vec(nodes: P) -> Self {
-        assert_eq!(nodes.is_empty(), true);
+        assert!(nodes.is_empty());
         let ends = V::Ends::empty();
         let col = SelfRefCol::from((nodes, ends));
         Self(col)
