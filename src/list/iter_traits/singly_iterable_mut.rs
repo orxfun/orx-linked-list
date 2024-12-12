@@ -32,7 +32,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([40, 41, 42]));
     /// ```
-    fn iter_mut<'a>(&'a mut self) -> SinglyIterMut<T, P>
+    fn iter_mut<'a>(&'a mut self) -> SinglyIterMut<'a, T, P>
     where
         M: 'a,
     {
@@ -70,7 +70,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([0, 11, 12, 13]));
     /// ```
-    fn iter_mut_from<'a>(&'a mut self, idx: &SinglyIdx<T>) -> SinglyIterMut<T, P>
+    fn iter_mut_from<'a>(&'a mut self, idx: &SinglyIdx<T>) -> SinglyIterMut<'a, T, P>
     where
         M: 'a,
     {

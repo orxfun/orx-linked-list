@@ -40,9 +40,9 @@ where
     }
 }
 
-impl<'a, T, P> FusedIterator for DoublyLinkIter<'a, T, P> where P: PinnedVec<Node<Doubly<T>>> {}
+impl<T, P> FusedIterator for DoublyLinkIter<'_, T, P> where P: PinnedVec<Node<Doubly<T>>> {}
 
-impl<'a, T, P> Clone for DoublyLinkIter<'a, T, P>
+impl<T, P> Clone for DoublyLinkIter<'_, T, P>
 where
     P: PinnedVec<Node<Doubly<T>>>,
 {

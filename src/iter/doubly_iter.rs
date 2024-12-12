@@ -38,7 +38,7 @@ where
     }
 }
 
-impl<'a, T, P> DoubleEndedIterator for DoublyIter<'a, T, P>
+impl<T, P> DoubleEndedIterator for DoublyIter<'_, T, P>
 where
     P: PinnedVec<Node<Doubly<T>>>,
 {
@@ -50,9 +50,9 @@ where
     }
 }
 
-impl<'a, T, P> FusedIterator for DoublyIter<'a, T, P> where P: PinnedVec<Node<Doubly<T>>> {}
+impl<T, P> FusedIterator for DoublyIter<'_, T, P> where P: PinnedVec<Node<Doubly<T>>> {}
 
-impl<'a, T, P> Clone for DoublyIter<'a, T, P>
+impl<T, P> Clone for DoublyIter<'_, T, P>
 where
     P: PinnedVec<Node<Doubly<T>>>,
 {

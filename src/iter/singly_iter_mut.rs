@@ -49,4 +49,4 @@ where
     }
 }
 
-impl<'a, T, P> FusedIterator for SinglyIterMut<'a, T, P> where P: PinnedVec<Node<Singly<T>>> {}
+impl<T, P> FusedIterator for SinglyIterMut<'_, T, P> where P: PinnedVec<Node<Singly<T>>> {}

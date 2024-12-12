@@ -35,7 +35,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([40, 41, 42]));
     /// ```
-    fn iter_mut<'a>(&'a mut self) -> DoublyIterMut<T, P>
+    fn iter_mut<'a>(&'a mut self) -> DoublyIterMut<'a, T, P>
     where
         M: 'a,
     {
@@ -74,7 +74,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([0, 1, 12, 13]));
     /// ```
-    fn iter_mut_from<'a>(&'a mut self, idx: &DoublyIdx<T>) -> DoublyIterMut<T, P>
+    fn iter_mut_from<'a>(&'a mut self, idx: &DoublyIdx<T>) -> DoublyIterMut<'a, T, P>
     where
         M: 'a,
     {
@@ -111,7 +111,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([10, 11, 12, 3]));
     /// ```
-    fn iter_mut_backward_from<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Rev<DoublyIterMut<T, P>>
+    fn iter_mut_backward_from<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Rev<DoublyIterMut<'a, T, P>>
     where
         M: 'a,
     {

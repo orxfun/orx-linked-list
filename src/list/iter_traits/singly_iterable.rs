@@ -16,7 +16,7 @@ where
     Self: Sized,
 {
     /// Returns a double-ended iterator of pointers to the elements of the list from front to back.
-    fn iter_ptr<'a>(&'a self) -> SinglyIterPtr<T, P>
+    fn iter_ptr<'a>(&'a self) -> SinglyIterPtr<'a, T, P>
     where
         M: 'a,
     {
@@ -45,7 +45,7 @@ where
     /// assert_eq!(Some(&'c'), iter.next());
     /// assert!(iter.next().is_none());
     /// ```
-    fn iter<'a>(&'a self) -> SinglyIter<T, P>
+    fn iter<'a>(&'a self) -> SinglyIter<'a, T, P>
     where
         M: 'a,
     {
@@ -127,7 +127,7 @@ where
     /// assert_eq!(iter.next(), Some(&3));
     /// assert_eq!(iter.next(), None);
     /// ```
-    fn iter_from<'a>(&'a self, idx: &SinglyIdx<T>) -> SinglyIter<T, P>
+    fn iter_from<'a>(&'a self, idx: &SinglyIdx<T>) -> SinglyIter<'a, T, P>
     where
         M: 'a,
     {

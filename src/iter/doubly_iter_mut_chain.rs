@@ -59,4 +59,4 @@ where
     }
 }
 
-impl<'a, T, P> FusedIterator for DoublyIterMutChain<'a, T, P> where P: PinnedVec<Node<Doubly<T>>> {}
+impl<T, P> FusedIterator for DoublyIterMutChain<'_, T, P> where P: PinnedVec<Node<Doubly<T>>> {}

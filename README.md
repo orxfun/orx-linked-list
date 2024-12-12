@@ -7,7 +7,8 @@ A linked list implementation with unique features and an extended list of consta
 
 Both doubly and singly lists are provided as generic variants of the core struct `List`. It is sufficient to know the four variants:
 * [`DoublyList`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyList.html) and [`SinglyList`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.SinglyList.html)
-* [`DoublyListLazy`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyListLazy.html) and [`SinglyListLazy`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.SinglyListLazy.html) -> lazy suffix corresponds to lazy memory reclaim and will be explained in the indices section.
+* [`DoublyListLazy`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyListLazy.html) and [`SinglyListLazy`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.SinglyListLazy.html)
+  * *Lazy* suffix corresponds to lazy memory reclaim and will be explained in the indices section.
 
 Some notable features are as follows.
 
@@ -18,7 +19,7 @@ Link lists are self organizing to keep the nodes close to each other to benefit 
 We observe in benchmarks that `DoublyList` is significantly faster than the standard linked list.
 
 <details>
-<summary style="font-weight:bold;">A. Mutation At Ends</summary>
+<summary style="font-weight:bold;">A. Benchmark & Example: Mutation At Ends</summary>
 
 In [doubly_mutation_ends.rs](https://github.com/orxfun/orx-linked-list/blob/main/benches/doubly_mutation_ends.rs) benchmark, we first push elements to a linked list until it reaches a particular length. Then, we call
 - `push_back`
@@ -26,7 +27,7 @@ In [doubly_mutation_ends.rs](https://github.com/orxfun/orx-linked-list/blob/main
 - `pop_back`
 - `pop_front`
 
-in a random alternating order. We observe that `DoublyList` is around **40%** faster than `std::collections::LinkedList`.
+in a random alternating order. We observe that **DoublyList** is around **40% faster than std::collections::LinkedList**.
 
 The following example demonstrates the simple usage of the list with mutation at its ends.
 
@@ -52,11 +53,11 @@ assert_eq!(list.len(), 2);
 </details>
 
 <details>
-<summary style="font-weight:bold;">B. Iteration</summary>
+<summary style="font-weight:bold;">B. Benchmark & Example: Iteration or Sequential Access</summary>
 
 In [doubly_iter.rs](https://github.com/orxfun/orx-linked-list/blob/main/benches/doubly_iter.rs) benchmark, we create a linked list with insertions to the back and front of the list in a random order. Then, we `iter()` over the nodes and apply a map-reduce over the elements.
 
-We observe that `DoublyList` iteration is around **25 times** faster than that with `std::collections::LinkedList`.
+We observe that **DoublyList** iteration is around **25 times faster than that with std::collections::LinkedList**.
 
 The significance of improvement can further be increased by using `DoublyList::iter_x()` instead, which iterates over the elements in an arbitrary order. Unordered iteration is not suitable for all use cases. Most reductions or applying a mutation to each element are a couple of common examples. When the use case allows, unordered iteration further provides significant speed up.
 
@@ -64,19 +65,23 @@ The significance of improvement can further be increased by using `DoublyList::i
 
 ## Iterations
 
-Linked lists are all about traversal. And hence, the linked list, specifically the `DoublyList`, provides various useful ways to iterate over the data:
-* [`iter()`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.iter) iterates from front to back of the list
-* `iter().rev()` iterates from back to front
-* [`iter_from(idx: &DoublyIdx<T>)`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.iter_from) iterates forward starting from the node with the given index to the back
-* [`iter_backward_from(idx: &DoublyIdx<T>)`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.iter_backward_from) iterates forward starting from the node with the given index to the front
-* [`ring_iter(pivot_idx: &DoublyIdx<T>)`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.ring_iter) iterates forward starting from the pivot node with the given index until the node before the pivot node, linking back to the front and giving the list the **circular behavior**
-* [`iter_links()`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.iter_links) iterates over the links of the list
-* [`iter_x()`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyList.html#method.iter_x) iterates over elements in an arbitrary order, which is often faster when the order is not required
+Linked lists are all about traversal. Therefore, the linked lists defined in this crate, especially the **DoublyList**, provide various useful ways to iterate over the data:
+
+|  | |
+|------------|------------|
+| [`iter()`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.iter) | from front to back of the list |
+| `iter().rev()` | from back to front |
+| [`iter_from(idx: &DoublyIdx<T>)`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.iter_from) | forward starting from the node with the given index to the back |
+| [`iter_backward_from(idx: &DoublyIdx<T>)`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.iter_backward_from) | backward starting from the node with the given index to the front |
+| [`ring_iter(pivot_idx: &DoublyIdx<T>)`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.ring_iter) | forward starting from the pivot node with the given index until the node before the pivot node, linking back to the front and giving the list the **circular behavior** |
+| [`iter_links()`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.iter_links) | forward over the links, rather than nodes, from front to back |
+| [`iter_x()`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyList.html#method.iter_x) | over elements in an arbitrary order, which is often faster when the order is not required |
+|||
 
 As typical, above-mentioned methods have the "_mut" suffixed versions for iterating over mutable references.
 
 <details>
-<summary style="font-weight:bold;">Example</summary>
+<summary style="font-weight:bold;">Example: Iterations or Traversals</summary>
 
 ```rust
 use orx_linked_list::*;
@@ -113,14 +118,14 @@ assert_eq!(res, [3, 4, 5, 0, 1, 2]);
 ```
 </details>
 
-## Zero-Cost Append
+## Zero-Cost Append or Merge
 
 Due to the feature of the [`Recursive`](https://docs.rs/orx-split-vec/3.8.0/orx_split_vec/struct.Recursive.html) growth strategy of the underlying SplitVec that allows merging vectors and the nature of linked lists, appending two lists is a constant time operation.
 
 See [`append_front`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyList.html#method.append_front) and [`append_back`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyList.html#method.append_back).
 
 <details>
-<summary style="font-weight:bold;">Example</summary>
+<summary style="font-weight:bold;">Example: Merging Linked Lists</summary>
 
 ```rust
 use orx_linked_list::*;
@@ -142,17 +147,17 @@ assert!(list.eq_to_iter_vals(['d', 'e', 'a', 'b', 'c']));
 
 [`DoublyIdx<T>`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyIdx.html) and [`SinglyIdx<T>`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.SinglyIdx.html) are the node indices for doubly and singly linked lists, respectively.
 
-A node index is analogous to `usize` for a slice (`&[T]`) in the following:
+A node index is analogous to **usize for a slice** (`&[T]`) in the following:
 * It provides constant time access to any element in the list.
 
-It differs from `usize` for a slice due to the following:
+It differs from **usize for a slice** due to the following:
 * `usize` represents a position of the slice. Say we have the slice `['a', 'b', 'c']`. Currently, index **0** points to element `a`. However, if we swap the first and third elements, index **0** will now be pointing to `c` because the `usize` represents a position on the slice.
 * A node index represents the element it is created for. Say we now have a list `['a', 'b', 'c']` instead and `idx_a` is the index of the first element. It will always be pointing to this element no matter how many times we change its position, its value, etc.
 
 Knowing the index of an element enables a large number of constant time operations. Below is a toy example to demonstrate how the index represents an element rather than a position, and illustrates some of the possible O(1) methods using it.
 
 <details>
-<summary style="font-weight:bold;">Example</summary>
+<summary style="font-weight:bold;">Example: Constant Time Access Through Indices</summary>
 
 ```rust
 use orx_linked_list::*;
@@ -215,7 +220,7 @@ assert_eq!(list.idx_err(&idx), Some(NodeIdxError::RemovedNode));
 Each method adding an element to the list returns the index created for that particular node.
 
 <details>
-<summary style="font-weight:bold;">push & insert</summary>
+<summary style="font-weight:bold;">Example: Individual node indices from push & insert</summary>
 
 ```rust
 use orx_linked_list::*;
@@ -237,7 +242,7 @@ assert_eq!(values, ['a', 'b', 'c', 'd']);
 Alternatively, we can collect all indices at once using the [`indices`](https://docs.rs/orx-linked-list/latest/orx_linked_list/trait.DoublyIterable.html#method.indices) method.
 
 <details>
-<summary style="font-weight:bold;">indices()</summary>
+<summary style="font-weight:bold;">Example: All node indices from indices()</summary>
 
 ```rust
 use orx_linked_list::*;
@@ -277,7 +282,7 @@ Traditionally, linked lists provide constant time access to the ends of the list
 Indices enable slicing the list, which in turns behaves as a list reflecting its recursive nature.
 
 <details>
-<summary style="font-weight:bold;">slice</summary>
+<summary style="font-weight:bold;">Example: Slicing linked lists</summary>
 
 ```rust
 use orx_linked_list::*;
@@ -315,7 +320,7 @@ assert!(list.eq_to_iter_vals([0, 12, 11, 42, 4, 5]));
 ### Efficiency of Constant Time Mutations (Example)
 
 How important are the additional O(1) methods?
-* In this talk [here](https://www.youtube.com/watch?v=YQs6IC-vgmo), Bjarne Stroustrup explains why we should avoid linked list. The talk nicely summarizes the trouble of achieving the appealing constant time mutation promise of linked list. Further, additional memory requirement due to the storage of links or pointers is mentioned.
+* In this talk [here](https://www.youtube.com/watch?v=YQs6IC-vgmo), Bjarne Stroustrup explains why we should avoid linked lists. The talk nicely summarizes the trouble of achieving the appealing constant time mutation promise of linked list. Further, additional memory requirement due to the storage of links or pointers is mentioned.
 * Likewise, there exists the following note in the documentation of the `std::collections::LinkedList`: "It is almost always better to use Vec or VecDeque because array-based containers are generally faster, more memory efficient, and make better use of CPU cache."
 
 This crate aims to overcome the concerns with the following approach:
@@ -366,14 +371,7 @@ impl TourLinkedList {
 
 Although clear from the worst time complexity of the implementations, [doubly_shuffling_around.rs](https://github.com/orxfun/orx-linked-list/blob/main/benches/doubly_shuffling_around.rs) benchmark demonstrates the dramatic difference. At each setting, we perform 10k `insert_after` moves with tours of different lengths. The following table summarizes the required time in microseconds for each setting.
 
-| num_cities | DoublyList | Vec       |
-|------------|------------|-----------|
-| 10         | 113        | 233       |
-| 100        | 152        | 834       |
-| 1,000      | 239        | 5,637     |
-| 10,000     | 885        | 84,890    |
-| 100,000    | 7,791      | 1,227,500 |
-||||
+<img src="https://raw.githubusercontent.com/orxfun/orx-linked-list/main/docs/img/tour-mutation-benchmark.PNG" alt="https://raw.githubusercontent.com/orxfun/orx-linked-list/main/docs/img/tour-mutation-benchmark.PNG" />
 
 ### Memory & Safety
 

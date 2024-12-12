@@ -2,7 +2,7 @@ use super::list_slice::ListSlice;
 use crate::variant::ListVariant;
 use orx_selfref_col::{MemoryPolicy, Refs};
 
-impl<'a, V, M> ListSlice<'a, V, M>
+impl<V, M> ListSlice<'_, V, M>
 where
     V: ListVariant,
     M: MemoryPolicy<V>,

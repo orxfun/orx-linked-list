@@ -27,7 +27,7 @@ where
     }
 }
 
-impl<'a, 'i, T, M, P> Index<&'i DoublyIdx<T>> for ListSlice<'a, Doubly<T>, M, P>
+impl<'i, T, M, P> Index<&'i DoublyIdx<T>> for ListSlice<'_, Doubly<T>, M, P>
 where
     M: MemoryPolicy<Doubly<T>>,
     P: PinnedVec<Node<Doubly<T>>>,
@@ -46,7 +46,7 @@ where
     }
 }
 
-impl<'a, 'i, T, M, P> Index<&'i DoublyIdx<T>> for ListSliceMut<'a, Doubly<T>, M, P>
+impl<'i, T, M, P> Index<&'i DoublyIdx<T>> for ListSliceMut<'_, Doubly<T>, M, P>
 where
     M: MemoryPolicy<Doubly<T>>,
     P: PinnedVec<Node<Doubly<T>>>,
@@ -82,7 +82,7 @@ where
     }
 }
 
-impl<'a, 'i, T, M, P> IndexMut<&'i DoublyIdx<T>> for ListSliceMut<'a, Doubly<T>, M, P>
+impl<'i, T, M, P> IndexMut<&'i DoublyIdx<T>> for ListSliceMut<'_, Doubly<T>, M, P>
 where
     M: MemoryPolicy<Doubly<T>>,
     P: PinnedVec<Node<Doubly<T>>>,
@@ -120,7 +120,7 @@ where
     }
 }
 
-impl<'a, 'i, T, M, P> Index<&'i SinglyIdx<T>> for ListSlice<'a, Singly<T>, M, P>
+impl<'i, T, M, P> Index<&'i SinglyIdx<T>> for ListSlice<'_, Singly<T>, M, P>
 where
     M: MemoryPolicy<Singly<T>>,
     P: PinnedVec<Node<Singly<T>>>,
@@ -139,7 +139,7 @@ where
     }
 }
 
-impl<'a, 'i, T, M, P> Index<&'i SinglyIdx<T>> for ListSliceMut<'a, Singly<T>, M, P>
+impl<'i, T, M, P> Index<&'i SinglyIdx<T>> for ListSliceMut<'_, Singly<T>, M, P>
 where
     M: MemoryPolicy<Singly<T>>,
     P: PinnedVec<Node<Singly<T>>>,
@@ -175,7 +175,7 @@ where
     }
 }
 
-impl<'a, 'i, T, M, P> IndexMut<&'i SinglyIdx<T>> for ListSliceMut<'a, Singly<T>, M, P>
+impl<'i, T, M, P> IndexMut<&'i SinglyIdx<T>> for ListSliceMut<'_, Singly<T>, M, P>
 where
     M: MemoryPolicy<Singly<T>>,
     P: PinnedVec<Node<Singly<T>>>,

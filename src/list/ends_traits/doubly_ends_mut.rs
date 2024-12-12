@@ -177,7 +177,7 @@ where
     /// assert!(list.get_mut(&idx).is_some());
     /// // assert_eq!(list.get_mut(&other_idx), None);
     /// ```
-    fn get_mut<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Option<&mut T>
+    fn get_mut<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Option<&'a mut T>
     where
         M: 'a,
         P: 'a,
@@ -294,7 +294,7 @@ where
     /// assert!(list.try_get_mut(&idx).is_ok());
     /// // assert_eq!(list.try_get_mut(&other_idx), Err(NodeIdxError::OutOfBounds));
     /// ```
-    fn try_get_mut<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Result<&mut T, NodeIdxError>
+    fn try_get_mut<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Result<&'a mut T, NodeIdxError>
     where
         M: 'a,
         P: 'a,
@@ -333,7 +333,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'x', 'd']));
     /// ```
-    fn next_mut_of<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Option<&mut T>
+    fn next_mut_of<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Option<&'a mut T>
     where
         M: 'a,
         P: 'a,
@@ -367,7 +367,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals(['x', 'b', 'c', 'd']));
     /// ```
-    fn prev_mut_of<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Option<&mut T>
+    fn prev_mut_of<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Option<&'a mut T>
     where
         M: 'a,
         P: 'a,
