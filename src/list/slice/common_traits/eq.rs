@@ -4,7 +4,7 @@ use orx_selfref_col::{MemoryPolicy, Node};
 
 // singly
 
-impl<'a, T, M, P> PartialEq for ListSlice<'a, Singly<T>, M, P>
+impl<T, M, P> PartialEq for ListSlice<'_, Singly<T>, M, P>
 where
     T: PartialEq,
     M: MemoryPolicy<Singly<T>>,
@@ -15,7 +15,7 @@ where
     }
 }
 
-impl<'a, T, M, P> Eq for ListSlice<'a, Singly<T>, M, P>
+impl<T, M, P> Eq for ListSlice<'_, Singly<T>, M, P>
 where
     T: PartialEq,
     M: MemoryPolicy<Singly<T>>,
@@ -25,7 +25,7 @@ where
 
 // doubly
 
-impl<'a, T, M, P> PartialEq for ListSlice<'a, Doubly<T>, M, P>
+impl<T, M, P> PartialEq for ListSlice<'_, Doubly<T>, M, P>
 where
     T: PartialEq,
     M: MemoryPolicy<Doubly<T>>,
@@ -36,7 +36,7 @@ where
     }
 }
 
-impl<'a, T, M, P> Eq for ListSlice<'a, Doubly<T>, M, P>
+impl<T, M, P> Eq for ListSlice<'_, Doubly<T>, M, P>
 where
     T: PartialEq,
     M: MemoryPolicy<Doubly<T>>,

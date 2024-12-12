@@ -68,7 +68,7 @@ where
     }
 }
 
-impl<'a, T, P> DoubleEndedIterator for DoublyIterMut<'a, T, P>
+impl<T, P> DoubleEndedIterator for DoublyIterMut<'_, T, P>
 where
     P: PinnedVec<Node<Doubly<T>>>,
 {
@@ -87,4 +87,4 @@ where
     }
 }
 
-impl<'a, T, P> FusedIterator for DoublyIterMut<'a, T, P> where P: PinnedVec<Node<Doubly<T>>> {}
+impl<T, P> FusedIterator for DoublyIterMut<'_, T, P> where P: PinnedVec<Node<Doubly<T>>> {}

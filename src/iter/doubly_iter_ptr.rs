@@ -37,7 +37,7 @@ where
     }
 }
 
-impl<'a, T, P> Iterator for DoublyIterPtr<'a, T, P>
+impl<T, P> Iterator for DoublyIterPtr<'_, T, P>
 where
     P: PinnedVec<Node<Doubly<T>>>,
 {
@@ -59,7 +59,7 @@ where
     }
 }
 
-impl<'a, T, P> DoubleEndedIterator for DoublyIterPtr<'a, T, P>
+impl<T, P> DoubleEndedIterator for DoublyIterPtr<'_, T, P>
 where
     P: PinnedVec<Node<Doubly<T>>>,
 {
@@ -80,9 +80,9 @@ where
     }
 }
 
-impl<'a, T, P> FusedIterator for DoublyIterPtr<'a, T, P> where P: PinnedVec<Node<Doubly<T>>> {}
+impl<T, P> FusedIterator for DoublyIterPtr<'_, T, P> where P: PinnedVec<Node<Doubly<T>>> {}
 
-impl<'a, T, P> Clone for DoublyIterPtr<'a, T, P>
+impl<T, P> Clone for DoublyIterPtr<'_, T, P>
 where
     P: PinnedVec<Node<Doubly<T>>>,
 {

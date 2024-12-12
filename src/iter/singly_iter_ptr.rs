@@ -23,7 +23,7 @@ where
     }
 }
 
-impl<'a, T, P> Iterator for SinglyIterPtr<'a, T, P>
+impl<T, P> Iterator for SinglyIterPtr<'_, T, P>
 where
     P: PinnedVec<Node<Singly<T>>>,
 {
@@ -41,9 +41,9 @@ where
     }
 }
 
-impl<'a, T, P> FusedIterator for SinglyIterPtr<'a, T, P> where P: PinnedVec<Node<Singly<T>>> {}
+impl<T, P> FusedIterator for SinglyIterPtr<'_, T, P> where P: PinnedVec<Node<Singly<T>>> {}
 
-impl<'a, T, P> Clone for SinglyIterPtr<'a, T, P>
+impl<T, P> Clone for SinglyIterPtr<'_, T, P>
 where
     P: PinnedVec<Node<Singly<T>>>,
 {

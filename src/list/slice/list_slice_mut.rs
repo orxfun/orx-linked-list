@@ -23,7 +23,7 @@ where
     pub(crate) ends: V::Ends,
 }
 
-impl<'a, V, M, P> HasCol<V, M, P> for ListSliceMut<'a, V, M, P>
+impl<V, M, P> HasCol<V, M, P> for ListSliceMut<'_, V, M, P>
 where
     V: ListVariant,
     M: MemoryPolicy<V>,
@@ -35,7 +35,7 @@ where
     }
 }
 
-impl<'a, V, M, P> HasColMut<V, M, P> for ListSliceMut<'a, V, M, P>
+impl<V, M, P> HasColMut<V, M, P> for ListSliceMut<'_, V, M, P>
 where
     V: ListVariant,
     M: MemoryPolicy<V>,
@@ -47,7 +47,7 @@ where
     }
 }
 
-impl<'a, T, M, P> HasSinglyEnds<T, M, P> for ListSliceMut<'a, Singly<T>, M, P>
+impl<T, M, P> HasSinglyEnds<T, M, P> for ListSliceMut<'_, Singly<T>, M, P>
 where
     M: MemoryPolicy<Singly<T>>,
     P: PinnedVec<Node<Singly<T>>>,
@@ -58,7 +58,7 @@ where
     }
 }
 
-impl<'a, T, M, P> HasSinglyEndsMut<T, M, P> for ListSliceMut<'a, Singly<T>, M, P>
+impl<T, M, P> HasSinglyEndsMut<T, M, P> for ListSliceMut<'_, Singly<T>, M, P>
 where
     M: MemoryPolicy<Singly<T>>,
     P: PinnedVec<Node<Singly<T>>>,
@@ -69,7 +69,7 @@ where
     }
 }
 
-impl<'a, T, M, P> HasDoublyEnds<T, M, P> for ListSliceMut<'a, Doubly<T>, M, P>
+impl<T, M, P> HasDoublyEnds<T, M, P> for ListSliceMut<'_, Doubly<T>, M, P>
 where
     M: MemoryPolicy<Doubly<T>>,
     P: PinnedVec<Node<Doubly<T>>>,
@@ -80,7 +80,7 @@ where
     }
 }
 
-impl<'a, T, M, P> HasDoublyEndsMut<T, M, P> for ListSliceMut<'a, Doubly<T>, M, P>
+impl<T, M, P> HasDoublyEndsMut<T, M, P> for ListSliceMut<'_, Doubly<T>, M, P>
 where
     M: MemoryPolicy<Doubly<T>>,
     P: PinnedVec<Node<Doubly<T>>>,

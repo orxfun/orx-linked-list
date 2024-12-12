@@ -373,7 +373,7 @@ where
     /// assert_eq!(list.get(&idx), Some(&'a'));
     /// // assert_eq!(list.get(&other_idx), None);
     /// ```
-    fn get<'a>(&'a self, idx: &DoublyIdx<T>) -> Option<&T>
+    fn get<'a>(&'a self, idx: &DoublyIdx<T>) -> Option<&'a T>
     where
         M: 'a,
         P: 'a,
@@ -484,7 +484,7 @@ where
     /// assert_eq!(list.try_get(&idx), Ok(&'a'));
     /// // assert_eq!(list.try_get(&other_idx), Err(NodeIdxError::OutOfBounds));
     /// ```
-    fn try_get<'a>(&'a self, idx: &DoublyIdx<T>) -> Result<&T, NodeIdxError>
+    fn try_get<'a>(&'a self, idx: &DoublyIdx<T>) -> Result<&'a T, NodeIdxError>
     where
         M: 'a,
         P: 'a,
@@ -556,7 +556,7 @@ where
     /// let c = list.next_idx_of(&a).and_then(|b| list.next_of(&b));
     /// assert_eq!(c, Some(&'c'));
     /// ```
-    fn next_of<'a>(&'a self, idx: &DoublyIdx<T>) -> Option<&T>
+    fn next_of<'a>(&'a self, idx: &DoublyIdx<T>) -> Option<&'a T>
     where
         M: 'a,
         P: 'a,
@@ -623,7 +623,7 @@ where
     /// let a = list.prev_idx_of(&c).and_then(|b| list.prev_of(&b));
     /// assert_eq!(a, Some(&'a'));
     /// ```
-    fn prev_of<'a>(&'a self, idx: &DoublyIdx<T>) -> Option<&T>
+    fn prev_of<'a>(&'a self, idx: &DoublyIdx<T>) -> Option<&'a T>
     where
         M: 'a,
         P: 'a,

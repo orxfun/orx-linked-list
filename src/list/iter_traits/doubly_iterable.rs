@@ -17,7 +17,7 @@ where
     Self: Sized,
 {
     /// Returns a double-ended iterator of pointers to the elements of the list from front to back.
-    fn iter_ptr<'a>(&'a self) -> DoublyIterPtr<T, P>
+    fn iter_ptr<'a>(&'a self) -> DoublyIterPtr<'a, T, P>
     where
         M: 'a,
     {
@@ -64,7 +64,7 @@ where
     /// assert_eq!(Some(&'c'), iter.next());
     /// assert!(iter.next().is_none());
     /// ```
-    fn iter<'a>(&'a self) -> DoublyIter<T, P>
+    fn iter<'a>(&'a self) -> DoublyIter<'a, T, P>
     where
         M: 'a,
     {
@@ -241,7 +241,7 @@ where
     /// assert_eq!(iter.next(), Some(&3));
     /// assert_eq!(iter.next(), None);
     /// ```
-    fn iter_from<'a>(&'a self, idx: &DoublyIdx<T>) -> DoublyIter<T, P>
+    fn iter_from<'a>(&'a self, idx: &DoublyIdx<T>) -> DoublyIter<'a, T, P>
     where
         M: 'a,
     {
@@ -276,7 +276,7 @@ where
     /// assert_eq!(iter.next(), Some(&0));
     /// assert_eq!(iter.next(), None);
     /// ```
-    fn iter_backward_from<'a>(&'a self, idx: &DoublyIdx<T>) -> Rev<DoublyIter<T, P>>
+    fn iter_backward_from<'a>(&'a self, idx: &DoublyIdx<T>) -> Rev<DoublyIter<'a, T, P>>
     where
         M: 'a,
     {
