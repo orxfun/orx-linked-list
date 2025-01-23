@@ -66,11 +66,11 @@ fn swap<P, T>(
     }
 
     if let Some(prev) = (unsafe { &*occupied }).prev().get() {
-        col.node_mut(&prev).next_mut().set(node_ptr(vacant));
+        col.node_mut(prev).next_mut().set(node_ptr(vacant));
     }
 
     if let Some(next) = (unsafe { &*occupied }).next().get() {
-        col.node_mut(&next).prev_mut().set(node_ptr(vacant));
+        col.node_mut(next).prev_mut().set(node_ptr(vacant));
     }
 
     core::mem::swap(unsafe { &mut *(vacant as *mut Node<Doubly<T>>) }, unsafe {

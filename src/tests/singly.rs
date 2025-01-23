@@ -33,7 +33,7 @@ where
                 assert!(self.front().is_some());
 
                 let front_ptr = self.0.ends().get().unwrap();
-                assert!(self.next(&front_ptr).is_none());
+                assert!(self.next(front_ptr).is_none());
             }
             _ => {
                 assert!(self.front().is_some());

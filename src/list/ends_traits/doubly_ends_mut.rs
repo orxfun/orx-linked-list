@@ -699,7 +699,7 @@ where
     /// ```
     fn move_to_front(&mut self, idx: &DoublyIdx<T>) {
         let ptr = self.ends().get(FRONT_IDX).expect(OOB);
-        let idx_target = NodeIdx::new(self.col().memory_state(), &ptr);
+        let idx_target = NodeIdx::new(self.col().memory_state(), ptr);
         self.move_prev_to(idx, &idx_target);
     }
 
@@ -731,7 +731,7 @@ where
     /// ```
     fn move_to_back(&mut self, idx: &DoublyIdx<T>) {
         let ptr = self.ends().get(BACK_IDX).expect(OOB);
-        let idx_target = NodeIdx::new(self.col().memory_state(), &ptr);
+        let idx_target = NodeIdx::new(self.col().memory_state(), ptr);
         self.move_next_to(idx, &idx_target);
     }
 

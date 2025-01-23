@@ -39,12 +39,12 @@ where
                 assert_eq!(self.0.ends().get(BACK_IDX), self.0.ends().get(FRONT_IDX));
 
                 let front_ptr = self.0.ends().get(FRONT_IDX).unwrap();
-                assert!(self.next(&front_ptr).is_none());
-                assert!(self.prev(&front_ptr).is_none());
+                assert!(self.next(front_ptr).is_none());
+                assert!(self.prev(front_ptr).is_none());
 
                 let back_ptr = self.0.ends().get(BACK_IDX).unwrap();
-                assert!(self.next(&back_ptr).is_none());
-                assert!(self.prev(&back_ptr).is_none());
+                assert!(self.next(back_ptr).is_none());
+                assert!(self.prev(back_ptr).is_none());
             }
             _ => {
                 assert!(self.front().is_some());
@@ -111,14 +111,14 @@ where
 
     fn next(&self, ptr: &NodePtr<Doubly<T>>) -> Option<PtrAndNode<T>> {
         self.0.node(ptr).next().get().map(|p| {
-            let next_node = self.0.node(&p);
+            let next_node = self.0.node(p);
             (p.clone(), next_node)
         })
     }
 
     fn prev(&self, ptr: &NodePtr<Doubly<T>>) -> Option<PtrAndNode<T>> {
         self.0.node(ptr).prev().get().map(|p| {
-            let prev_node = self.0.node(&p);
+            let prev_node = self.0.node(p);
             (p.clone(), prev_node)
         })
     }

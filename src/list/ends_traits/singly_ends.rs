@@ -35,7 +35,7 @@ where
     {
         self.ends()
             .get()
-            .map(|p| unsafe { self.col().data_unchecked(&p) })
+            .map(|p| unsafe { self.col().data_unchecked(p) })
     }
 
     // idx
@@ -492,7 +492,7 @@ where
     fn next_idx_of(&self, idx: &SinglyIdx<T>) -> Option<SinglyIdx<T>> {
         let ptr = self.col().try_get_ptr(idx).expect(IDX_ERR);
         let next_ptr = self.col().node(&ptr).next().get();
-        next_ptr.map(|p| SinglyIdx::new(self.col().memory_state(), &p))
+        next_ptr.map(|p| SinglyIdx::new(self.col().memory_state(), p))
     }
 
     /// ***O(1)*** Returns the element succeeding the one with the given `idx`.
