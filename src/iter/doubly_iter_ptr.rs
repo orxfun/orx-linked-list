@@ -48,7 +48,7 @@ where
             Some(p) => {
                 let ptr = Some(p.clone());
                 match self.current == self.current_back {
-                    false => self.current = self.col.node(p).next().get(),
+                    false => self.current = self.col.node(p).next().get().cloned(),
                     true => self.end(),
                 }
 
@@ -69,7 +69,7 @@ where
                 let ptr = Some(p.clone());
 
                 match self.current == self.current_back {
-                    false => self.current_back = self.col.node(p).prev().get(),
+                    false => self.current_back = self.col.node(p).prev().get().cloned(),
                     true => self.end(),
                 }
 

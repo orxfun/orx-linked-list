@@ -28,10 +28,10 @@ where
         let begin = match range.start_bound() {
             Excluded(x) => {
                 let ptr = self.col().try_get_ptr(x)?;
-                self.col().node(&ptr).next().get()
+                self.col().node(&ptr).next().get().cloned()
             }
             Included(x) => Some(self.col().try_get_ptr(x)?),
-            Unbounded => self.col().ends().get(FRONT_IDX),
+            Unbounded => self.col().ends().get(FRONT_IDX).cloned(),
         };
 
         Ok(begin)
@@ -51,12 +51,12 @@ where
             Excluded(x) => {
                 let ptr = self.col().try_get_ptr(x)?;
                 match ptr == *front {
-                    false => self.col().node(&ptr).prev().get(),
+                    false => self.col().node(&ptr).prev().get().cloned(),
                     true => None,
                 }
             }
             Included(x) => Some(self.col().try_get_ptr(x)?),
-            Unbounded => self.ends().get(BACK_IDX),
+            Unbounded => self.ends().get(BACK_IDX).cloned(),
         };
 
         Ok(end)
@@ -73,8 +73,8 @@ where
                 match back {
                     Some(back) => {
                         let mut ends = <Doubly<T> as Variant>::Ends::empty();
-                        ends.set_some(FRONT_IDX, &front);
-                        ends.set_some(BACK_IDX, &back);
+                        ends.set_some(FRONT_IDX, front);
+                        ends.set_some(BACK_IDX, back);
                         ends
                     }
                     _ => <Doubly<T> as Variant>::Ends::empty(),
@@ -97,14 +97,20 @@ where
     // links
     #[inline(always)]
     fn is_linked(&self, prev: &NodePtr<Doubly<T>>, next: &NodePtr<Doubly<T>>) -> bool {
-        self.col().node(prev).next().get().as_ref() == Some(next)
-            && self.col().node(next).prev().get().as_ref() == Some(prev)
+        self.col().node(prev).next().get() == Some(next)
+            && self.col().node(next).prev().get() == Some(prev)
     }
 
     #[inline(always)]
     fn link(&mut self, prev: &NodePtr<Doubly<T>>, next: &NodePtr<Doubly<T>>) {
-        self.col_mut().node_mut(prev).next_mut().set_some(next);
-        self.col_mut().node_mut(next).prev_mut().set_some(prev);
+        self.col_mut()
+            .node_mut(prev)
+            .next_mut()
+            .set_some(next.clone());
+        self.col_mut()
+            .node_mut(next)
+            .prev_mut()
+            .set_some(prev.clone());
     }
 
     #[inline(always)]

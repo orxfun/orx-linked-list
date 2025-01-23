@@ -39,7 +39,7 @@ where
     {
         self.ends()
             .get(FRONT_IDX)
-            .map(|p| unsafe { self.col().data_unchecked(&p) })
+            .map(|p| unsafe { self.col().data_unchecked(p) })
     }
 
     /// ***O(1)*** Returns a reference to the back of the list.
@@ -72,7 +72,7 @@ where
     {
         self.ends()
             .get(BACK_IDX)
-            .map(|p| unsafe { self.col().data_unchecked(&p) })
+            .map(|p| unsafe { self.col().data_unchecked(p) })
     }
 
     // idx
@@ -529,7 +529,7 @@ where
     fn next_idx_of(&self, idx: &DoublyIdx<T>) -> Option<DoublyIdx<T>> {
         let ptr = self.col().try_get_ptr(idx).expect(IDX_ERR);
         let next_ptr = self.col().node(&ptr).next().get();
-        next_ptr.map(|p| DoublyIdx::new(self.col().memory_state(), &p))
+        next_ptr.map(|p| DoublyIdx::new(self.col().memory_state(), p))
     }
 
     /// ***O(1)*** Returns the element succeeding the one with the given `idx`.
@@ -596,7 +596,7 @@ where
     fn prev_idx_of(&self, idx: &DoublyIdx<T>) -> Option<DoublyIdx<T>> {
         let ptr = self.col().try_get_ptr(idx).expect(IDX_ERR);
         let prev_ptr = self.col().node(&ptr).prev().get();
-        prev_ptr.map(|p| DoublyIdx::new(self.col().memory_state(), &p))
+        prev_ptr.map(|p| DoublyIdx::new(self.col().memory_state(), p))
     }
 
     /// ***O(1)*** Returns the element preceding the one with the given `idx`.

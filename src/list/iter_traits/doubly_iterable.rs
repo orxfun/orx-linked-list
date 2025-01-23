@@ -21,8 +21,8 @@ where
     where
         M: 'a,
     {
-        let a = self.ends().get(FRONT_IDX);
-        let b = self.ends().get(BACK_IDX);
+        let a = self.ends().get(FRONT_IDX).cloned();
+        let b = self.ends().get(BACK_IDX).cloned();
         DoublyIterPtr::new(self.col(), a, b)
     }
 
@@ -68,8 +68,8 @@ where
     where
         M: 'a,
     {
-        let a = self.ends().get(FRONT_IDX);
-        let b = self.ends().get(BACK_IDX);
+        let a = self.ends().get(FRONT_IDX).cloned();
+        let b = self.ends().get(BACK_IDX).cloned();
         DoublyIter::new(self.col(), a, b)
     }
 
@@ -95,13 +95,15 @@ where
     where
         M: 'a,
     {
-        let a = self.ends().get(FRONT_IDX);
-        let b = a.as_ref().and_then(|a| self.col().node(a).next().get());
+        let a = self.ends().get(FRONT_IDX).cloned();
+        let b = a
+            .as_ref()
+            .and_then(|a| self.col().node(a).next().get().cloned());
         let begin = match (a, b) {
             (Some(a), Some(b)) => Some((a, b)),
             _ => None,
         };
-        let end = self.ends().get(BACK_IDX);
+        let end = self.ends().get(BACK_IDX).cloned();
         DoublyLinkIter::new(self.col(), begin, end)
     }
 
@@ -203,11 +205,11 @@ where
         let iter1 = self.iter_from(pivot_idx);
 
         let pivot = self.col().try_get_ptr(pivot_idx).expect(OOB);
-        let a = self.ends().get(FRONT_IDX).expect(OOB);
+        let a = self.ends().get(FRONT_IDX).expect(OOB).clone();
 
         let iter2 = match pivot == a {
             true => DoublyIter::new(self.col(), None, None),
-            false => match self.col().node(&pivot).prev().get() {
+            false => match self.col().node(&pivot).prev().get().cloned() {
                 Some(b) => DoublyIter::new(self.col(), Some(a), Some(b)),
                 None => DoublyIter::new(self.col(), None, None),
             },
@@ -246,7 +248,7 @@ where
         M: 'a,
     {
         let a = self.col().try_get_ptr(idx).expect(OOB);
-        let b = self.ends().get(BACK_IDX);
+        let b = self.ends().get(BACK_IDX).cloned();
         DoublyIter::new(self.col(), Some(a), b)
     }
 
@@ -281,7 +283,7 @@ where
         M: 'a,
     {
         let b = self.col().try_get_ptr(idx).expect(OOB);
-        let a = self.ends().get(BACK_IDX);
+        let a = self.ends().get(BACK_IDX).cloned();
         DoublyIter::new(self.col(), a, Some(b)).rev()
     }
 
@@ -314,9 +316,9 @@ where
         M: 'a,
     {
         let a = self.col().try_get_ptr(idx).expect(OOB);
-        let b = self.col().node(&a).next().get();
+        let b = self.col().node(&a).next().get().cloned();
         let begin = b.map(|b| (a, b));
-        let end = self.ends().get(BACK_IDX);
+        let end = self.ends().get(BACK_IDX).cloned();
         DoublyLinkIter::new(self.col(), begin, end)
     }
 

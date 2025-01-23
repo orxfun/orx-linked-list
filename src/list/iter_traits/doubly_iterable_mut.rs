@@ -39,8 +39,8 @@ where
     where
         M: 'a,
     {
-        let a = self.ends().get(FRONT_IDX);
-        let b = self.ends().get(BACK_IDX);
+        let a = self.ends().get(FRONT_IDX).cloned();
+        let b = self.ends().get(BACK_IDX).cloned();
         DoublyIterMut::new(self.col_mut(), a, b)
     }
 
@@ -79,7 +79,7 @@ where
         M: 'a,
     {
         let a = self.col().try_get_ptr(idx).expect(OOB);
-        let b = self.ends().get(BACK_IDX);
+        let b = self.ends().get(BACK_IDX).cloned();
         DoublyIterMut::new(self.col_mut(), Some(a), b)
     }
 
@@ -116,7 +116,7 @@ where
         M: 'a,
     {
         let b = self.col().try_get_ptr(idx).expect(OOB);
-        let a = self.col().ends().get(FRONT_IDX);
+        let a = self.col().ends().get(FRONT_IDX).cloned();
         DoublyIterMut::new(self.col_mut(), a, Some(b)).rev()
     }
 
@@ -161,10 +161,10 @@ where
         M: 'a,
     {
         let a1 = self.col().try_get_ptr(pivot_idx).expect(OOB);
-        let b1 = self.ends().get(BACK_IDX).expect(OOB);
+        let b1 = self.ends().get(BACK_IDX).cloned().expect(OOB);
 
-        let a2 = self.ends().get(FRONT_IDX).expect(OOB);
-        let b2 = self.col().node(&a1).prev().get();
+        let a2 = self.ends().get(FRONT_IDX).cloned().expect(OOB);
+        let b2 = self.col().node(&a1).prev().get().cloned();
 
         let second = match a1 == a2 {
             true => [None, None],
