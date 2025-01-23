@@ -36,7 +36,7 @@ where
     where
         M: 'a,
     {
-        let a = self.ends().get();
+        let a = self.ends().get().cloned();
         SinglyIterMut::new(self.col_mut(), a)
     }
 

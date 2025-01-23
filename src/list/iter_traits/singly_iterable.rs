@@ -20,7 +20,7 @@ where
     where
         M: 'a,
     {
-        let a = self.ends().get();
+        let a = self.ends().get().cloned();
         SinglyIterPtr::new(self.col(), a)
     }
 
@@ -49,7 +49,7 @@ where
     where
         M: 'a,
     {
-        let a = self.ends().get();
+        let a = self.ends().get().cloned();
         SinglyIter::new(self.col(), a)
     }
 

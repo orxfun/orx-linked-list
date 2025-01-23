@@ -7,7 +7,7 @@ pub type SinglyPtr<T> = NodePtr<Singly<T>>;
 impl<T> SinglyPointer<T> for SinglyPtr<T> {
     #[inline(always)]
     fn raw_ptr(&self) -> *mut Node<Singly<T>> {
-        self.ptr()
+        self.ptr() as *mut Node<Singly<T>>
     }
 }
 
@@ -61,6 +61,6 @@ pub trait SinglyPointer<T> {
     /// Alternatively, you may use `NodeIdx` for safe access.
     #[inline(always)]
     unsafe fn next(&self) -> Option<SinglyPtr<T>> {
-        self.node().next().get()
+        self.node().next().get().cloned()
     }
 }

@@ -7,7 +7,7 @@ pub type DoublyPtr<T> = NodePtr<Doubly<T>>;
 impl<T> DoublyPointer<T> for DoublyPtr<T> {
     #[inline(always)]
     fn raw_ptr(&self) -> *mut Node<Doubly<T>> {
-        self.ptr()
+        self.ptr() as *mut Node<Doubly<T>>
     }
 }
 
@@ -61,7 +61,7 @@ pub trait DoublyPointer<T> {
     /// Alternatively, you may use `NodeIdx` for safe access.
     #[inline(always)]
     unsafe fn next(&self) -> Option<DoublyPtr<T>> {
-        self.node().next().get()
+        self.node().next().get().cloned()
     }
 
     /// Returns the pointer to the prev node if exists; None otherwise.
@@ -77,6 +77,6 @@ pub trait DoublyPointer<T> {
     /// Alternatively, you may use `NodeIdx` for safe access.
     #[inline(always)]
     unsafe fn prev(&self) -> Option<DoublyPtr<T>> {
-        self.node().prev().get()
+        self.node().prev().get().cloned()
     }
 }

@@ -51,20 +51,20 @@ where
                 assert_ne!(self.0.ends().get(BACK_IDX), self.0.ends().get(FRONT_IDX));
 
                 let mut fwd_pointers = alloc::vec![];
-                let mut ptr = self.0.ends().get(FRONT_IDX).unwrap();
+                let mut ptr = self.0.ends().get(FRONT_IDX).cloned().unwrap();
                 fwd_pointers.push(ptr.clone());
                 while let Some((next_ptr, next)) = self.next(&ptr) {
-                    assert_eq!(next.prev().get(), Some(ptr));
+                    assert_eq!(next.prev().get(), Some(&ptr));
                     ptr = next_ptr;
                     fwd_pointers.push(ptr.clone());
                 }
                 assert_eq!(fwd_pointers.len(), num_active_nodes);
 
                 let mut bwd_pointers = alloc::vec![];
-                let mut ptr = self.0.ends().get(BACK_IDX).unwrap();
+                let mut ptr = self.0.ends().get(BACK_IDX).cloned().unwrap();
                 bwd_pointers.push(ptr.clone());
                 while let Some((prev_ptr, prev)) = self.prev(&ptr) {
-                    assert_eq!(prev.next().get(), Some(ptr));
+                    assert_eq!(prev.next().get(), Some(&ptr));
                     ptr = prev_ptr;
                     bwd_pointers.push(ptr.clone());
                 }
@@ -79,7 +79,7 @@ where
 
         assert_eq!(iter.next(), self.front());
 
-        let mut maybe_ptr = self.0.ends().get(FRONT_IDX);
+        let mut maybe_ptr = self.0.ends().get(FRONT_IDX).cloned();
         for _ in 1..num_active_nodes {
             let ptr = maybe_ptr.clone().unwrap();
             maybe_ptr = self.next(&ptr).map(|x| x.0);
@@ -96,7 +96,7 @@ where
 
         assert_eq!(iter.next(), self.back());
 
-        let mut maybe_ptr = self.0.ends().get(BACK_IDX);
+        let mut maybe_ptr = self.0.ends().get(BACK_IDX).cloned();
         for _ in 1..num_active_nodes {
             let ptr = maybe_ptr.clone().unwrap();
             maybe_ptr = self.prev(&ptr).map(|x| x.0);
@@ -112,14 +112,14 @@ where
     fn next(&self, ptr: &NodePtr<Doubly<T>>) -> Option<PtrAndNode<T>> {
         self.0.node(ptr).next().get().map(|p| {
             let next_node = self.0.node(&p);
-            (p, next_node)
+            (p.clone(), next_node)
         })
     }
 
     fn prev(&self, ptr: &NodePtr<Doubly<T>>) -> Option<PtrAndNode<T>> {
         self.0.node(ptr).prev().get().map(|p| {
             let prev_node = self.0.node(&p);
-            (p, prev_node)
+            (p.clone(), prev_node)
         })
     }
 }

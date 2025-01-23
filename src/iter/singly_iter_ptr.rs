@@ -33,7 +33,7 @@ where
         match &self.current {
             Some(p) => {
                 let ptr = Some(p.clone());
-                self.current = self.col.node(p).next().get();
+                self.current = self.col.node(p).next().get().cloned();
                 ptr
             }
             None => None,

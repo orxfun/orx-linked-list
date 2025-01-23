@@ -38,6 +38,7 @@ where
     {
         self.ends_mut()
             .get(FRONT_IDX)
+            .cloned()
             .map(|p| unsafe { self.col_mut().data_mut_unchecked(&p) })
     }
 
@@ -67,6 +68,7 @@ where
     {
         self.ends_mut()
             .get(BACK_IDX)
+            .cloned()
             .map(|p| unsafe { self.col_mut().data_mut_unchecked(&p) })
     }
 
@@ -405,21 +407,21 @@ where
     /// assert!(list.eq_to_iter_vals(['c', 'd', 'e', 'b', 'a']));
     /// ```
     fn reverse(&mut self) {
-        if let Some(front) = self.ends().get(FRONT_IDX) {
-            let back = self.ends().get(BACK_IDX).expect("exists");
+        if let Some(front) = self.ends().get(FRONT_IDX).cloned() {
+            let back = self.ends().get(BACK_IDX).cloned().expect("exists");
 
             if front == back {
                 return;
             }
 
-            let new_next_of_front = self.col().node(&back).next().get();
-            let new_prev_of_back = self.col().node(&front).prev().get();
+            let new_next_of_front = self.col().node(&back).next().get().cloned();
+            let new_prev_of_back = self.col().node(&front).prev().get().cloned();
 
             let mut prev = front.clone();
-            let mut new_next = self.col().node(&prev).next().get();
+            let mut new_next = self.col().node(&prev).next().get().cloned();
 
             while let Some(next) = new_next {
-                new_next = self.col().node(&next).next().get();
+                new_next = self.col().node(&next).next().get().cloned();
 
                 self.link(&next, &prev);
 
@@ -441,18 +443,18 @@ where
 
             // ends
 
-            let old_col_front = self.col().ends().get(FRONT_IDX).expect("exists");
-            let old_col_back = self.col().ends().get(BACK_IDX).expect("exists");
+            let old_col_front = self.col().ends().get(FRONT_IDX).cloned().expect("exists");
+            let old_col_back = self.col().ends().get(BACK_IDX).cloned().expect("exists");
 
-            self.ends_mut().set_some(FRONT_IDX, &back);
-            self.ends_mut().set_some(BACK_IDX, &front);
+            self.ends_mut().set_some(FRONT_IDX, back.clone());
+            self.ends_mut().set_some(BACK_IDX, front.clone());
 
             if front == old_col_front {
-                self.col_mut().ends_mut().set_some(FRONT_IDX, &back);
+                self.col_mut().ends_mut().set_some(FRONT_IDX, back.clone());
             }
 
             if back == old_col_back {
-                self.col_mut().ends_mut().set_some(BACK_IDX, &front);
+                self.col_mut().ends_mut().set_some(BACK_IDX, front);
             }
         }
     }
@@ -493,23 +495,23 @@ where
             return;
         }
 
-        let next = self.col().node(&prev).next().get();
-        let old_next = self.col().node(&mid).next().get();
-        let old_prev = self.col().node(&mid).prev().get();
+        let next = self.col().node(&prev).next().get().cloned();
+        let old_next = self.col().node(&mid).next().get().cloned();
+        let old_prev = self.col().node(&mid).prev().get().cloned();
 
         // update the gap
-        match (&old_prev, &old_next) {
-            (Some(old_prev), _) if old_prev == &prev => return,
-            (Some(old_prev), Some(old_next)) => self.link(old_prev, old_next),
+        match (old_prev.clone(), old_next.clone()) {
+            (Some(old_prev), _) if old_prev == prev => return,
+            (Some(old_prev), Some(old_next)) => self.link(&old_prev, &old_next),
             (Some(old_prev), None) => {
                 // idx must be col.back
-                self.col_mut().node_mut(old_prev).next_mut().set_none();
+                self.col_mut().node_mut(&old_prev).next_mut().set_none();
 
                 self.col_mut().ends_mut().set_some(BACK_IDX, old_prev);
             }
             (None, Some(old_next)) => {
                 // idx must be col.front
-                self.col_mut().node_mut(old_next).prev_mut().set_none();
+                self.col_mut().node_mut(&old_next).prev_mut().set_none();
 
                 self.col_mut().ends_mut().set_some(FRONT_IDX, old_next);
             }
@@ -524,23 +526,23 @@ where
         self.link(&prev, &mid);
 
         // custom ends
-        let old_front = self.ends().get(FRONT_IDX);
-        let old_back = self.ends().get(BACK_IDX);
+        let old_front = self.ends().get(FRONT_IDX).cloned();
+        let old_back = self.ends().get(BACK_IDX).cloned();
 
-        if let Some(old_back) = &old_back {
-            match old_back == &prev {
+        if let Some(old_back) = old_back.clone() {
+            match old_back == prev {
                 true => {
                     // new node placed in front
-                    self.ends_mut().set_some(BACK_IDX, &mid)
+                    self.ends_mut().set_some(BACK_IDX, mid.clone())
                 }
                 false => {
-                    if old_back == &mid {
+                    if old_back == mid {
                         // old front is moved away
                         let old_front = old_front.clone().expect("exists");
                         match mid == old_front {
                             false => {
                                 let new_back = old_prev.expect("exists");
-                                self.ends_mut().set_some(BACK_IDX, &new_back);
+                                self.ends_mut().set_some(BACK_IDX, new_back);
                             }
                             true => { /* singleton, no update */ }
                         }
@@ -556,7 +558,7 @@ where
                 match old_front == old_back {
                     false => {
                         let new_front = old_next.expect("exists");
-                        self.ends_mut().set_some(FRONT_IDX, &new_front);
+                        self.ends_mut().set_some(FRONT_IDX, new_front);
                     }
                     true => { /* singleton, no update */ }
                 }
@@ -598,23 +600,23 @@ where
             return;
         }
 
-        let prev = self.col().node(&next).prev().get();
-        let old_next = self.col().node(&mid).next().get();
-        let old_prev = self.col().node(&mid).prev().get();
+        let prev = self.col().node(&next).prev().get().cloned();
+        let old_next = self.col().node(&mid).next().get().cloned();
+        let old_prev = self.col().node(&mid).prev().get().cloned();
 
         // update the gap
-        match (&old_prev, &old_next) {
-            (_, Some(old_next)) if old_next == &next => return,
-            (Some(old_prev), Some(old_next)) => self.link(old_prev, old_next),
+        match (old_prev.clone(), old_next.clone()) {
+            (_, Some(old_next)) if old_next == next => return,
+            (Some(old_prev), Some(old_next)) => self.link(&old_prev, &old_next),
             (Some(old_prev), None) => {
                 // idx must be col.back
-                self.col_mut().node_mut(old_prev).next_mut().set_none();
+                self.col_mut().node_mut(&old_prev).next_mut().set_none();
 
                 self.col_mut().ends_mut().set_some(BACK_IDX, old_prev);
             }
             (None, Some(old_next)) => {
                 // idx must be col.front
-                self.col_mut().node_mut(old_next).prev_mut().set_none();
+                self.col_mut().node_mut(&old_next).prev_mut().set_none();
 
                 self.col_mut().ends_mut().set_some(FRONT_IDX, old_next);
             }
@@ -629,14 +631,14 @@ where
         self.link(&mid, &next);
 
         // custom ends
-        let old_front = self.ends().get(FRONT_IDX);
-        let old_back = self.ends().get(BACK_IDX);
+        let old_front = self.ends().get(FRONT_IDX).cloned();
+        let old_back = self.ends().get(BACK_IDX).cloned();
 
         if let Some(old_front) = &old_front {
             match old_front == &next {
                 true => {
                     // new node placed in front
-                    self.ends_mut().set_some(FRONT_IDX, &mid)
+                    self.ends_mut().set_some(FRONT_IDX, mid.clone())
                 }
                 false => {
                     if old_front == &mid {
@@ -645,7 +647,7 @@ where
                         match mid == old_back {
                             false => {
                                 let new_front = old_next.expect("exists");
-                                self.ends_mut().set_some(FRONT_IDX, &new_front);
+                                self.ends_mut().set_some(FRONT_IDX, new_front);
                             }
                             true => { /* singleton, no update */ }
                         }
@@ -661,7 +663,7 @@ where
                 match old_front == old_back {
                     false => {
                         let new_back = old_prev.expect("exists");
-                        self.ends_mut().set_some(BACK_IDX, &new_back);
+                        self.ends_mut().set_some(BACK_IDX, new_back);
                     }
                     true => { /* singleton, no update */ }
                 }
@@ -766,14 +768,14 @@ where
             return;
         }
 
-        let p_a = self.col().node(&a).prev().get();
-        let p_b = self.col().node(&b).prev().get();
-        let n_a = self.col().node(&a).next().get();
-        let n_b = self.col().node(&b).next().get();
+        let p_a = self.col().node(&a).prev().get().cloned();
+        let p_b = self.col().node(&b).prev().get().cloned();
+        let n_a = self.col().node(&a).next().get().cloned();
+        let n_b = self.col().node(&b).next().get().cloned();
 
-        match (&n_a, &n_b) {
-            (Some(n_a), _) if b == *n_a => self.move_next_to(idx_a, idx_b),
-            (_, Some(n_b)) if a == *n_b => self.move_next_to(idx_b, idx_a),
+        match (n_a.clone(), n_b.clone()) {
+            (Some(n_a), _) if b == n_a => self.move_next_to(idx_a, idx_b),
+            (_, Some(n_b)) if a == n_b => self.move_next_to(idx_b, idx_a),
             _ => {
                 match p_a {
                     Some(p_a) => self.link(&p_a, &b),
@@ -796,28 +798,28 @@ where
                 }
 
                 // cache custom ends
-                let custom_front = match self.ends().get(FRONT_IDX) {
-                    Some(x) if x == a => Some(&b),
-                    Some(x) if x == b => Some(&a),
+                let custom_front = match self.ends().get(FRONT_IDX).cloned() {
+                    Some(x) if x == a => Some(b.clone()),
+                    Some(x) if x == b => Some(a.clone()),
                     _ => None,
                 };
 
-                let custom_back = match self.ends().get(BACK_IDX) {
-                    Some(x) if x == a => Some(&b),
-                    Some(x) if x == b => Some(&a),
+                let custom_back = match self.ends().get(BACK_IDX).cloned() {
+                    Some(x) if x == a => Some(b.clone()),
+                    Some(x) if x == b => Some(a.clone()),
                     _ => None,
                 };
 
                 // update col ends
-                match self.col().ends().get(FRONT_IDX) {
-                    Some(x) if x == a => self.col_mut().ends_mut().set_some(FRONT_IDX, &b),
-                    Some(x) if x == b => self.col_mut().ends_mut().set_some(FRONT_IDX, &a),
+                match self.col().ends().get(FRONT_IDX).cloned() {
+                    Some(x) if x == a => self.col_mut().ends_mut().set_some(FRONT_IDX, b.clone()),
+                    Some(x) if x == b => self.col_mut().ends_mut().set_some(FRONT_IDX, a.clone()),
                     _ => {}
                 }
 
-                match self.col().ends().get(BACK_IDX) {
-                    Some(x) if x == a => self.col_mut().ends_mut().set_some(BACK_IDX, &b),
-                    Some(x) if x == b => self.col_mut().ends_mut().set_some(BACK_IDX, &a),
+                match self.col().ends().get(BACK_IDX).cloned() {
+                    Some(x) if x == a => self.col_mut().ends_mut().set_some(BACK_IDX, b),
+                    Some(x) if x == b => self.col_mut().ends_mut().set_some(BACK_IDX, a),
                     _ => {}
                 }
 
@@ -962,7 +964,7 @@ where
     /// proved to be legal move as a combination of unsafe moves.
     unsafe fn set_front(&mut self, new_front: &DoublyIdx<T>) {
         let new_front = self.col().try_get_ptr(new_front).expect(OOB);
-        self.col_mut().ends_mut().set_some(FRONT_IDX, &new_front);
+        self.col_mut().ends_mut().set_some(FRONT_IDX, new_front);
     }
 
     /// ***O(1)*** Sets the `back` of the list as the `new_back`.
@@ -1003,7 +1005,7 @@ where
     /// proved to be legal move as a combination of unsafe moves.
     unsafe fn set_back(&mut self, new_back: &DoublyIdx<T>) {
         let new_back = self.col().try_get_ptr(new_back).expect(OOB);
-        self.col_mut().ends_mut().set_some(BACK_IDX, &new_back);
+        self.col_mut().ends_mut().set_some(BACK_IDX, new_back);
     }
 }
 

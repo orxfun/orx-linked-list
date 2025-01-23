@@ -12,7 +12,7 @@ impl<T> MemoryReclaimer<Singly<T>> for SinglyReclaimer {
     {
         let mut nodes_moved = false;
 
-        if let Some(mut occupied_ptr) = col.ends().get() {
+        if let Some(mut occupied_ptr) = col.ends().get().cloned() {
             let mut prev = core::ptr::null();
 
             // SAFETY: lifetime of `forward` iterator is limited to this method
@@ -24,7 +24,7 @@ impl<T> MemoryReclaimer<Singly<T>> for SinglyReclaimer {
                     loop {
                         let o = col.position_of_unchecked(&occupied_ptr);
 
-                        let next = col.node(&occupied_ptr).next().get();
+                        let next = col.node(&occupied_ptr).next().get().cloned();
 
                         let swapped = o > v;
                         match swapped {

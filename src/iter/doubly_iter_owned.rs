@@ -20,8 +20,8 @@ where
     P: PinnedVec<Node<Doubly<T>>>,
 {
     pub(crate) fn new(col: CoreCol<Doubly<T>, P>) -> Self {
-        let current = col.ends().get(0);
-        let current_back = col.ends().get(1);
+        let current = col.ends().get(0).cloned();
+        let current_back = col.ends().get(1).cloned();
         Self {
             col,
             current,
@@ -44,9 +44,9 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         match &self.current {
             Some(p) => {
-                let ptr = p.ptr();
+                let ptr = p.ptr_mut();
                 match self.current == self.current_back {
-                    false => self.current = self.col.node(p).next().get(),
+                    false => self.current = self.col.node(p).next().get().cloned(),
                     true => self.end(),
                 }
 
@@ -64,9 +64,9 @@ where
     fn next_back(&mut self) -> Option<Self::Item> {
         match &self.current_back {
             Some(p) => {
-                let ptr = p.ptr();
+                let ptr = p.ptr_mut();
                 match self.current == self.current_back {
-                    false => self.current_back = self.col.node(p).prev().get(),
+                    false => self.current_back = self.col.node(p).prev().get().cloned(),
                     true => self.end(),
                 }
 

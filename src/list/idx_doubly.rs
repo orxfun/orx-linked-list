@@ -42,7 +42,7 @@ where
         let idx = self.0.try_get_ptr(idx).expect(IDX_ERR);
         let [prev, next] = {
             let node = self.0.node(&idx);
-            [node.prev().get(), node.next().get()]
+            [node.prev().get().cloned(), node.next().get().cloned()]
         };
 
         match prev.clone() {
@@ -87,18 +87,18 @@ where
     ///```
     pub fn insert_next_to(&mut self, idx: &DoublyIdx<T>, value: T) -> DoublyIdx<T> {
         let prev = self.0.try_get_ptr(idx).expect(IDX_ERR);
-        let next = self.0.node(&prev).next().get();
+        let next = self.0.node(&prev).next().get().cloned();
         let idx = self.0.push(value);
 
-        self.0.node_mut(&prev).next_mut().set_some(&idx);
-        self.0.node_mut(&idx).prev_mut().set_some(&prev);
+        self.0.node_mut(&prev).next_mut().set_some(idx.clone());
+        self.0.node_mut(&idx).prev_mut().set_some(prev);
 
         match next {
             Some(next) => {
-                self.0.node_mut(&next).prev_mut().set_some(&idx);
-                self.0.node_mut(&idx).next_mut().set_some(&next);
+                self.0.node_mut(&next).prev_mut().set_some(idx.clone());
+                self.0.node_mut(&idx).next_mut().set_some(next);
             }
-            None => self.0.ends_mut().set_some(BACK_IDX, &idx),
+            None => self.0.ends_mut().set_some(BACK_IDX, idx.clone()),
         }
 
         NodeIdx::new(self.memory_state(), &idx)
@@ -134,18 +134,18 @@ where
     ///```
     pub fn insert_prev_to(&mut self, idx: &DoublyIdx<T>, value: T) -> DoublyIdx<T> {
         let next = self.0.try_get_ptr(idx).expect(IDX_ERR);
-        let prev = self.0.node(&next).prev().get();
+        let prev = self.0.node(&next).prev().get().cloned();
         let idx = self.0.push(value);
 
-        self.0.node_mut(&next).prev_mut().set_some(&idx);
-        self.0.node_mut(&idx).next_mut().set_some(&next);
+        self.0.node_mut(&next).prev_mut().set_some(idx.clone());
+        self.0.node_mut(&idx).next_mut().set_some(next);
 
         match prev {
             Some(prev) => {
-                self.0.node_mut(&prev).next_mut().set_some(&idx);
-                self.0.node_mut(&idx).prev_mut().set_some(&prev);
+                self.0.node_mut(&prev).next_mut().set_some(idx.clone());
+                self.0.node_mut(&idx).prev_mut().set_some(prev);
             }
-            None => self.0.ends_mut().set_some(FRONT_IDX, &idx),
+            None => self.0.ends_mut().set_some(FRONT_IDX, idx.clone()),
         }
 
         NodeIdx::new(self.memory_state(), &idx)
@@ -187,7 +187,7 @@ where
                 let idx = idx.node_ptr();
                 let [prev, next] = {
                     let node = self.0.node(&idx);
-                    [node.prev().get(), node.next().get()]
+                    [node.prev().get().cloned(), node.next().get().cloned()]
                 };
 
                 match prev.clone() {
@@ -245,18 +245,18 @@ where
         value: T,
     ) -> Result<DoublyIdx<T>, NodeIdxError> {
         let prev = self.0.try_get_ptr(idx)?;
-        let next = self.0.node(&prev).next().get();
+        let next = self.0.node(&prev).next().get().cloned();
         let idx = self.0.push(value);
 
-        self.0.node_mut(&prev).next_mut().set_some(&idx);
-        self.0.node_mut(&idx).prev_mut().set_some(&prev);
+        self.0.node_mut(&prev).next_mut().set_some(idx.clone());
+        self.0.node_mut(&idx).prev_mut().set_some(prev);
 
         match next {
             Some(next) => {
-                self.0.node_mut(&next).prev_mut().set_some(&idx);
-                self.0.node_mut(&idx).next_mut().set_some(&next);
+                self.0.node_mut(&next).prev_mut().set_some(idx.clone());
+                self.0.node_mut(&idx).next_mut().set_some(next);
             }
-            None => self.0.ends_mut().set_some(BACK_IDX, &idx),
+            None => self.0.ends_mut().set_some(BACK_IDX, idx.clone()),
         }
 
         Ok(NodeIdx::new(self.memory_state(), &idx))
@@ -301,18 +301,18 @@ where
         value: T,
     ) -> Result<DoublyIdx<T>, NodeIdxError> {
         let next = self.0.try_get_ptr(idx)?;
-        let prev = self.0.node(&next).prev().get();
+        let prev = self.0.node(&next).prev().get().cloned();
         let idx = self.0.push(value);
 
-        self.0.node_mut(&next).prev_mut().set_some(&idx);
-        self.0.node_mut(&idx).next_mut().set_some(&next);
+        self.0.node_mut(&next).prev_mut().set_some(idx.clone());
+        self.0.node_mut(&idx).next_mut().set_some(next);
 
         match prev {
             Some(prev) => {
-                self.0.node_mut(&prev).next_mut().set_some(&idx);
-                self.0.node_mut(&idx).prev_mut().set_some(&prev);
+                self.0.node_mut(&prev).next_mut().set_some(idx.clone());
+                self.0.node_mut(&idx).prev_mut().set_some(prev);
             }
-            None => self.0.ends_mut().set_some(FRONT_IDX, &idx),
+            None => self.0.ends_mut().set_some(FRONT_IDX, idx.clone()),
         }
 
         Ok(NodeIdx::new(self.memory_state(), &idx))
