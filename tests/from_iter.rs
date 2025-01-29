@@ -5,6 +5,7 @@ use test_case::test_matrix;
 fn from_iter_singly(len: usize) {
     let iter = (0..len).map(|i| i.to_string());
     let list: SinglyList<_> = iter.collect();
+    #[cfg(feature = "validation")]
     list.validate();
 
     match len {
@@ -27,6 +28,7 @@ fn from_iter_singly(len: usize) {
 fn from_iter_doubly(len: usize) {
     let iter = (0..len).map(|i| i.to_string());
     let list: DoublyList<_> = iter.collect();
+    #[cfg(feature = "validation")]
     list.validate();
 
     match len {

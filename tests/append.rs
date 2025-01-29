@@ -19,6 +19,7 @@ fn append_front_doubly<M: MemoryPolicy<Doubly<char>>>(mut list: List<Doubly<char
     other.push_back('j');
 
     list.append_front(other);
+    #[cfg(feature = "validation")]
     list.validate();
     assert!(list.eq_to_iter_vals(['f', 'g', 'h', 'i', 'j', 'a', 'b', 'c', 'd', 'e']));
 
@@ -44,6 +45,7 @@ fn append_back_doubly<M: MemoryPolicy<Doubly<char>>>(mut list: List<Doubly<char>
     other.push_back('j');
 
     list.append_back(other);
+    #[cfg(feature = "validation")]
     list.validate();
     assert!(list.eq_to_iter_vals(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']));
 

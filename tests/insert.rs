@@ -41,6 +41,7 @@ fn insert_doubly<M: MemoryPolicy<Doubly<char>>>(
         false => list.try_insert_prev_to(&indices[idx], 'f'),
     }
     .unwrap();
+    #[cfg(feature = "validation")]
     list.validate();
 
     assert!(list.eq_to_iter_vals(vec.iter().copied()));
@@ -60,6 +61,7 @@ fn insert_doubly_oob(idx: usize, next_to: bool) {
 
     let mut vec = vec!['a', 'b', 'c', 'd', 'e'];
     vec.remove(idx);
+    #[cfg(feature = "validation")]
     list.validate();
 
     let idx = match idx {
@@ -70,6 +72,7 @@ fn insert_doubly_oob(idx: usize, next_to: bool) {
         _ => 4,
     };
     let _ = list.try_remove(&indices[idx]);
+    #[cfg(feature = "validation")]
     list.validate();
     assert!(list.eq_to_iter_vals(vec.iter().copied()));
 

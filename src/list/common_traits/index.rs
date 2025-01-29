@@ -2,9 +2,9 @@ use crate::{
     type_aliases::OOB, variant::Doubly, DoublyEnds, DoublyEndsMut, DoublyIdx, List, ListSlice,
     ListSliceMut, Singly, SinglyEnds, SinglyEndsMut, SinglyIdx,
 };
+use core::ops::{Index, IndexMut};
 use orx_pinned_vec::PinnedVec;
 use orx_selfref_col::{MemoryPolicy, Node};
-use std::ops::{Index, IndexMut};
 
 // doubly
 

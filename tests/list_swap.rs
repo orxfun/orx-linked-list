@@ -25,6 +25,7 @@ fn list_swap() {
         list.swap(&idx[a], &idx[b]);
 
         // validate
+        #[cfg(feature = "validation")]
         list.validate();
 
         let val_a = list.get(&idx[a]).unwrap();

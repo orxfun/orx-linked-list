@@ -21,6 +21,7 @@ fn slice_move_prev_to_front() {
 
         let slice: Vec<_> = slice.iter().copied().collect();
 
+        #[cfg(feature = "validation")]
         list.validate();
 
         let mut vec: Vec<_> = (0..n).into_iter().filter(|x| x != &i).collect();
@@ -45,6 +46,7 @@ fn slice_move_prev_to_back() {
 
         let slice: Vec<_> = slice.iter().copied().collect();
 
+        #[cfg(feature = "validation")]
         list.validate();
 
         let mut vec: Vec<_> = (0..n).into_iter().filter(|x| x != &i).collect();
@@ -72,6 +74,7 @@ fn slice_move_front_prev_to_arbitrary() {
         slice.iter().copied().collect::<Vec<_>>(),
         vec![2, 1, 3, 4, 5]
     );
+    #[cfg(feature = "validation")]
     list.validate();
     assert!(list.eq_to_iter_vals([0, 2, 1, 3, 4, 5, 6, 7, 8, 9]));
 
@@ -83,6 +86,7 @@ fn slice_move_front_prev_to_arbitrary() {
         slice.iter().copied().collect::<Vec<_>>(),
         vec![2, 3, 1, 4, 5]
     );
+    #[cfg(feature = "validation")]
     list.validate();
     assert!(list.eq_to_iter_vals([0, 2, 3, 1, 4, 5, 6, 7, 8, 9]));
 
@@ -94,6 +98,7 @@ fn slice_move_front_prev_to_arbitrary() {
         slice.iter().copied().collect::<Vec<_>>(),
         vec![2, 3, 4, 1, 5]
     );
+    #[cfg(feature = "validation")]
     list.validate();
     assert!(list.eq_to_iter_vals([0, 2, 3, 4, 1, 5, 6, 7, 8, 9]));
 }
@@ -112,6 +117,7 @@ fn slice_move_back_prev_to_arbitrary() {
         slice.iter().copied().collect::<Vec<_>>(),
         vec![1, 2, 5, 3, 4]
     );
+    #[cfg(feature = "validation")]
     list.validate();
     assert!(list.eq_to_iter_vals([0, 1, 2, 5, 3, 4, 6, 7, 8, 9]));
 
@@ -123,6 +129,7 @@ fn slice_move_back_prev_to_arbitrary() {
         slice.iter().copied().collect::<Vec<_>>(),
         vec![1, 2, 3, 5, 4]
     );
+    #[cfg(feature = "validation")]
     list.validate();
     assert!(list.eq_to_iter_vals([0, 1, 2, 3, 5, 4, 6, 7, 8, 9]));
 
@@ -134,6 +141,7 @@ fn slice_move_back_prev_to_arbitrary() {
         slice.iter().copied().collect::<Vec<_>>(),
         vec![1, 2, 3, 4, 5]
     );
+    #[cfg(feature = "validation")]
     list.validate();
     assert!(list.eq_to_iter_vals([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
 }
@@ -152,6 +160,7 @@ fn slice_move_prev_to_arbitrary() {
         slice.iter().copied().collect::<Vec<_>>(),
         vec![1, 2, 4, 3, 5]
     );
+    #[cfg(feature = "validation")]
     list.validate();
     assert!(list.eq_to_iter_vals([0, 1, 2, 4, 3, 5, 6, 7, 8, 9]));
 
@@ -163,6 +172,7 @@ fn slice_move_prev_to_arbitrary() {
         slice.iter().copied().collect::<Vec<_>>(),
         vec![1, 3, 2, 4, 5]
     );
+    #[cfg(feature = "validation")]
     list.validate();
     assert!(list.eq_to_iter_vals([0, 1, 3, 2, 4, 5, 6, 7, 8, 9]));
 }
