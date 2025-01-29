@@ -23,6 +23,7 @@ fn iter_from_singly() {
 
     let vec_slice = &vec[index_of_42..];
     let mut list_slice = list.iter_from(&idx42);
+    #[cfg(feature = "validation")]
     list.validate();
 
     for x in vec_slice {
@@ -60,6 +61,7 @@ fn iter_from_doubly() {
 
     let vec_slice = &vec[index_of_42..];
     let mut list_slice = list.iter_from(&idx42);
+    #[cfg(feature = "validation")]
     list.validate();
 
     for x in vec_slice {
@@ -97,6 +99,7 @@ fn iter_backward_from_doubly() {
 
     let vec_slice = &vec[0..=index_of_42];
     let mut list_slice = list.iter_backward_from(&idx42);
+    #[cfg(feature = "validation")]
     list.validate();
 
     for x in vec_slice.iter().rev() {

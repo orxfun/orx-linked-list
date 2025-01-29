@@ -1,6 +1,6 @@
 [package]
 name = "orx-linked-list"
-version = "3.3.0"
+version = "3.4.0"
 edition = "2021"
 authors = ["orxfun <orx.ugur.arikan@gmail.com>"]
 description = "A linked list implementation with unique features and an extended list of constant time methods providing high performance traversals and mutations."
@@ -11,10 +11,11 @@ categories = ["data-structures", "rust-patterns", "no-std"]
 
 [dependencies]
 orx-pseudo-default = { version = "1.4", default-features = false }
-orx-pinned-vec = "3.11"
-orx-split-vec = "3.11"
-orx-fixed-vec = "3.11"
-orx-selfref-col = "2.3"
+orx-pinned-vec = "3.12"
+orx-fixed-vec = "3.12"
+orx-split-vec = "3.12"
+orx-selfref-col = "2.5"
+orx-iterable = { version = "1.1.1", default-features = false }
 
 [dev-dependencies]
 clap = { version = "4.5.27", features = ["derive"] }
@@ -24,7 +25,7 @@ rand_chacha = "0.3.1"
 test-case = "3.3.1"
 
 [features]
-default = ["validation"]
+default = []
 validation = []
 
 [[bench]]

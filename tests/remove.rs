@@ -19,6 +19,7 @@ fn remove_doubly<M: MemoryPolicy<Doubly<char>>>(mut list: List<Doubly<char>, M>,
 
     let idx = &indices[idx];
     let removed = list.try_remove(idx);
+    #[cfg(feature = "validation")]
     list.validate();
 
     assert_eq!(removed, Some(c));
@@ -37,7 +38,9 @@ fn remove_doubly_oob<M: MemoryPolicy<Doubly<char>>>(mut list: List<Doubly<char>,
     let _ = list.pop_back();
 
     let removed = list.try_remove(&indices[4]);
+    #[cfg(feature = "validation")]
     list.validate();
+
     assert_eq!(removed, None);
 }
 
@@ -66,6 +69,8 @@ fn remove_doubly_other_list<M: MemoryPolicy<Doubly<char>>>(mut other: List<Doubl
     let removed = list.try_remove(&other_indices[4]);
     assert_eq!(removed, None);
 
+    #[cfg(feature = "validation")]
     list.validate();
+    #[cfg(feature = "validation")]
     other.validate();
 }

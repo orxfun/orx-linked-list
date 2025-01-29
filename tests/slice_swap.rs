@@ -17,7 +17,9 @@ fn slice_swap_with_all_idx() {
     slice.swap(&all_idx[2], &all_idx[3]);
     assert_eq!(slice.iter().copied().collect::<Vec<_>>(), [4, 1, 2, 3]);
 
+    #[cfg(feature = "validation")]
     list.validate();
+
     assert_eq!(
         list.iter().copied().collect::<Vec<_>>(),
         [0, 4, 1, 2, 3, 5, 6]
@@ -43,6 +45,7 @@ fn slice_swap_with_slice_idx() {
     slice.swap(&idx[3], &idx[1]);
     assert_eq!(slice.iter().copied().collect::<Vec<_>>(), [3, 2, 1, 4]);
 
+    #[cfg(feature = "validation")]
     list.validate();
     assert_eq!(
         list.iter().copied().collect::<Vec<_>>(),
@@ -97,6 +100,7 @@ fn slice_swap_with_entire_list() {
         [4, 6, 1, 0, 3, 5, 2]
     );
 
+    #[cfg(feature = "validation")]
     list.validate();
     assert_eq!(
         list.iter().copied().collect::<Vec<_>>(),
