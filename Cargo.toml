@@ -20,8 +20,8 @@ orx-iterable = { version = "1.1.1", default-features = false }
 [dev-dependencies]
 clap = { version = "4.5.27", features = ["derive"] }
 criterion = "0.5"
-rand = "0.9"
-rand_chacha = "0.9"
+rand = "0.8.5"
+rand_chacha = "0.3.1"
 test-case = "3.3.1"
 
 [features]
