@@ -1,20 +1,20 @@
 [package]
 name = "orx-linked-list"
-version = "3.4.0"
+version = "3.5.0"
 edition = "2021"
 authors = ["orxfun <orx.ugur.arikan@gmail.com>"]
 description = "A linked list implementation with unique features and an extended list of constant time methods providing high performance traversals and mutations."
-license = "MIT"
+license = "MIT OR Apache-2.0"
 repository = "https://github.com/orxfun/orx-linked-list/"
 keywords = ["linked", "list", "doubly", "singly", "pinned"]
 categories = ["data-structures", "rust-patterns", "no-std"]
 
 [dependencies]
 orx-pseudo-default = { version = "1.4", default-features = false }
-orx-pinned-vec = "3.12"
-orx-fixed-vec = "3.12"
-orx-split-vec = "3.12"
-orx-selfref-col = "2.5"
+orx-pinned-vec = "3.14"
+orx-fixed-vec = "3.14"
+orx-split-vec = "3.14"
+orx-selfref-col = "2.6"
 orx-iterable = { version = "1.1.1", default-features = false }
 
 [dev-dependencies]

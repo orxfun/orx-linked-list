@@ -1,6 +1,7 @@
 # orx-linked-list
 
 [![orx-linked-list crate](https://img.shields.io/crates/v/orx-linked-list.svg)](https://crates.io/crates/orx-linked-list)
+[![orx-linked-list crate](https://img.shields.io/crates/d/orx-linked-list.svg)](https://crates.io/crates/orx-linked-list)
 [![orx-linked-list documentation](https://docs.rs/orx-linked-list/badge.svg)](https://docs.rs/orx-linked-list)
 
 A linked list implementation with unique features and an extended list of constant time methods providing high performance traversals and mutations.
@@ -502,4 +503,4 @@ Contributions are welcome! If you notice an error, have a question or think some
 
 ## License
 
-This library is licensed under MIT license. See LICENSE for details.
+Dual-licensed under [Apache 2.0](LICENSE-APACHE) or [MIT](LICENSE-MIT).
