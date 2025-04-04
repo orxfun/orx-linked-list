@@ -14,7 +14,7 @@ orx-pseudo-default = { version = "2.0.0", default-features = false }
 orx-pinned-vec = { path = "../orx-pinned-vec" }
 orx-fixed-vec = { path = "../orx-fixed-vec" }
 orx-split-vec = { path = "../orx-split-vec" }
-orx-selfref-col = { path = "../orx-selfref-col " }
+orx-selfref-col = { path = "../orx-selfref-col" }
 orx-iterable = { version = "1.2.0", default-features = false }
 
 [dev-dependencies]
