@@ -28,13 +28,22 @@ fn doubly() {
     let mut list = doubly::new_doubly(&mut rng, 20, 20);
 
     list.pop_front();
+    #[cfg(target_pointer_width = "64")]
     assert_eq!(list.node_utilization().num_closed_nodes, 5);
-
-    list.pop_front();
+    #[cfg(target_pointer_width = "32")]
     assert_eq!(list.node_utilization().num_closed_nodes, 6);
 
     list.pop_front();
+    #[cfg(target_pointer_width = "64")]
+    assert_eq!(list.node_utilization().num_closed_nodes, 6);
+    #[cfg(target_pointer_width = "32")]
     assert_eq!(list.node_utilization().num_closed_nodes, 0);
+
+    list.pop_front();
+    #[cfg(target_pointer_width = "64")]
+    assert_eq!(list.node_utilization().num_closed_nodes, 0);
+    #[cfg(target_pointer_width = "32")]
+    assert_eq!(list.node_utilization().num_closed_nodes, 1);
 
     list.pop_back();
 
@@ -68,7 +77,10 @@ fn singly() {
     list.pop_front();
 
     list.pop_front();
+    #[cfg(target_pointer_width = "64")]
     assert_eq!(list.node_utilization().num_closed_nodes, 7);
+    #[cfg(target_pointer_width = "32")]
+    assert_eq!(list.node_utilization().num_closed_nodes, 4);
 
     list.pop_front();
     assert_eq!(list.node_utilization().num_closed_nodes, 0);
