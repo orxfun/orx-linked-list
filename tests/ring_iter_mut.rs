@@ -3,23 +3,6 @@ mod doubly;
 use orx_linked_list::*;
 
 #[test]
-fn abc() {
-    let mut list: DoublyList<_> = (0..5).collect();
-    let idx: Vec<_> = list.indices().collect();
-
-    let i = 1;
-
-    let iter = list.ring_iter_mut(&idx[i]);
-    for x in iter {
-        dbg!(*x);
-    }
-
-    dbg!("_---------_");
-
-    // assert_eq!(list.len(), 3333);
-}
-
-#[test]
 fn ring_iter_mut_on_list() {
     let mut list = doubly::new_doubly(&mut doubly::rng(), 40, 40);
     let n = list.len();
