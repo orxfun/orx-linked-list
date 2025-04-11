@@ -29,7 +29,7 @@ pub trait SinglyPointer<T> {
     /// Alternatively, you may use `NodeIdx` for safe access.
     #[inline(always)]
     unsafe fn node(&self) -> &Node<Singly<T>> {
-        &*self.raw_ptr()
+        unsafe { &*self.raw_ptr() }
     }
 
     /// Returns a mutable reference to the node.
@@ -45,7 +45,7 @@ pub trait SinglyPointer<T> {
     /// Alternatively, you may use `NodeIdx` for safe access.
     #[inline(always)]
     unsafe fn node_mut(&mut self) -> &mut Node<Singly<T>> {
-        &mut *self.raw_ptr()
+        unsafe { &mut *self.raw_ptr() }
     }
 
     /// Returns the pointer to the next node if exists; None otherwise.
@@ -61,6 +61,6 @@ pub trait SinglyPointer<T> {
     /// Alternatively, you may use `NodeIdx` for safe access.
     #[inline(always)]
     unsafe fn next(&self) -> Option<SinglyPtr<T>> {
-        self.node().next().get().cloned()
+        unsafe { self.node() }.next().get().cloned()
     }
 }

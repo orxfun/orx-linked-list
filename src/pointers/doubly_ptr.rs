@@ -29,7 +29,7 @@ pub trait DoublyPointer<T> {
     /// Alternatively, you may use `NodeIdx` for safe access.
     #[inline(always)]
     unsafe fn node(&self) -> &Node<Doubly<T>> {
-        &*self.raw_ptr()
+        unsafe { &*self.raw_ptr() }
     }
 
     /// Returns a mutable reference to the node.
@@ -45,7 +45,7 @@ pub trait DoublyPointer<T> {
     /// Alternatively, you may use `NodeIdx` for safe access.
     #[inline(always)]
     unsafe fn node_mut(&mut self) -> &mut Node<Doubly<T>> {
-        &mut *self.raw_ptr()
+        unsafe { &mut *self.raw_ptr() }
     }
 
     /// Returns the pointer to the next node if exists; None otherwise.
@@ -61,7 +61,7 @@ pub trait DoublyPointer<T> {
     /// Alternatively, you may use `NodeIdx` for safe access.
     #[inline(always)]
     unsafe fn next(&self) -> Option<DoublyPtr<T>> {
-        self.node().next().get().cloned()
+        unsafe { self.node() }.next().get().cloned()
     }
 
     /// Returns the pointer to the prev node if exists; None otherwise.
@@ -77,6 +77,6 @@ pub trait DoublyPointer<T> {
     /// Alternatively, you may use `NodeIdx` for safe access.
     #[inline(always)]
     unsafe fn prev(&self) -> Option<DoublyPtr<T>> {
-        self.node().prev().get().cloned()
+        unsafe { self.node() }.prev().get().cloned()
     }
 }

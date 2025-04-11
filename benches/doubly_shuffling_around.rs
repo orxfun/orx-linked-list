@@ -1,4 +1,4 @@
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use orx_linked_list::*;
 use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;
@@ -16,8 +16,8 @@ fn get_moves(num_moves: usize, num_cities: usize) -> Vec<(usize, usize)> {
     let mut moves = vec![];
 
     for _ in 0..num_moves {
-        let a = rng.gen_range(0..num_cities);
-        let b = rng.gen_range(0..num_cities);
+        let a = rng.random_range(0..num_cities);
+        let b = rng.random_range(0..num_cities);
         moves.push((a, b));
     }
 

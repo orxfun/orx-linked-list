@@ -1,4 +1,4 @@
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use orx_linked_list::*;
 use orx_selfref_col::MemoryPolicy;
 use rand::prelude::*;
@@ -13,11 +13,11 @@ enum Action {
 fn get_test_data(n: usize) -> Vec<Action> {
     let mut rng = ChaCha8Rng::seed_from_u64(56456);
     let mut vec: Vec<_> = (0..n)
-        .map(|_| Action::PushFront(rng.gen_range(0..n) as u32))
+        .map(|_| Action::PushFront(rng.random_range(0..n) as u32))
         .collect();
     for _ in 0..2 * n {
-        let action = match rng.gen::<f32>() {
-            x if x < 0.50 => Action::PushFront(rng.gen_range(0..n) as u32),
+        let action = match rng.random::<f32>() {
+            x if x < 0.50 => Action::PushFront(rng.random_range(0..n) as u32),
             _ => Action::PopFront,
         };
         vec.push(action)
