@@ -17,8 +17,8 @@ fn get_moves(num_moves: usize, num_cities: usize) -> Vec<(usize, usize)> {
     let mut moves = vec![];
 
     for _ in 0..num_moves {
-        let a = rng.gen_range(0..num_cities);
-        let b = rng.gen_range(0..num_cities);
+        let a = rng.random_range(0..num_cities);
+        let b = rng.random_range(0..num_cities);
         moves.push((a, b));
     }
 
