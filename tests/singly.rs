@@ -29,16 +29,16 @@ const ACTIONS: [Actions; 6] = [
 const GROW_ACTIONS: [Actions; 2] = [Actions::PushFront, Actions::Insert];
 
 fn val(r: &mut R) -> String {
-    r.gen_range(0..10000).to_string()
+    r.random_range(0..10000).to_string()
 }
 
 impl Actions {
     fn pick_grow(r: &mut R) -> Self {
-        GROW_ACTIONS[r.gen_range(0..GROW_ACTIONS.len())]
+        GROW_ACTIONS[r.random_range(0..GROW_ACTIONS.len())]
     }
 
     fn pick(r: &mut R) -> Self {
-        ACTIONS[r.gen_range(0..ACTIONS.len())]
+        ACTIONS[r.random_range(0..ACTIONS.len())]
     }
 
     fn apply<M>(self, r: &mut R, list: &mut List<Singly<String>, M>)
@@ -64,14 +64,14 @@ impl Actions {
             Insert => {
                 let pos = match list.len() {
                     0 => 0,
-                    _ => r.gen_range(0..=list.len()),
+                    _ => r.random_range(0..=list.len()),
                 };
                 list.insert_at(pos, val(r));
             }
             Remove => {
                 let pos = match list.len() {
                     0 => 0,
-                    _ => r.gen_range(0..list.len()),
+                    _ => r.random_range(0..list.len()),
                 };
                 list.remove_at(pos);
             }

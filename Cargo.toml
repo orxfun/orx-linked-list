@@ -30,5 +30,5 @@ default = []
 validation = []
 
 [[bench]]
-name = "doubly_shuffling_around"
+name = "doubly_mutation_ends"
 harness = false

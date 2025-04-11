@@ -29,21 +29,21 @@ fn doubly() {
 
     list.pop_front();
     #[cfg(target_pointer_width = "64")]
-    assert_eq!(list.node_utilization().num_closed_nodes, 5);
+    assert_eq!(list.node_utilization().num_closed_nodes, 6);
     #[cfg(target_pointer_width = "32")]
     assert_eq!(list.node_utilization().num_closed_nodes, 6);
 
     list.pop_front();
     #[cfg(target_pointer_width = "64")]
-    assert_eq!(list.node_utilization().num_closed_nodes, 6);
+    assert_eq!(list.node_utilization().num_closed_nodes, 7);
     #[cfg(target_pointer_width = "32")]
-    assert_eq!(list.node_utilization().num_closed_nodes, 0);
+    assert_eq!(list.node_utilization().num_closed_nodes, 7);
 
     list.pop_front();
     #[cfg(target_pointer_width = "64")]
     assert_eq!(list.node_utilization().num_closed_nodes, 0);
     #[cfg(target_pointer_width = "32")]
-    assert_eq!(list.node_utilization().num_closed_nodes, 1);
+    assert_eq!(list.node_utilization().num_closed_nodes, 0);
 
     list.pop_back();
 
@@ -78,12 +78,12 @@ fn singly() {
 
     list.pop_front();
     #[cfg(target_pointer_width = "64")]
-    assert_eq!(list.node_utilization().num_closed_nodes, 7);
+    assert_eq!(list.node_utilization().num_closed_nodes, 1);
     #[cfg(target_pointer_width = "32")]
-    assert_eq!(list.node_utilization().num_closed_nodes, 4);
+    assert_eq!(list.node_utilization().num_closed_nodes, 1);
 
     list.pop_front();
-    assert_eq!(list.node_utilization().num_closed_nodes, 0);
+    assert_eq!(list.node_utilization().num_closed_nodes, 2);
 
     list.clear();
     assert_eq!(list.node_utilization().num_closed_nodes, 0);

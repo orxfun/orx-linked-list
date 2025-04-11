@@ -19,8 +19,8 @@ fn list_swap() {
     let mut control: Vec<_> = list.iter().cloned().collect();
 
     for _ in 0..100 {
-        let a = r.gen_range(0..list.len());
-        let b = r.gen_range(0..list.len());
+        let a = r.random_range(0..list.len());
+        let b = r.random_range(0..list.len());
 
         list.swap(&idx[a], &idx[b]);
 
