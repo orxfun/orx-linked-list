@@ -29,10 +29,10 @@ pub mod pointers;
 mod type_aliases;
 mod variant;
 
+pub use list::List;
 pub use list::ends_traits::*;
 pub use list::iter_traits::*;
 pub use list::slice::{ListSlice, ListSliceMut};
-pub use list::List;
 pub use orx_selfref_col::{MemoryPolicy, NodeIdx, NodeIdxError};
 pub use type_aliases::{
     DoublyIdx, DoublyList, DoublyListLazy, DoublyListSlice, DoublyListSliceLazy,
