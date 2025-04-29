@@ -1,9 +1,9 @@
 use crate::{
+    Doubly, DoublyIdx,
     iter::{DoublyIter, DoublyIterPtr, DoublyLinkIter},
     list::helper_traits::HasDoublyEnds,
     pointers::DoublyPtr,
     type_aliases::{BACK_IDX, FRONT_IDX, OOB},
-    Doubly, DoublyIdx,
 };
 use core::iter::{Chain, Rev};
 use orx_pinned_vec::PinnedVec;
@@ -283,7 +283,7 @@ where
         M: 'a,
     {
         let b = self.col().try_get_ptr(idx).expect(OOB);
-        let a = self.ends().get(BACK_IDX).cloned();
+        let a = self.ends().get(FRONT_IDX).cloned();
         DoublyIter::new(self.col(), a, Some(b)).rev()
     }
 
