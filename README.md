@@ -63,7 +63,7 @@ The significance of improvement can further be increased by using `DoublyList::i
 
 </details>
 
-### Parallelization
+## Parallelization
 
 When [orx-parallel](https://crates.io/crates/orx-parallel) feature is used (by default), computations over `LinkedList` elements can be efficiently parallelized.
 
