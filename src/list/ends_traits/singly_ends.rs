@@ -1,4 +1,4 @@
-use crate::{list::helper_traits::HasSinglyEnds, type_aliases::IDX_ERR, Singly, SinglyIdx};
+use crate::{Singly, SinglyIdx, list::helper_traits::HasSinglyEnds, type_aliases::IDX_ERR};
 use orx_pinned_vec::PinnedVec;
 use orx_selfref_col::{MemoryPolicy, Node, NodeIdxError};
 

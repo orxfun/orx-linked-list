@@ -1,6 +1,6 @@
 use crate::{
-    type_aliases::OOB, variant::Doubly, DoublyEnds, DoublyEndsMut, DoublyIdx, List, ListSlice,
-    ListSliceMut, Singly, SinglyEnds, SinglyEndsMut, SinglyIdx,
+    DoublyEnds, DoublyEndsMut, DoublyIdx, List, ListSlice, ListSliceMut, Singly, SinglyEnds,
+    SinglyEndsMut, SinglyIdx, type_aliases::OOB, variant::Doubly,
 };
 use core::ops::{Index, IndexMut};
 use orx_pinned_vec::PinnedVec;

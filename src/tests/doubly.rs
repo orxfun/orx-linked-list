@@ -1,8 +1,8 @@
 #![allow(unused_imports, dead_code)]
 use crate::{
+    DoublyEnds, DoublyIterable, List,
     type_aliases::{BACK_IDX, FRONT_IDX},
     variant::Doubly,
-    DoublyEnds, DoublyIterable, List,
 };
 use core::fmt::Debug;
 use orx_pinned_vec::PinnedVec;

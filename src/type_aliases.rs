@@ -1,7 +1,7 @@
 use crate::{
+    ListSlice, ListSliceMut,
     list::List,
     variant::{Doubly, ListVariant, Singly},
-    ListSlice, ListSliceMut,
 };
 use orx_selfref_col::{MemoryReclaimNever, MemoryReclaimOnThreshold, Node, NodeIdx};
 use orx_split_vec::{Recursive, SplitVec};

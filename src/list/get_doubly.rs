@@ -1,5 +1,5 @@
-use super::{helper_traits::HasDoublyEnds, slice::ListSlice, List};
-use crate::{variant::Doubly, DoublyIdx};
+use super::{List, helper_traits::HasDoublyEnds, slice::ListSlice};
+use crate::{DoublyIdx, variant::Doubly};
 use core::ops::RangeBounds;
 use orx_selfref_col::MemoryPolicy;
 

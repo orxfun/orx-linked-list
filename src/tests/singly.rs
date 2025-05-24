@@ -1,5 +1,5 @@
 #![allow(unused_imports, dead_code)]
-use crate::{variant::Singly, List, SinglyEnds, SinglyIterable};
+use crate::{List, SinglyEnds, SinglyIterable, variant::Singly};
 use core::fmt::Debug;
 use orx_pinned_vec::PinnedVec;
 use orx_selfref_col::{MemoryPolicy, Node, NodePtr};

@@ -1,6 +1,6 @@
 use crate::{
-    iter::SinglyIterMut, list::helper_traits::HasSinglyEndsMut, type_aliases::OOB, Singly,
-    SinglyIdx,
+    Singly, SinglyIdx, iter::SinglyIterMut, list::helper_traits::HasSinglyEndsMut,
+    type_aliases::OOB,
 };
 use orx_pinned_vec::PinnedVec;
 use orx_selfref_col::{MemoryPolicy, Node};

@@ -104,4 +104,51 @@ where
     pub fn iter_x(&self) -> impl Iterator<Item = &V::Item> {
         self.0.nodes().iter().filter_map(|x| x.data())
     }
+
+    /// Creates a parallel iterator over references to the elements of the linked list in **arbitrary order**.
+    ///
+    /// Note that `par_x` is parallel counterpart of [`iter_x`].
+    ///
+    /// Please see [`ParIter`] for details of the parallel computation.
+    /// In brief, computation is defined as chain of iterator transformations and parallelization
+    /// is handled by the underlying parallel executor.
+    ///
+    /// Required **orx-parallel** feature.
+    ///
+    /// [`ParIter`]: orx_parallel::ParIter
+    /// [`iter_x`]: crate::List::iter_x
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use orx_linked_list::*;
+    ///
+    /// let list: DoublyList<_> = (0..1024).collect();
+    ///
+    /// let expected: usize = list.iter_x().sum();
+    ///
+    /// let sum = list.par_x().sum(); // parallelized computation
+    /// assert_eq!(expected, sum);
+    ///
+    /// let sum = list.par_x().num_threads(4).sum(); // using at most 4 threads
+    /// assert_eq!(expected, sum);
+    ///
+    /// let sum_doubles = list.par_x().map(|x| x * 2).sum();
+    /// assert_eq!(2 * expected, sum_doubles);
+    ///
+    /// let expected: usize = list.iter_x().filter(|x| *x % 2 == 0).sum();
+    /// let sum_evens = list.par_x().filter(|x| *x % 2 == 0).sum();
+    /// std::dbg!(sum_evens, expected);
+    /// ```
+    #[cfg(feature = "orx-parallel")]
+    pub fn par_x(&self) -> impl orx_parallel::ParIter<Item = &V::Item>
+    where
+        V::Item: Send + Sync,
+        Node<V>: Send + Sync,
+        for<'a> &'a P: orx_concurrent_iter::IntoConcurrentIter<Item = &'a Node<V>>,
+    {
+        use orx_parallel::*;
+        let pinned = self.0.nodes();
+        pinned.par().filter_map(|x| x.data())
+    }
 }

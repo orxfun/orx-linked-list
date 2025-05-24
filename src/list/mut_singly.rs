@@ -1,5 +1,5 @@
 use super::List;
-use crate::{iter::SinglyIterMut, variant::Singly, SinglyIdx};
+use crate::{SinglyIdx, iter::SinglyIterMut, variant::Singly};
 use orx_pinned_vec::PinnedVec;
 use orx_selfref_col::{MemoryPolicy, Node, NodeIdx, Refs};
 

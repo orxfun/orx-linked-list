@@ -1,4 +1,4 @@
-use crate::{variant::Doubly, List};
+use crate::{List, variant::Doubly};
 use orx_pinned_vec::PinnedVec;
 use orx_selfref_col::{MemoryPolicy, Node};
 

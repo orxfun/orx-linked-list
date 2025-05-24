@@ -1,7 +1,7 @@
 use super::{HasCol, HasColMut};
 use crate::{
-    type_aliases::{BACK_IDX, FRONT_IDX},
     Doubly, DoublyIdx,
+    type_aliases::{BACK_IDX, FRONT_IDX},
 };
 use core::ops::RangeBounds;
 use orx_pinned_vec::PinnedVec;

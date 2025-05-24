@@ -8,10 +8,9 @@ A linked list implementation with unique features and an extended list of consta
 
 Both doubly and singly lists are provided as generic variants of the core struct `List`. It is sufficient to know the four variants:
 * [`DoublyList`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyList.html) and [`SinglyList`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.SinglyList.html)
-* [`DoublyListLazy`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyListLazy.html) and [`SinglyListLazy`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.SinglyListLazy.html)
-  * *Lazy* suffix corresponds to lazy memory reclaim and will be explained in the indices section.
+* [`DoublyListLazy`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyListLazy.html) and [`SinglyListLazy`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.SinglyListLazy.html) (*Lazy* suffix corresponds to lazy memory reclaim and will be explained in the indices section)
 
-Some notable features are as follows.
+> **no-std**: This crate supports **no-std**; however, *std* is added due to the default [**orx-parallel**](https://crates.io/crates/orx-parallel) feature. Please include with **no-default-features** for no-std use cases: `cargo add orx-linked-list --no-default-features`.
 
 ## Efficiency
 
@@ -63,6 +62,24 @@ We observe that **DoublyList** iteration is around **25 times faster than that w
 The significance of improvement can further be increased by using `DoublyList::iter_x()` instead, which iterates over the elements in an arbitrary order. Unordered iteration is not suitable for all use cases. Most reductions or applying a mutation to each element are a couple of common examples. When the use case allows, unordered iteration further provides significant speed up.
 
 </details>
+
+## Parallelization
+
+When [orx-parallel](https://crates.io/crates/orx-parallel) feature is used (by default), computations over `LinkedList` elements can be efficiently parallelized.
+
+Parallel computation is defined by chained iterator methods, simply by replacing `iter_x` with `par_x`, and `into_iter_x` by `into_par_x`.
+
+You may find demonstrations in [`demo_parallelization`](https://github.com/orxfun/orx-linked-list/blob/main/examples/demo_parallelization.rs)
+
+Significant performance improvements can be achieved by replacing `iter_x` with `par_x`, as can be tested with the benchmark file [parallelization_ref.rs](https://github.com/orxfun/orx-linked-list/blob/main/benches/parallelization_ref.rs), or with the lightweight benchmark example [`bench_parallelization`](https://github.com/orxfun/orx-linked-list/blob/main/examples/bench_parallelization.rs):
+
+```bash
+Sequential computation over std::collections::LinkedList : 12.56s
+Sequential computation over DoublyList : 11.78s
+Parallelized over DoublyList using orx_parallel : 2.93s
+```
+
+*The suffix "_x" indicates that the iterators yield elements in arbitrary order, rather than from front to back. Parallelization of all iterations defined in the next section is in progress.*
 
 ## Iterations
 

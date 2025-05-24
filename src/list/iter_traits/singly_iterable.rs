@@ -1,9 +1,9 @@
 use crate::{
+    Singly, SinglyIdx,
     iter::{SinglyIter, SinglyIterPtr},
     list::helper_traits::HasSinglyEnds,
     pointers::SinglyPtr,
     type_aliases::OOB,
-    Singly, SinglyIdx,
 };
 use orx_selfref_col::{MemoryPolicy, Node};
 use orx_split_vec::PinnedVec;

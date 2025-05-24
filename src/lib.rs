@@ -41,3 +41,6 @@ pub use type_aliases::{
     SinglyListSliceMutLazy, SinglyListThreshold,
 };
 pub use variant::{Doubly, Singly};
+
+#[cfg(feature = "orx-parallel")]
+pub use orx_parallel::*;

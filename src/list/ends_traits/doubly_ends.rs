@@ -1,7 +1,7 @@
 use crate::{
+    Doubly, DoublyIdx,
     list::helper_traits::HasDoublyEnds,
     type_aliases::{BACK_IDX, FRONT_IDX, IDX_ERR},
-    Doubly, DoublyIdx,
 };
 use orx_pinned_vec::PinnedVec;
 use orx_selfref_col::{MemoryPolicy, Node, NodeIdxError};
