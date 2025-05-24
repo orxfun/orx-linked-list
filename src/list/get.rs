@@ -105,7 +105,7 @@ where
         self.0.nodes().iter().filter_map(|x| x.data())
     }
 
-    /// Creates a parallel iterator over the elements of the linked list in **arbitrary order**.
+    /// Creates a parallel iterator over references to the elements of the linked list in **arbitrary order**.
     ///
     /// Please see [`ParIter`] for details of the parallel computation.
     /// In brief, computation is defined as chain of iterator transformations and parallelization
