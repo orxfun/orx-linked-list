@@ -107,6 +107,8 @@ where
 
     /// Creates a parallel iterator over references to the elements of the linked list in **arbitrary order**.
     ///
+    /// Note that `par_x` is parallel counterpart of [`iter_x`].
+    ///
     /// Please see [`ParIter`] for details of the parallel computation.
     /// In brief, computation is defined as chain of iterator transformations and parallelization
     /// is handled by the underlying parallel executor.
@@ -114,6 +116,7 @@ where
     /// Required **orx-parallel** feature.
     ///
     /// [`ParIter`]: orx_parallel::ParIter
+    /// [`iter_x`]: crate::List::iter_x
     ///
     /// # Examples
     ///

@@ -44,6 +44,8 @@ where
 
     /// Consumes the linked list and creates a parallel iterator over owned elements in **arbitrary order**.
     ///
+    /// Note that `into_par_x` is parallel counterpart of [`into_iter_x`].
+    ///
     /// Please see [`ParIter`] for details of the parallel computation.
     /// In brief, computation is defined as chain of iterator transformations and parallelization
     /// is handled by the underlying parallel executor.
@@ -51,6 +53,7 @@ where
     /// Required **orx-parallel** feature.
     ///
     /// [`ParIter`]: orx_parallel::ParIter
+    /// [`into_iter_x`]: crate::List::into_iter_x
     ///
     /// # Examples
     ///
