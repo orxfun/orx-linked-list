@@ -10,7 +10,7 @@ Both doubly and singly lists are provided as generic variants of the core struct
 * [`DoublyList`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyList.html) and [`SinglyList`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.SinglyList.html)
 * [`DoublyListLazy`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.DoublyListLazy.html) and [`SinglyListLazy`](https://docs.rs/orx-linked-list/latest/orx_linked_list/type.SinglyListLazy.html) (*Lazy* suffix corresponds to lazy memory reclaim and will be explained in the indices section)
 
-> **no-std**: This crate supports **no-std**; however, *std* is added due to the default "orx-parallel" feature. Please include with **no-default-features** for no-std use cases: `cargo add orx-linked-list --no-default-features`.
+> **no-std**: This crate supports **no-std**; however, *std* is added due to the default [**orx-parallel**](https://crates.io/crates/orx-parallel) feature. Please include with **no-default-features** for no-std use cases: `cargo add orx-linked-list --no-default-features`.
 
 ## Efficiency
 
