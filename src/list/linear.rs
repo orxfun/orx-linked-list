@@ -1,4 +1,4 @@
-use crate::{type_aliases::OOB, Doubly, DoublyIterable, List, Singly, SinglyIterable};
+use crate::{Doubly, DoublyIterable, List, Singly, SinglyIterable, type_aliases::OOB};
 use orx_pinned_vec::PinnedVec;
 use orx_selfref_col::{MemoryPolicy, Node, NodeIdx};
 

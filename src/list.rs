@@ -1,7 +1,7 @@
 use crate::{
+    Doubly, Singly,
     type_aliases::{DefaultMemory, DefaultPinVec},
     variant::ListVariant,
-    Doubly, Singly,
 };
 use helper_traits::{
     HasCol, HasColMut, HasDoublyEnds, HasDoublyEndsMut, HasSinglyEnds, HasSinglyEndsMut,

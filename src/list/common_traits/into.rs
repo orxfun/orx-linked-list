@@ -1,6 +1,6 @@
 use crate::{
-    variant::ListVariant, Doubly, DoublyList, DoublyListLazy, DoublyListThreshold, List, Singly,
-    SinglyList, SinglyListLazy, SinglyListThreshold,
+    Doubly, DoublyList, DoublyListLazy, DoublyListThreshold, List, Singly, SinglyList,
+    SinglyListLazy, SinglyListThreshold, variant::ListVariant,
 };
 use orx_pinned_vec::PinnedVec;
 use orx_selfref_col::{MemoryReclaimNever, MemoryReclaimOnThreshold, MemoryReclaimer, Node};

@@ -1,10 +1,10 @@
 use crate::{
+    Doubly, List, Singly,
     list::helper_traits::{
         HasCol, HasColMut, HasDoublyEnds, HasDoublyEndsMut, HasSinglyEnds, HasSinglyEndsMut,
     },
     type_aliases::{DefaultMemory, DefaultPinVec},
     variant::ListVariant,
-    Doubly, List, Singly,
 };
 use orx_pinned_vec::PinnedVec;
 use orx_selfref_col::{MemoryPolicy, Node, SelfRefCol, Variant};

@@ -1,4 +1,4 @@
-use crate::{variant::Doubly, DoublyIterable, List, Singly, SinglyIterable};
+use crate::{DoublyIterable, List, Singly, SinglyIterable, variant::Doubly};
 use core::fmt::Debug;
 use orx_pinned_vec::PinnedVec;
 use orx_selfref_col::{MemoryPolicy, Node};

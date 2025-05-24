@@ -1,7 +1,7 @@
 use crate::{
+    List, Singly,
     iter::{DoublyIterOwned, SinglyIterOwned},
     variant::Doubly,
-    List, Singly,
 };
 use orx_pinned_vec::PinnedVec;
 use orx_selfref_col::{MemoryPolicy, Node};

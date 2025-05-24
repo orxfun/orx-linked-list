@@ -1,6 +1,6 @@
 use crate::{
-    list::List, variant::ListVariant, DoublyList, DoublyListLazy, DoublyListThreshold, SinglyList,
-    SinglyListLazy, SinglyListThreshold,
+    DoublyList, DoublyListLazy, DoublyListThreshold, SinglyList, SinglyListLazy,
+    SinglyListThreshold, list::List, variant::ListVariant,
 };
 use orx_fixed_vec::FixedVec;
 use orx_pinned_vec::PinnedVec;

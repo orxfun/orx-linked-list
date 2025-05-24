@@ -1,8 +1,8 @@
 use crate::{
+    Doubly, DoublyIdx,
     iter::{DoublyIterMut, DoublyIterMutChain},
     list::helper_traits::HasDoublyEndsMut,
     type_aliases::{BACK_IDX, FRONT_IDX, OOB},
-    Doubly, DoublyIdx,
 };
 use core::iter::Rev;
 use orx_pinned_vec::PinnedVec;

@@ -1,8 +1,8 @@
-use super::{helper_traits::HasDoublyEnds, List};
+use super::{List, helper_traits::HasDoublyEnds};
 use crate::{
-    type_aliases::{DoublyIdx, BACK_IDX, FRONT_IDX},
-    variant::Doubly,
     ListSliceMut,
+    type_aliases::{BACK_IDX, DoublyIdx, FRONT_IDX},
+    variant::Doubly,
 };
 use core::ops::RangeBounds;
 use orx_pinned_vec::PinnedVec;

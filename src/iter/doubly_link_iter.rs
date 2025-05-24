@@ -1,4 +1,4 @@
-use super::{doubly_link_iter_ptr::PairPtr, DoublyLinkIterPtr};
+use super::{DoublyLinkIterPtr, doubly_link_iter_ptr::PairPtr};
 use crate::Doubly;
 use core::iter::FusedIterator;
 use orx_pinned_vec::PinnedVec;

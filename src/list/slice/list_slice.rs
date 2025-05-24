@@ -1,8 +1,8 @@
 use crate::{
+    Doubly, Singly,
     list::helper_traits::{HasCol, HasDoublyEnds, HasSinglyEnds},
     type_aliases::{DefaultMemory, DefaultPinVec},
     variant::ListVariant,
-    Doubly, Singly,
 };
 use orx_pinned_vec::PinnedVec;
 use orx_selfref_col::{MemoryPolicy, Node, SelfRefCol, Variant};

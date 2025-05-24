@@ -1,7 +1,7 @@
 use crate::{
+    DoublyIdx, List,
     type_aliases::{BACK_IDX, FRONT_IDX, IDX_ERR},
     variant::Doubly,
-    DoublyIdx, List,
 };
 use orx_selfref_col::{MemoryPolicy, NodeIdx, NodeIdxError};
 
