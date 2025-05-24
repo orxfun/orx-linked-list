@@ -1,6 +1,6 @@
-// cargo run --release --example bench_parallelization
-// cargo run --release --example bench_parallelization -- --help
-// cargo run --release --example bench_parallelization -- --len 50000 --num-repetitions 20
+// cargo run --release --features orx-parallel --example bench_parallelization
+// cargo run --release --features orx-parallel --example bench_parallelization -- --help
+// cargo run --release --features orx-parallel --example bench_parallelization -- --len 50000 --num-repetitions 20
 
 mod utils;
 
@@ -33,7 +33,7 @@ fn main() {
     let args = Args::parse();
 
     let expected_output = {
-        let list: Vec<_> = (0..args.len as usize).collect();
+        let list: DoublyList<_> = (0..args.len as usize).collect();
 
         list.iter()
             .filter(|x| *x % 3 != 0)
@@ -55,6 +55,7 @@ fn main() {
                     .collect::<Vec<_>>()
             }),
         ),
+        #[cfg(feature = "orx-parallel")]
         (
             "Sequential computation over DoublyList",
             Box::new(move || {
@@ -67,6 +68,7 @@ fn main() {
                     .collect::<Vec<_>>()
             }),
         ),
+        #[cfg(feature = "orx-parallel")]
         (
             "Parallelized over DoublyList using orx_parallel",
             Box::new(move || {
