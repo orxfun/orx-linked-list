@@ -50,7 +50,7 @@ where
     /// In brief, computation is defined as chain of iterator transformations and parallelization
     /// is handled by the underlying parallel executor.
     ///
-    /// Required **orx-parallel** feature.
+    /// Requires **orx-parallel** feature.
     ///
     /// [`ParIter`]: orx_parallel::ParIter
     /// [`into_iter_x`]: crate::List::into_iter_x
