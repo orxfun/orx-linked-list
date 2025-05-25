@@ -72,10 +72,9 @@ fn main() {
         (
             "Parallelized over DoublyList using orx_parallel",
             Box::new(move || {
-                let imp_vec: DoublyList<_> = (0..args.len as usize).collect();
+                let list: DoublyList<_> = (0..args.len as usize).collect();
 
-                imp_vec
-                    .into_par_x() // replace iter (into_iter_x) with par (into_par_x) to parallelize !
+                list.par_x() // replace iter_ (into_iter_x) with par_x (into_par_x) to parallelize !
                     .filter(|x| *x % 3 != 0)
                     .map(|x| x + fibonacci(x % 1000))
                     .filter(|x| x % 2 == 0)
