@@ -74,7 +74,7 @@ fn main() {
             Box::new(move || {
                 let list: DoublyList<_> = (0..args.len as usize).collect();
 
-                list.par_x() // replace iter_ (into_iter_x) with par_x (into_par_x) to parallelize !
+                list.par_x() // replace iter_x (into_iter_x) with par_x (into_par_x) to parallelize !
                     .filter(|x| *x % 3 != 0)
                     .map(|x| x + fibonacci(x % 1000))
                     .filter(|x| x % 2 == 0)

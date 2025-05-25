@@ -50,7 +50,7 @@ where
     /// In brief, computation is defined as chain of iterator transformations and parallelization
     /// is handled by the underlying parallel executor.
     ///
-    /// Required **orx-parallel** feature.
+    /// Requires **orx-parallel** feature.
     ///
     /// [`ParIter`]: orx_parallel::ParIter
     /// [`into_iter_x`]: crate::List::into_iter_x
@@ -75,7 +75,6 @@ where
     ///
     /// let expected: usize = new_list().into_iter_x().filter(|x| x % 2 == 0).sum();
     /// let sum_evens = new_list().into_par_x().filter(|x| x % 2 == 0).sum();
-    /// std::dbg!(sum_evens, expected);
     /// ```
     #[cfg(feature = "orx-parallel")]
     pub fn into_par_x(self) -> impl orx_parallel::ParIter<Item = V::Item>

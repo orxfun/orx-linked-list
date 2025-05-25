@@ -393,7 +393,6 @@ where
     /// let e = list.push_back('e');
     ///
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'c', 'd', 'e']));
-    /// dbg!(list.front());
     ///
     /// list.reverse();
     /// assert!(list.eq_to_iter_vals(['e', 'd', 'c', 'b', 'a']));

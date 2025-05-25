@@ -12,7 +12,6 @@ fn slice_move_prev_to_front() {
     let a = 1;
     let b = 5;
     for i in a..=b {
-        dbg!(i);
         let (mut list, idx) = list_and_indices(n);
         let mut slice = list.slice_mut(&idx[a]..=&idx[b]);
         let idx: Vec<_> = slice.indices().collect();
