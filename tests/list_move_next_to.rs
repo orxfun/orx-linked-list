@@ -32,8 +32,6 @@ fn list_move_next_to_back() {
         let mut vec: Vec<_> = (0..n).into_iter().filter(|x| x != &i).collect();
         vec.insert(n - 1, i);
 
-        dbg!(i, &vec, list.iter().collect::<Vec<_>>());
-
         #[cfg(feature = "validation")]
         list.validate();
         assert!(list.eq_to_iter_refs(&vec));

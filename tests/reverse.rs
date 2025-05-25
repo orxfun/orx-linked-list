@@ -84,7 +84,6 @@ fn slice_reverse_until_back() {
 #[test]
 fn slice_reverse_middle() {
     for i in 0..20 {
-        dbg!(i);
         let mut list = doubly::new_doubly(&mut &mut doubly::rng_with_seed(100 * i as u64), 20, 50);
         let mut expected: Vec<_> = list.iter().cloned().collect();
         let idx: Vec<_> = list.indices().collect();

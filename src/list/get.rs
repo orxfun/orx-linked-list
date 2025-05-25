@@ -138,7 +138,6 @@ where
     ///
     /// let expected: usize = list.iter_x().filter(|x| *x % 2 == 0).sum();
     /// let sum_evens = list.par_x().filter(|x| *x % 2 == 0).sum();
-    /// std::dbg!(sum_evens, expected);
     /// ```
     #[cfg(feature = "orx-parallel")]
     pub fn par_x(&self) -> impl orx_parallel::ParIter<Item = &V::Item>

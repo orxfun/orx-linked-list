@@ -11,7 +11,6 @@ fn ring_iter_mut_on_list() {
     let values: Vec<_> = list.iter().cloned().collect();
 
     for i in 0..n {
-        dbg!(i, n);
         let cyclic: Vec<_> = list.ring_iter_mut(&idx[i]).map(|x| x.clone()).collect();
         assert_eq!(cyclic.len(), n);
 
