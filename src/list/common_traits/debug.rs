@@ -14,9 +14,9 @@ where
 
         let mut iter = self.iter();
         if let Some(first) = iter.next() {
-            write!(f, "{:?}", first)?;
+            write!(f, "{first:?}")?;
             for x in iter {
-                write!(f, " -> {:?}", x)?;
+                write!(f, " -> {x:?}")?;
             }
         }
 
@@ -35,9 +35,9 @@ where
 
         let mut iter = self.iter();
         if let Some(first) = iter.next() {
-            write!(f, "{:?}", first)?;
+            write!(f, "{first:?}")?;
             for x in iter {
-                write!(f, " <-> {:?}", x)?;
+                write!(f, " <-> {x:?}")?;
             }
         }
 
