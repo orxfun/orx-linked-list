@@ -550,17 +550,17 @@ where
             }
         }
 
-        if let Some(old_front) = old_front {
-            if old_front == mid {
-                // old back is moved away
-                let old_back = old_back.expect("exists");
-                match old_front == old_back {
-                    false => {
-                        let new_front = old_next.expect("exists");
-                        self.ends_mut().set_some(FRONT_IDX, new_front);
-                    }
-                    true => { /* singleton, no update */ }
+        if let Some(old_front) = old_front
+            && old_front == mid
+        {
+            // old back is moved away
+            let old_back = old_back.expect("exists");
+            match old_front == old_back {
+                false => {
+                    let new_front = old_next.expect("exists");
+                    self.ends_mut().set_some(FRONT_IDX, new_front);
                 }
+                true => { /* singleton, no update */ }
             }
         }
     }
@@ -655,17 +655,17 @@ where
             }
         }
 
-        if let Some(old_back) = old_back {
-            if old_back == mid {
-                // old back is moved away
-                let old_front = old_front.expect("exists");
-                match old_front == old_back {
-                    false => {
-                        let new_back = old_prev.expect("exists");
-                        self.ends_mut().set_some(BACK_IDX, new_back);
-                    }
-                    true => { /* singleton, no update */ }
+        if let Some(old_back) = old_back
+            && old_back == mid
+        {
+            // old back is moved away
+            let old_front = old_front.expect("exists");
+            match old_front == old_back {
+                false => {
+                    let new_back = old_prev.expect("exists");
+                    self.ends_mut().set_some(BACK_IDX, new_back);
                 }
+                true => { /* singleton, no update */ }
             }
         }
     }
