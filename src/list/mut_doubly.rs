@@ -281,7 +281,7 @@ where
     /// let slice = list.slice_mut(&idx[4]..&idx[1]);
     /// assert!(slice.eq_to_iter_vals([4, 5, 6, 7, 8, 9]));
     /// ```
-    pub fn slice_mut<'a, R>(&mut self, range: R) -> ListSliceMut<Doubly<T>, M, P>
+    pub fn slice_mut<'a, R>(&mut self, range: R) -> ListSliceMut<'_, Doubly<T>, M, P>
     where
         R: RangeBounds<&'a DoublyIdx<T>>,
         T: 'a,

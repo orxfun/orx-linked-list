@@ -118,7 +118,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([40, 41, 42]));
     /// ```
-    pub fn iter_mut(&mut self) -> SinglyIterMut<T, P> {
+    pub fn iter_mut(&mut self) -> SinglyIterMut<'_, T, P> {
         SinglyIterMut::new_old(&mut self.0)
     }
 }
