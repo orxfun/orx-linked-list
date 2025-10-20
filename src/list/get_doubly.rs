@@ -77,7 +77,7 @@ where
     /// let slice = list.slice(&idx[4]..&idx[1]);
     /// assert!(slice.eq_to_iter_vals([4, 5, 6, 7, 8, 9]));
     /// ```
-    pub fn slice<'a, R>(&self, range: R) -> ListSlice<Doubly<T>, M>
+    pub fn slice<'a, R>(&self, range: R) -> ListSlice<'_, Doubly<T>, M>
     where
         R: RangeBounds<&'a DoublyIdx<T>>,
         T: 'a,
