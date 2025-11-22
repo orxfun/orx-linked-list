@@ -497,7 +497,7 @@ where
         let old_prev = self.col().node(mid).prev().get();
 
         // update the gap
-        match (old_prev.clone(), old_next.clone()) {
+        match (old_prev, old_next) {
             (Some(old_prev), _) if old_prev == prev => return,
             (Some(old_prev), Some(old_next)) => self.link(old_prev, old_next),
             (Some(old_prev), None) => {
@@ -602,7 +602,7 @@ where
         let old_prev = self.col().node(mid).prev().get();
 
         // update the gap
-        match (old_prev.clone(), old_next.clone()) {
+        match (old_prev, old_next) {
             (_, Some(old_next)) if old_next == next => return,
             (Some(old_prev), Some(old_next)) => self.link(old_prev, old_next),
             (Some(old_prev), None) => {

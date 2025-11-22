@@ -32,7 +32,7 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         match self.current {
             Some(p) => {
-                let ptr = Some(p.clone());
+                let ptr = Some(p);
                 self.current = self.col.node(p).next().get();
                 ptr
             }

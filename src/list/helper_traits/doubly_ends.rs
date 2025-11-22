@@ -94,14 +94,8 @@ where
 
     #[inline(always)]
     fn link(&mut self, prev: NodePtr<Doubly<T>>, next: NodePtr<Doubly<T>>) {
-        self.col_mut()
-            .node_mut(prev)
-            .next_mut()
-            .set_some(next.clone());
-        self.col_mut()
-            .node_mut(next)
-            .prev_mut()
-            .set_some(prev.clone());
+        self.col_mut().node_mut(prev).next_mut().set_some(next);
+        self.col_mut().node_mut(next).prev_mut().set_some(prev);
     }
 
     #[inline(always)]

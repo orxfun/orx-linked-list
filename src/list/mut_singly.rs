@@ -64,7 +64,7 @@ where
             self.0.node_mut(idx).next_mut().set_some(front);
         }
 
-        self.0.ends_mut().set_some(idx.clone());
+        self.0.ends_mut().set_some(idx);
 
         NodeIdx::new(self.0.memory_state(), idx)
     }

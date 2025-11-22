@@ -112,14 +112,14 @@ where
     fn next(&self, ptr: NodePtr<Doubly<T>>) -> Option<PtrAndNode<'_, T>> {
         self.0.node(ptr).next().get().map(|p| {
             let next_node = self.0.node(p);
-            (p.clone(), next_node)
+            (p, next_node)
         })
     }
 
     fn prev(&self, ptr: NodePtr<Doubly<T>>) -> Option<PtrAndNode<'_, T>> {
         self.0.node(ptr).prev().get().map(|p| {
             let prev_node = self.0.node(p);
-            (p.clone(), prev_node)
+            (p, prev_node)
         })
     }
 }
