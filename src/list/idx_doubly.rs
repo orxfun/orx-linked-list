@@ -41,21 +41,21 @@ where
     pub fn remove(&mut self, idx: DoublyIdx<T>) -> T {
         let idx = self.0.try_get_ptr(idx).expect(IDX_ERR);
         let [prev, next] = {
-            let node = self.0.node(&idx);
-            [node.prev().get().cloned(), node.next().get().cloned()]
+            let node = self.0.node(idx);
+            [node.prev().get(), node.next().get()]
         };
 
-        match prev.clone() {
-            Some(prev) => self.0.node_mut(&prev).next_mut().set(next.clone()),
-            None => self.0.ends_mut().set(FRONT_IDX, next.clone()),
+        match prev {
+            Some(prev) => self.0.node_mut(prev).next_mut().set(next),
+            None => self.0.ends_mut().set(FRONT_IDX, next),
         }
 
         match next {
-            Some(next) => self.0.node_mut(&next).prev_mut().set(prev),
+            Some(next) => self.0.node_mut(next).prev_mut().set(prev),
             None => self.0.ends_mut().set(BACK_IDX, prev),
         }
 
-        self.0.close_and_reclaim(&idx)
+        self.0.close_and_reclaim(idx)
     }
 
     /// ***O(1)*** Inserts the given `value` as the next of the node with the given `idx`.
@@ -87,21 +87,21 @@ where
     ///```
     pub fn insert_next_to(&mut self, idx: DoublyIdx<T>, value: T) -> DoublyIdx<T> {
         let prev = self.0.try_get_ptr(idx).expect(IDX_ERR);
-        let next = self.0.node(&prev).next().get().cloned();
+        let next = self.0.node(prev).next().get();
         let idx = self.0.push(value);
 
-        self.0.node_mut(&prev).next_mut().set_some(idx.clone());
-        self.0.node_mut(&idx).prev_mut().set_some(prev);
+        self.0.node_mut(prev).next_mut().set_some(idx);
+        self.0.node_mut(idx).prev_mut().set_some(prev);
 
         match next {
             Some(next) => {
-                self.0.node_mut(&next).prev_mut().set_some(idx.clone());
-                self.0.node_mut(&idx).next_mut().set_some(next);
+                self.0.node_mut(next).prev_mut().set_some(idx);
+                self.0.node_mut(idx).next_mut().set_some(next);
             }
-            None => self.0.ends_mut().set_some(BACK_IDX, idx.clone()),
+            None => self.0.ends_mut().set_some(BACK_IDX, idx),
         }
 
-        NodeIdx::new(self.memory_state(), &idx)
+        NodeIdx::new(self.memory_state(), idx)
     }
 
     /// ***O(1)*** Inserts the given `value` as the next of the node with the given `idx`.
@@ -134,21 +134,21 @@ where
     ///```
     pub fn insert_prev_to(&mut self, idx: DoublyIdx<T>, value: T) -> DoublyIdx<T> {
         let next = self.0.try_get_ptr(idx).expect(IDX_ERR);
-        let prev = self.0.node(&next).prev().get().cloned();
+        let prev = self.0.node(next).prev().get();
         let idx = self.0.push(value);
 
-        self.0.node_mut(&next).prev_mut().set_some(idx.clone());
-        self.0.node_mut(&idx).next_mut().set_some(next);
+        self.0.node_mut(next).prev_mut().set_some(idx);
+        self.0.node_mut(idx).next_mut().set_some(next);
 
         match prev {
             Some(prev) => {
-                self.0.node_mut(&prev).next_mut().set_some(idx.clone());
-                self.0.node_mut(&idx).prev_mut().set_some(prev);
+                self.0.node_mut(prev).next_mut().set_some(idx);
+                self.0.node_mut(idx).prev_mut().set_some(prev);
             }
-            None => self.0.ends_mut().set_some(FRONT_IDX, idx.clone()),
+            None => self.0.ends_mut().set_some(FRONT_IDX, idx),
         }
 
-        NodeIdx::new(self.memory_state(), &idx)
+        NodeIdx::new(self.memory_state(), idx)
     }
 
     /// ***O(1)*** Removes and returns value at the given `idx` of the list.
@@ -186,21 +186,21 @@ where
             true => {
                 let idx = idx.node_ptr();
                 let [prev, next] = {
-                    let node = self.0.node(&idx);
-                    [node.prev().get().cloned(), node.next().get().cloned()]
+                    let node = self.0.node(idx);
+                    [node.prev().get(), node.next().get()]
                 };
 
-                match prev.clone() {
-                    Some(prev) => self.0.node_mut(&prev).next_mut().set(next.clone()),
-                    None => self.0.ends_mut().set(FRONT_IDX, next.clone()),
+                match prev {
+                    Some(prev) => self.0.node_mut(prev).next_mut().set(next),
+                    None => self.0.ends_mut().set(FRONT_IDX, next),
                 }
 
                 match next {
-                    Some(next) => self.0.node_mut(&next).prev_mut().set(prev),
+                    Some(next) => self.0.node_mut(next).prev_mut().set(prev),
                     None => self.0.ends_mut().set(BACK_IDX, prev),
                 }
 
-                Some(self.0.close_and_reclaim(&idx))
+                Some(self.0.close_and_reclaim(idx))
             }
             false => None,
         }
@@ -245,21 +245,21 @@ where
         value: T,
     ) -> Result<DoublyIdx<T>, NodeIdxError> {
         let prev = self.0.try_get_ptr(idx)?;
-        let next = self.0.node(&prev).next().get().cloned();
+        let next = self.0.node(prev).next().get();
         let idx = self.0.push(value);
 
-        self.0.node_mut(&prev).next_mut().set_some(idx.clone());
-        self.0.node_mut(&idx).prev_mut().set_some(prev);
+        self.0.node_mut(prev).next_mut().set_some(idx);
+        self.0.node_mut(idx).prev_mut().set_some(prev);
 
         match next {
             Some(next) => {
-                self.0.node_mut(&next).prev_mut().set_some(idx.clone());
-                self.0.node_mut(&idx).next_mut().set_some(next);
+                self.0.node_mut(next).prev_mut().set_some(idx);
+                self.0.node_mut(idx).next_mut().set_some(next);
             }
-            None => self.0.ends_mut().set_some(BACK_IDX, idx.clone()),
+            None => self.0.ends_mut().set_some(BACK_IDX, idx),
         }
 
-        Ok(NodeIdx::new(self.memory_state(), &idx))
+        Ok(NodeIdx::new(self.memory_state(), idx))
     }
 
     /// ***O(1)*** Inserts the given `value` as the next of the node with the given `idx`.
@@ -301,20 +301,20 @@ where
         value: T,
     ) -> Result<DoublyIdx<T>, NodeIdxError> {
         let next = self.0.try_get_ptr(idx)?;
-        let prev = self.0.node(&next).prev().get().cloned();
+        let prev = self.0.node(next).prev().get();
         let idx = self.0.push(value);
 
-        self.0.node_mut(&next).prev_mut().set_some(idx.clone());
-        self.0.node_mut(&idx).next_mut().set_some(next);
+        self.0.node_mut(next).prev_mut().set_some(idx);
+        self.0.node_mut(idx).next_mut().set_some(next);
 
         match prev {
             Some(prev) => {
-                self.0.node_mut(&prev).next_mut().set_some(idx.clone());
-                self.0.node_mut(&idx).prev_mut().set_some(prev);
+                self.0.node_mut(prev).next_mut().set_some(idx);
+                self.0.node_mut(idx).prev_mut().set_some(prev);
             }
-            None => self.0.ends_mut().set_some(FRONT_IDX, idx.clone()),
+            None => self.0.ends_mut().set_some(FRONT_IDX, idx),
         }
 
-        Ok(NodeIdx::new(self.memory_state(), &idx))
+        Ok(NodeIdx::new(self.memory_state(), idx))
     }
 }
