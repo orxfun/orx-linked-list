@@ -6,15 +6,15 @@ pub type SinglyPtr<T> = NodePtr<Singly<T>>;
 
 impl<T> SinglyPointer<T> for SinglyPtr<T> {
     #[inline(always)]
-    fn raw_ptr(&self) -> *mut Node<Singly<T>> {
-        self.ptr() as *mut Node<Singly<T>>
+    unsafe fn raw_ptr(&self) -> *mut Node<Singly<T>> {
+        unsafe { self.ptr() as *mut Node<Singly<T>> }
     }
 }
 
 /// A node pointer in a Singly linked list.
 pub trait SinglyPointer<T> {
     /// Returns the raw pointer to the node.
-    fn raw_ptr(&self) -> *mut Node<Singly<T>>;
+    unsafe fn raw_ptr(&self) -> *mut Node<Singly<T>>;
 
     /// Returns a reference to the node.
     ///

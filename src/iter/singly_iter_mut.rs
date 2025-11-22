@@ -40,7 +40,8 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         match &self.current {
             Some(p) => {
-                let ptr = p.ptr_mut();
+                // SAFETY: collection as alive as guaranteed by the `col` field.
+                let ptr = unsafe { p.ptr_mut() };
                 self.current = self.col.node(p).next().get().cloned();
                 unsafe { &mut *ptr }.data_mut()
             }

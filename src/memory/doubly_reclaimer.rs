@@ -77,11 +77,15 @@ fn swap<P, T>(
         &mut *(occupied as *mut Node<Doubly<T>>)
     });
 
-    if occupied == col.ends().get(FRONT_IDX).expect("nonempty list").ptr() {
+    // SAFETY: we have a mutual &mut reference to the underlying collection
+    // which is guaranteed to be in the same memory state as occupied
+    if occupied == unsafe { col.ends().get(FRONT_IDX).expect("nonempty list").ptr() } {
         col.ends_mut().set(FRONT_IDX, node_ptr(vacant));
     }
 
-    if occupied == col.ends().get(BACK_IDX).expect("nonempty list").ptr() {
+    // SAFETY: we have a mutual &mut reference to the underlying collection
+    // which is guaranteed to be in the same memory state as occupied
+    if occupied == unsafe { col.ends().get(BACK_IDX).expect("nonempty list").ptr() } {
         col.ends_mut().set(BACK_IDX, node_ptr(vacant));
     }
 }

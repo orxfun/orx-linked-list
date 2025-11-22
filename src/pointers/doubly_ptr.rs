@@ -6,15 +6,15 @@ pub type DoublyPtr<T> = NodePtr<Doubly<T>>;
 
 impl<T> DoublyPointer<T> for DoublyPtr<T> {
     #[inline(always)]
-    fn raw_ptr(&self) -> *mut Node<Doubly<T>> {
-        self.ptr() as *mut Node<Doubly<T>>
+    unsafe fn raw_ptr(&self) -> *mut Node<Doubly<T>> {
+        unsafe { self.ptr() as *mut Node<Doubly<T>> }
     }
 }
 
 /// A node pointer in a doubly linked list.
 pub trait DoublyPointer<T> {
     /// Returns the raw pointer to the node.
-    fn raw_ptr(&self) -> *mut Node<Doubly<T>>;
+    unsafe fn raw_ptr(&self) -> *mut Node<Doubly<T>>;
 
     /// Returns a reference to the node.
     ///

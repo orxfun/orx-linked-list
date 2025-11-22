@@ -44,7 +44,7 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         match &self.current {
             Some(p) => {
-                let ptr = p.ptr_mut();
+                let ptr = unsafe { p.ptr_mut() };
                 match self.current == self.current_back {
                     false => self.current = self.col.node(p).next().get().cloned(),
                     true => self.end(),
@@ -64,7 +64,8 @@ where
     fn next_back(&mut self) -> Option<Self::Item> {
         match &self.current_back {
             Some(p) => {
-                let ptr = p.ptr_mut();
+                // SAFETY: collection as alive as guaranteed by the `col` field.
+                let ptr = unsafe { p.ptr_mut() };
                 match self.current == self.current_back {
                     false => self.current_back = self.col.node(p).prev().get().cloned(),
                     true => self.end(),

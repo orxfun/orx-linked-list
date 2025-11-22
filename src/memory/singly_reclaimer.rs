@@ -30,10 +30,14 @@ impl<T> MemoryReclaimer<Singly<T>> for SinglyReclaimer {
                         match swapped {
                             true => {
                                 nodes_moved = true;
-                                swap(col, vacant_ptr, occupied_ptr.ptr(), prev);
+                                // SAFETY: we have a mutual &mut reference to the underlying collection
+                                // which is guaranteed to be in the same memory state as occupied
+                                swap(col, vacant_ptr, unsafe { occupied_ptr.ptr() }, prev);
                                 prev = vacant_ptr;
                             }
-                            false => prev = occupied_ptr.ptr(),
+                            // SAFETY: we have a mutual &mut reference to the underlying collection
+                            // which is guaranteed to be in the same memory state as occupied
+                            false => prev = unsafe { occupied_ptr.ptr() },
                         }
 
                         match next {
