@@ -68,7 +68,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3]));
     ///
-    /// for x in list.iter_mut_from(&idx) {
+    /// for x in list.iter_mut_from(idx) {
     ///     *x += 10;
     /// }
     ///
@@ -105,7 +105,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3]));
     ///
-    /// for x in list.iter_mut_backward_from(&idx) {
+    /// for x in list.iter_mut_backward_from(idx) {
     ///     *x += 10;
     /// }
     ///
@@ -153,7 +153,7 @@ where
     /// let mut list: DoublyList<_> = (0..5).collect();
     /// let idx: Vec<_> = list.indices().collect();
     ///
-    /// scan(list.ring_iter_mut(&idx[3]));
+    /// scan(list.ring_iter_mut(idx[3]));
     /// assert!(list.eq_to_iter_vals([7, 8, 10, 3, 7]));
     /// ```
     fn ring_iter_mut<'a>(&'a mut self, pivot_idx: DoublyIdx<T>) -> DoublyIterMutChain<'a, T, P>

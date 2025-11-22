@@ -31,23 +31,23 @@ where
     ///
     /// let b = b.unwrap();
     ///
-    /// let data_b = list.get(&b); // O(1)
+    /// let data_b = list.get(b); // O(1)
     /// assert_eq!(data_b, Some(&'b'));
     ///
     /// // O(1) to create the iterators from the index
-    /// assert_eq!(&['b', 'c', 'd'], list.iter_from(&b).copied().collect::<Vec<_>>().as_slice());
-    /// assert_eq!(&['b', 'a'], list.iter_backward_from(&b).copied().collect::<Vec<_>>().as_slice());
+    /// assert_eq!(&['b', 'c', 'd'], list.iter_from(b).copied().collect::<Vec<_>>().as_slice());
+    /// assert_eq!(&['b', 'a'], list.iter_backward_from(b).copied().collect::<Vec<_>>().as_slice());
     ///
-    /// list.insert_prev_to(&b, 'X'); // O(1)
-    /// list.insert_next_to(&b, 'Y'); // O(1)
+    /// list.insert_prev_to(b, 'X'); // O(1)
+    /// list.insert_next_to(b, 'Y'); // O(1)
     /// assert!(list.eq_to_iter_vals(['a', 'X', 'b', 'Y', 'c', 'd']));
     ///
-    /// let removed = list.remove(&b);  // O(1)
+    /// let removed = list.remove(b);  // O(1)
     /// assert_eq!(removed, 'b');
     /// assert!(list.eq_to_iter_vals(['a', 'X', 'Y', 'c', 'd']));
     ///
-    /// assert_eq!(list.get(&b), None);
-    /// assert_eq!(list.idx_err(&b), Some(NodeIdxError::RemovedNode));
+    /// assert_eq!(list.get(b), None);
+    /// assert_eq!(list.idx_err(b), Some(NodeIdxError::RemovedNode));
     /// ```
     pub fn idx_of(&self, value: &T) -> Option<SinglyIdx<T>> {
         self.iter_ptr()
@@ -131,23 +131,23 @@ where
     ///
     /// let b = b.unwrap();
     ///
-    /// let data_b = list.get(&b); // O(1)
+    /// let data_b = list.get(b); // O(1)
     /// assert_eq!(data_b, Some(&'b'));
     ///
     /// // O(1) to create the iterators from the index
-    /// assert_eq!(&['b', 'c', 'd'], list.iter_from(&b).copied().collect::<Vec<_>>().as_slice());
-    /// assert_eq!(&['b', 'a'], list.iter_backward_from(&b).copied().collect::<Vec<_>>().as_slice());
+    /// assert_eq!(&['b', 'c', 'd'], list.iter_from(b).copied().collect::<Vec<_>>().as_slice());
+    /// assert_eq!(&['b', 'a'], list.iter_backward_from(b).copied().collect::<Vec<_>>().as_slice());
     ///
-    /// list.insert_prev_to(&b, 'X'); // O(1)
-    /// list.insert_next_to(&b, 'Y'); // O(1)
+    /// list.insert_prev_to(b, 'X'); // O(1)
+    /// list.insert_next_to(b, 'Y'); // O(1)
     /// assert!(list.eq_to_iter_vals(['a', 'X', 'b', 'Y', 'c', 'd']));
     ///
-    /// let removed = list.remove(&b);  // O(1)
+    /// let removed = list.remove(b);  // O(1)
     /// assert_eq!(removed, 'b');
     /// assert!(list.eq_to_iter_vals(['a', 'X', 'Y', 'c', 'd']));
     ///
-    /// assert_eq!(list.get(&b), None);
-    /// assert_eq!(list.idx_err(&b), Some(NodeIdxError::RemovedNode));
+    /// assert_eq!(list.get(b), None);
+    /// assert_eq!(list.idx_err(b), Some(NodeIdxError::RemovedNode));
     /// ```
     pub fn idx_of(&self, value: &T) -> Option<DoublyIdx<T>> {
         self.iter_ptr()
@@ -222,23 +222,23 @@ where
     ///
     /// let b = b.unwrap();
     ///
-    /// let data_b = list.get(&b); // O(1)
+    /// let data_b = list.get(b); // O(1)
     /// assert_eq!(data_b, Some(&'b'));
     ///
     /// // O(1) to create the iterators from the index
-    /// assert_eq!(&['b', 'c', 'd'], list.iter_from(&b).copied().collect::<Vec<_>>().as_slice());
-    /// assert_eq!(&['b', 'a'], list.iter_backward_from(&b).copied().collect::<Vec<_>>().as_slice());
+    /// assert_eq!(&['b', 'c', 'd'], list.iter_from(b).copied().collect::<Vec<_>>().as_slice());
+    /// assert_eq!(&['b', 'a'], list.iter_backward_from(b).copied().collect::<Vec<_>>().as_slice());
     ///
-    /// list.insert_prev_to(&b, 'X'); // O(1)
-    /// list.insert_next_to(&b, 'Y'); // O(1)
+    /// list.insert_prev_to(b, 'X'); // O(1)
+    /// list.insert_next_to(b, 'Y'); // O(1)
     /// assert!(list.eq_to_iter_vals(['a', 'X', 'b', 'Y', 'c', 'd']));
     ///
-    /// let removed = list.remove(&b);  // O(1)
+    /// let removed = list.remove(b);  // O(1)
     /// assert_eq!(removed, 'b');
     /// assert!(list.eq_to_iter_vals(['a', 'X', 'Y', 'c', 'd']));
     ///
-    /// assert_eq!(list.get(&b), None);
-    /// assert_eq!(list.idx_err(&b), Some(NodeIdxError::RemovedNode));
+    /// assert_eq!(list.get(b), None);
+    /// assert_eq!(list.idx_err(b), Some(NodeIdxError::RemovedNode));
     /// ```
     pub fn idx_of_from_back(&self, value: &T) -> Option<DoublyIdx<T>> {
         self.iter_ptr()

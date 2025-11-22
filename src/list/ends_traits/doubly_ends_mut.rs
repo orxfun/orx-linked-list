@@ -107,33 +107,33 @@ where
     /// let a = list.push_back('a');
     /// let b = list.push_back('b');
     ///
-    /// assert_eq!(list.get(&a), Some(&'a'));
-    /// assert_eq!(list.get(&b), Some(&'b'));
+    /// assert_eq!(list.get(a), Some(&'a'));
+    /// assert_eq!(list.get(b), Some(&'b'));
     ///
-    /// *list.get_mut(&a).unwrap() = 'x';
+    /// *list.get_mut(a).unwrap() = 'x';
     ///
     /// list.push_front('c');
     /// list.push_back('d');
     /// list.push_front('e');
     /// let f = list.push_back('f');
     ///
-    /// assert_eq!(list.get(&a), Some(&'x'));
-    /// assert_eq!(list.get(&b), Some(&'b'));
-    /// assert_eq!(list.get(&f), Some(&'f'));
+    /// assert_eq!(list.get(a), Some(&'x'));
+    /// assert_eq!(list.get(b), Some(&'b'));
+    /// assert_eq!(list.get(f), Some(&'f'));
     ///
     /// let _ = list.pop_back(); // f is removed
     ///
-    /// *list.get_mut(&a).unwrap() = 'y';
+    /// *list.get_mut(a).unwrap() = 'y';
     ///
-    /// assert_eq!(list.get(&a), Some(&'y'));
-    /// assert_eq!(list.get(&b), Some(&'b'));
-    /// assert_eq!(list.get(&f), None);
+    /// assert_eq!(list.get(a), Some(&'y'));
+    /// assert_eq!(list.get(b), Some(&'b'));
+    /// assert_eq!(list.get(f), None);
     ///
     /// list.clear(); // all removed
     ///
-    /// assert_eq!(list.get(&a), None);
-    /// assert_eq!(list.get(&b), None);
-    /// assert_eq!(list.get(&f), None);
+    /// assert_eq!(list.get(a), None);
+    /// assert_eq!(list.get(b), None);
+    /// assert_eq!(list.get(f), None);
     /// ```
     ///
     /// In the following, removal of nodes invalidates indices due to reorganization.
@@ -154,15 +154,15 @@ where
     /// list.push_back('d');
     /// list.push_back('e');
     ///
-    /// *list.get_mut(&c).unwrap() = 'x';
+    /// *list.get_mut(c).unwrap() = 'x';
     ///
     /// list.pop_back(); // does not lead to reorganization
     ///
-    /// assert_eq!(list.get(&c), Some(&'x'));
+    /// assert_eq!(list.get(c), Some(&'x'));
     ///
     /// list.pop_front(); // leads to reorganization
     ///
-    /// assert_eq!(list.get(&c), None);
+    /// assert_eq!(list.get(c), None);
     /// ```
     ///
     /// In the final example, we attempt to access to a list element using an index created by another list.
@@ -176,8 +176,8 @@ where
     /// let mut other_list = DoublyList::new();
     /// let other_idx = other_list.push_back('a');
     ///
-    /// assert!(list.get_mut(&idx).is_some());
-    /// // assert_eq!(list.get_mut(&other_idx), None);
+    /// assert!(list.get_mut(idx).is_some());
+    /// // assert_eq!(list.get_mut(other_idx), None);
     /// ```
     fn get_mut<'a>(&'a mut self, idx: DoublyIdx<T>) -> Option<&'a mut T>
     where
@@ -224,33 +224,33 @@ where
     /// let a = list.push_back('a');
     /// let b = list.push_back('b');
     ///
-    /// assert_eq!(list.try_get(&a), Ok(&'a'));
-    /// assert_eq!(list.try_get(&b), Ok(&'b'));
+    /// assert_eq!(list.try_get(a), Ok(&'a'));
+    /// assert_eq!(list.try_get(b), Ok(&'b'));
     ///
-    /// *list.try_get_mut(&a).unwrap() = 'x';
+    /// *list.try_get_mut(a).unwrap() = 'x';
     ///
     /// list.push_front('c');
     /// list.push_back('d');
     /// list.push_front('e');
     /// let f = list.push_back('f');
     ///
-    /// assert_eq!(list.try_get(&a), Ok(&'x'));
-    /// assert_eq!(list.try_get(&b), Ok(&'b'));
-    /// assert_eq!(list.try_get(&f), Ok(&'f'));
+    /// assert_eq!(list.try_get(a), Ok(&'x'));
+    /// assert_eq!(list.try_get(b), Ok(&'b'));
+    /// assert_eq!(list.try_get(f), Ok(&'f'));
     ///
     /// let _ = list.pop_back(); // f is removed
     ///
-    /// *list.try_get_mut(&a).unwrap() = 'y';
+    /// *list.try_get_mut(a).unwrap() = 'y';
     ///
-    /// assert_eq!(list.try_get(&a), Ok(&'y'));
-    /// assert_eq!(list.try_get(&b), Ok(&'b'));
-    /// assert_eq!(list.try_get(&f), Err(NodeIdxError::RemovedNode));
+    /// assert_eq!(list.try_get(a), Ok(&'y'));
+    /// assert_eq!(list.try_get(b), Ok(&'b'));
+    /// assert_eq!(list.try_get(f), Err(NodeIdxError::RemovedNode));
     ///
     /// list.clear(); // all removed
     ///
-    /// assert_eq!(list.try_get(&a), Err(NodeIdxError::OutOfBounds));
-    /// assert_eq!(list.try_get(&b), Err(NodeIdxError::OutOfBounds));
-    /// assert_eq!(list.try_get(&f), Err(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.try_get(a), Err(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.try_get(b), Err(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.try_get(f), Err(NodeIdxError::OutOfBounds));
     /// ```
     ///
     /// In the following, removal of nodes invalidates indices due to reorganization.
@@ -271,15 +271,15 @@ where
     /// list.push_back('d');
     /// list.push_back('e');
     ///
-    /// *list.try_get_mut(&c).unwrap() = 'x';
+    /// *list.try_get_mut(c).unwrap() = 'x';
     ///
     /// list.pop_back(); // does not lead to reorganization
     ///
-    /// assert_eq!(list.get(&c), Some(&'x'));
+    /// assert_eq!(list.get(c), Some(&'x'));
     ///
     /// list.pop_front(); // leads to reorganization
     ///
-    /// assert_eq!(list.try_get_mut(&c), Err(NodeIdxError::ReorganizedCollection));
+    /// assert_eq!(list.try_get_mut(c), Err(NodeIdxError::ReorganizedCollection));
     /// ```
     ///
     /// In the final example, we attempt to access to a list element using an index created by another list.
@@ -293,8 +293,8 @@ where
     /// let mut other_list = DoublyList::new();
     /// let other_idx = other_list.push_back('a');
     ///
-    /// assert!(list.try_get_mut(&idx).is_ok());
-    /// // assert_eq!(list.try_get_mut(&other_idx), Err(NodeIdxError::OutOfBounds));
+    /// assert!(list.try_get_mut(idx).is_ok());
+    /// // assert_eq!(list.try_get_mut(other_idx), Err(NodeIdxError::OutOfBounds));
     /// ```
     fn try_get_mut<'a>(&'a mut self, idx: DoublyIdx<T>) -> Result<&'a mut T, NodeIdxError>
     where
@@ -330,7 +330,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'c', 'd']));
     ///
-    /// let c = list.next_idx_of(&a).and_then(|b| list.next_mut_of(&b));
+    /// let c = list.next_idx_of(a).and_then(|b| list.next_mut_of(b));
     /// *c.unwrap() = 'x';
     ///
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'x', 'd']));
@@ -364,7 +364,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'c', 'd']));
     ///
-    /// let a = list.prev_idx_of(&c).and_then(|b| list.prev_mut_of(&b));
+    /// let a = list.prev_idx_of(c).and_then(|b| list.prev_mut_of(b));
     /// *a.unwrap() = 'x';
     ///
     /// assert!(list.eq_to_iter_vals(['x', 'b', 'c', 'd']));
@@ -477,13 +477,13 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3, 4, 5]));
     ///
-    /// list.move_next_to(&idx[4], &idx[1]);
+    /// list.move_next_to(idx[4], idx[1]);
     /// assert!(list.eq_to_iter_vals([0, 1, 4, 2, 3, 5]));
     ///
-    /// list.move_next_to(&idx[2], &idx[5]);
+    /// list.move_next_to(idx[2], idx[5]);
     /// assert!(list.eq_to_iter_vals([0, 1, 4, 3, 5, 2]));
     ///
-    /// list.move_next_to(&idx[3], &idx[0]);
+    /// list.move_next_to(idx[3], idx[0]);
     /// assert!(list.eq_to_iter_vals([0, 3, 1, 4, 5, 2]));
     /// ```
     fn move_next_to(&mut self, idx: DoublyIdx<T>, idx_target: DoublyIdx<T>) {
@@ -582,13 +582,13 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3, 4, 5]));
     ///
-    /// list.move_prev_to(&idx[4], &idx[1]);
+    /// list.move_prev_to(idx[4], idx[1]);
     /// assert!(list.eq_to_iter_vals([0, 4, 1, 2, 3, 5]));
     ///
-    /// list.move_prev_to(&idx[2], &idx[5]);
+    /// list.move_prev_to(idx[2], idx[5]);
     /// assert!(list.eq_to_iter_vals([0, 4, 1, 3, 2, 5]));
     ///
-    /// list.move_prev_to(&idx[3], &idx[0]);
+    /// list.move_prev_to(idx[3], idx[0]);
     /// assert!(list.eq_to_iter_vals([3, 0, 4, 1, 2, 5]));
     /// ```
     fn move_prev_to(&mut self, idx: DoublyIdx<T>, idx_target: DoublyIdx<T>) {
@@ -687,13 +687,13 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3, 4, 5]));
     ///
-    /// list.move_to_front(&idx[5]);
+    /// list.move_to_front(idx[5]);
     /// assert!(list.eq_to_iter_vals([5, 0, 1, 2, 3, 4]));
     ///
-    /// list.move_to_front(&idx[2]);
+    /// list.move_to_front(idx[2]);
     /// assert!(list.eq_to_iter_vals([2, 5, 0, 1, 3, 4]));
     ///
-    /// list.move_to_front(&idx[3]);
+    /// list.move_to_front(idx[3]);
     /// assert!(list.eq_to_iter_vals([3, 2, 5, 0, 1, 4]));
     /// ```
     fn move_to_front(&mut self, idx: DoublyIdx<T>) {
@@ -719,13 +719,13 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3, 4, 5]));
     ///
-    /// list.move_to_back(&idx[1]);
+    /// list.move_to_back(idx[1]);
     /// assert!(list.eq_to_iter_vals([0, 2, 3, 4, 5, 1]));
     ///
-    /// list.move_to_back(&idx[4]);
+    /// list.move_to_back(idx[4]);
     /// assert!(list.eq_to_iter_vals([0, 2, 3, 5, 1, 4]));
     ///
-    /// list.move_to_back(&idx[2]);
+    /// list.move_to_back(idx[2]);
     /// assert!(list.eq_to_iter_vals([0, 3, 5, 1, 4, 2]));
     /// ```
     fn move_to_back(&mut self, idx: DoublyIdx<T>) {
@@ -750,13 +750,13 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3, 4, 5]));
     ///
-    /// list.swap(&idx[1], &idx[5]);
+    /// list.swap(idx[1], idx[5]);
     /// assert!(list.eq_to_iter_vals([0, 5, 2, 3, 4, 1]));
     ///
-    /// list.swap(&idx[4], &idx[0]);
+    /// list.swap(idx[4], idx[0]);
     /// assert!(list.eq_to_iter_vals([4, 5, 2, 3, 0, 1]));
     ///
-    /// list.swap(&idx[3], &idx[5]);
+    /// list.swap(idx[3], idx[5]);
     /// assert!(list.eq_to_iter_vals([4, 3, 2, 5, 0, 1]));
     /// ```
     fn swap(&mut self, idx_a: DoublyIdx<T>, idx_b: DoublyIdx<T>) {
@@ -861,11 +861,11 @@ where
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3, 4, 5, 6, 7]));
     ///
     /// unsafe {
-    ///     list.remove_link(&idx[0], &idx[1]);
-    ///     list.remove_link(&idx[2], &idx[3]);
-    ///     list.add_link(&idx[0], &idx[3]);
-    ///     list.add_link(&idx[7], &idx[1]);
-    ///     list.set_back(&idx[2]);
+    ///     list.remove_link(idx[0], idx[1]);
+    ///     list.remove_link(idx[2], idx[3]);
+    ///     list.add_link(idx[0], idx[3]);
+    ///     list.add_link(idx[7], idx[1]);
+    ///     list.set_back(idx[2]);
     /// }
     ///
     /// assert!(list.eq_to_iter_vals([0, 3, 4, 5, 6, 7, 1, 2]));
@@ -906,11 +906,11 @@ where
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3, 4, 5, 6, 7]));
     ///
     /// unsafe {
-    ///     list.remove_link(&idx[0], &idx[1]);
-    ///     list.remove_link(&idx[2], &idx[3]);
-    ///     list.add_link(&idx[0], &idx[3]);
-    ///     list.add_link(&idx[7], &idx[1]);
-    ///     list.set_back(&idx[2]);
+    ///     list.remove_link(idx[0], idx[1]);
+    ///     list.remove_link(idx[2], idx[3]);
+    ///     list.add_link(idx[0], idx[3]);
+    ///     list.add_link(idx[7], idx[1]);
+    ///     list.set_back(idx[2]);
     /// }
     ///
     /// assert!(list.eq_to_iter_vals([0, 3, 4, 5, 6, 7, 1, 2]));
@@ -948,11 +948,11 @@ where
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3, 4, 5, 6, 7]));
     ///
     /// unsafe {
-    ///     list.remove_link(&idx[0], &idx[1]);
-    ///     list.remove_link(&idx[2], &idx[3]);
-    ///     list.add_link(&idx[0], &idx[3]);
-    ///     list.add_link(&idx[7], &idx[1]);
-    ///     list.set_back(&idx[2]);
+    ///     list.remove_link(idx[0], idx[1]);
+    ///     list.remove_link(idx[2], idx[3]);
+    ///     list.add_link(idx[0], idx[3]);
+    ///     list.add_link(idx[7], idx[1]);
+    ///     list.set_back(idx[2]);
     /// }
     ///
     /// assert!(list.eq_to_iter_vals([0, 3, 4, 5, 6, 7, 1, 2]));
@@ -989,11 +989,11 @@ where
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3, 4, 5, 6, 7]));
     ///
     /// unsafe {
-    ///     list.remove_link(&idx[0], &idx[1]);
-    ///     list.remove_link(&idx[2], &idx[3]);
-    ///     list.add_link(&idx[0], &idx[3]);
-    ///     list.add_link(&idx[7], &idx[1]);
-    ///     list.set_back(&idx[2]);
+    ///     list.remove_link(idx[0], idx[1]);
+    ///     list.remove_link(idx[2], idx[3]);
+    ///     list.add_link(idx[0], idx[3]);
+    ///     list.add_link(idx[7], idx[1]);
+    ///     list.set_back(idx[2]);
     /// }
     ///
     /// assert!(list.eq_to_iter_vals([0, 3, 4, 5, 6, 7, 1, 2]));

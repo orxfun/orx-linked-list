@@ -101,7 +101,7 @@ fn demo_usage() {
 
     let idx: Vec<_> = list.indices().collect();
 
-    let slice = list.slice(&idx[1]..=&idx[3]);
+    let slice = list.slice(idx[1]..=idx[3]);
     assert_eq!(slice.front(), Some(&7));
     assert_eq!(slice.back(), Some(&3));
     assert!(slice.eq_to_iter_vals([7, 1, 3]));
@@ -120,34 +120,34 @@ fn doubly_slice() {
 
     // empty
     for i in 0..n {
-        assert_empty_slice(&list.slice(&idx[i]..&idx[i]));
+        assert_empty_slice(&list.slice(idx[i]..idx[i]));
     }
 
     // single
     for i in 0..n {
-        let s = list.slice(&idx[i]..=&idx[i]);
+        let s = list.slice(idx[i]..=idx[i]);
         s.eq_to_iter_refs(&vec[i..=i]);
 
         if i != n - 1 {
-            let s = list.slice(&idx[i]..&idx[i + 1]);
+            let s = list.slice(idx[i]..idx[i + 1]);
             s.eq_to_iter_refs(&vec[i..=i]);
         }
     }
 
     // full
     list.slice(..).eq_to_iter_refs(&vec[..]);
-    list.slice(&idx[0]..).eq_to_iter_refs(&vec[0..]);
-    list.slice(..=&idx[n - 1]).eq_to_iter_refs(&vec[..(n - 1)]);
-    list.slice(&idx[0]..=&idx[n - 1])
+    list.slice(idx[0]..).eq_to_iter_refs(&vec[0..]);
+    list.slice(..=idx[n - 1]).eq_to_iter_refs(&vec[..(n - 1)]);
+    list.slice(idx[0]..=idx[n - 1])
         .eq_to_iter_refs(&vec[0..(n - 1)]);
 
     // arbitrary ranges
     for i in 0..n {
         for j in i..n {
-            let s = list.slice(&idx[i]..=&idx[j]);
+            let s = list.slice(idx[i]..=idx[j]);
             s.eq_to_iter_refs(&vec[i..=j]);
 
-            let s = list.slice(&idx[i]..&idx[j]);
+            let s = list.slice(idx[i]..idx[j]);
             s.eq_to_iter_refs(&vec[i..j]);
         }
     }

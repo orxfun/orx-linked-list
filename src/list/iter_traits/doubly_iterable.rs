@@ -128,12 +128,12 @@ where
     ///
     /// let idx: Vec<_> = list.indices().collect();
     ///
-    /// assert_eq!(list.get(&idx[1]), Some(&1));
+    /// assert_eq!(list.get(idx[1]), Some(&1));
     ///
     /// // O(1) mutations through indices
-    /// list.insert_next_to(&idx[0], 42);
-    /// list.insert_prev_to(&idx[2], 7);
-    /// list.remove(&idx[1]);
+    /// list.insert_next_to(idx[0], 42);
+    /// list.insert_prev_to(idx[2], 7);
+    /// list.remove(idx[1]);
     ///
     /// assert!(list.eq_to_iter_vals([0, 42, 7, 2]));
     /// ```
@@ -175,24 +175,24 @@ where
     /// let list: DoublyList<_> = (0..8).collect();
     /// let idx: Vec<_> = list.indices().collect();
     ///
-    /// let iter = list.ring_iter(&idx[2]);
+    /// let iter = list.ring_iter(idx[2]);
     /// assert_eq!(iter.copied().collect::<Vec<_>>(), [2, 3, 4, 5, 6, 7, 0, 1]);
     ///
-    /// let iter = list.ring_iter(&idx[4]);
+    /// let iter = list.ring_iter(idx[4]);
     /// assert_eq!(iter.copied().collect::<Vec<_>>(), [4, 5, 6, 7, 0, 1, 2, 3]);
     ///
     /// // ring iterator is also double-ended
-    /// let iter = list.ring_iter(&idx[4]).rev();
+    /// let iter = list.ring_iter(idx[4]).rev();
     /// assert_eq!(iter.copied().collect::<Vec<_>>(), [3, 2, 1, 0, 7, 6, 5, 4]);
     ///
     /// // ring iterators are also available for slices
-    /// let slice = list.slice(&idx[3]..&idx[7]);
+    /// let slice = list.slice(idx[3]..idx[7]);
     /// assert!(slice.eq_to_iter_vals([3, 4, 5, 6]));
     ///
-    /// let iter = slice.ring_iter(&idx[4]);
+    /// let iter = slice.ring_iter(idx[4]);
     /// assert_eq!(iter.copied().collect::<Vec<_>>(), [4, 5, 6, 3,]);
     ///
-    /// let iter = slice.ring_iter(&idx[6]);
+    /// let iter = slice.ring_iter(idx[6]);
     /// assert_eq!(iter.copied().collect::<Vec<_>>(), [6, 3, 4, 5]);
     /// ```
     fn ring_iter<'a>(
@@ -238,7 +238,7 @@ where
     /// let idx = list.push_back(2);
     /// list.push_back(3);
     ///
-    /// let mut iter = list.iter_from(&idx);
+    /// let mut iter = list.iter_from(idx);
     /// assert_eq!(iter.next(), Some(&2));
     /// assert_eq!(iter.next(), Some(&3));
     /// assert_eq!(iter.next(), None);
@@ -272,7 +272,7 @@ where
     /// let idx = list.push_back(2);
     /// list.push_back(3);
     ///
-    /// let mut iter = list.iter_backward_from(&idx);
+    /// let mut iter = list.iter_backward_from(idx);
     /// assert_eq!(iter.next(), Some(&2));
     /// assert_eq!(iter.next(), Some(&1));
     /// assert_eq!(iter.next(), Some(&0));
@@ -303,7 +303,7 @@ where
     /// let tour: DoublyList<_> = ['a', 'b', 'c', 'd', 'e'].into_iter().collect();
     /// let idx: Vec<_> = tour.indices().collect();
     ///
-    /// let mut iter = tour.iter_links_from(&idx[1]);
+    /// let mut iter = tour.iter_links_from(idx[1]);
     ///
     /// assert_eq!(iter.next(), Some((&'b', &'c')));
     /// assert_eq!(iter.next(), Some((&'c', &'d')));

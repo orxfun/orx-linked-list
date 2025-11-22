@@ -74,7 +74,7 @@ where
     ///
     /// let idx: Vec<_> = list.indices().collect();
     ///
-    /// assert_eq!(list.get(&idx[1]), Some(&1));
+    /// assert_eq!(list.get(idx[1]), Some(&1));
     /// ```
     fn indices<'a>(&'a self) -> impl Iterator<Item = SinglyIdx<T>>
     where
@@ -121,7 +121,7 @@ where
     /// let idx = list.push_front(1);
     /// list.push_front(0); // 0->1->2->3
     ///
-    /// let mut iter = list.iter_from(&idx);
+    /// let mut iter = list.iter_from(idx);
     /// assert_eq!(iter.next(), Some(&1));
     /// assert_eq!(iter.next(), Some(&2));
     /// assert_eq!(iter.next(), Some(&3));

@@ -250,7 +250,7 @@ where
     ///
     /// let idx: Vec<_> = list.indices().collect();
     ///
-    /// let slice = list.slice(&idx[1]..=&idx[3]);
+    /// let slice = list.slice(idx[1]..=idx[3]);
     /// assert_eq!(slice.front(), Some(&7));
     /// assert_eq!(slice.back(), Some(&3));
     /// assert!(slice.eq_to_iter_vals([7, 1, 3]));
@@ -274,11 +274,11 @@ where
     /// let idx: Vec<_> = list.indices().collect();
     ///
     /// // a..b where b comes later, hence, we get the slice a..b
-    /// let slice = list.slice_mut(&idx[1]..&idx[4]);
+    /// let slice = list.slice_mut(idx[1]..idx[4]);
     /// assert!(slice.eq_to_iter_vals([1, 2, 3]));
     ///
     /// // a..b where b comes earlier, then, we get the slice a..back
-    /// let slice = list.slice_mut(&idx[4]..&idx[1]);
+    /// let slice = list.slice_mut(idx[4]..idx[1]);
     /// assert!(slice.eq_to_iter_vals([4, 5, 6, 7, 8, 9]));
     /// ```
     pub fn slice_mut<R>(&mut self, range: R) -> ListSliceMut<'_, Doubly<T>, M, P>

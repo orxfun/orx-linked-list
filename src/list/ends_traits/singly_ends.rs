@@ -72,29 +72,29 @@ where
     /// let a = list.push_back('a');
     /// let b = list.push_back('b');
     ///
-    /// assert_eq!(list.idx_err(&a), None);
-    /// assert_eq!(list.idx_err(&b), None);
+    /// assert_eq!(list.idx_err(a), None);
+    /// assert_eq!(list.idx_err(b), None);
     ///
     /// list.push_front('c');
     /// list.push_back('d');
     /// list.push_front('e');
     /// let f = list.push_back('f');
     ///
-    /// assert_eq!(list.idx_err(&a), None);
-    /// assert_eq!(list.idx_err(&b), None);
-    /// assert_eq!(list.idx_err(&f), None);
+    /// assert_eq!(list.idx_err(a), None);
+    /// assert_eq!(list.idx_err(b), None);
+    /// assert_eq!(list.idx_err(f), None);
     ///
     /// let _ = list.pop_back(); // f is removed
     ///
-    /// assert_eq!(list.idx_err(&a), None);
-    /// assert_eq!(list.idx_err(&b), None);
-    /// assert_eq!(list.idx_err(&f), Some(NodeIdxError::RemovedNode));
+    /// assert_eq!(list.idx_err(a), None);
+    /// assert_eq!(list.idx_err(b), None);
+    /// assert_eq!(list.idx_err(f), Some(NodeIdxError::RemovedNode));
     ///
     /// list.clear(); // all removed
     ///
-    /// assert_eq!(list.idx_err(&a), Some(NodeIdxError::OutOfBounds));
-    /// assert_eq!(list.idx_err(&b), Some(NodeIdxError::OutOfBounds));
-    /// assert_eq!(list.idx_err(&f), Some(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.idx_err(a), Some(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.idx_err(b), Some(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.idx_err(f), Some(NodeIdxError::OutOfBounds));
     /// ```
     ///
     /// In the following, removal of nodes invalidates indices due to reorganization.
@@ -115,15 +115,15 @@ where
     /// list.push_back('d');
     /// list.push_back('e');
     ///
-    /// assert_eq!(list.idx_err(&c), None);
+    /// assert_eq!(list.idx_err(c), None);
     ///
     /// list.pop_back(); // does not lead to reorganization
     ///
-    /// assert_eq!(list.idx_err(&c), None);
+    /// assert_eq!(list.idx_err(c), None);
     ///
     /// list.pop_front(); // leads to reorganization
     ///
-    /// assert_eq!(list.idx_err(&c), Some(NodeIdxError::ReorganizedCollection));
+    /// assert_eq!(list.idx_err(c), Some(NodeIdxError::ReorganizedCollection));
     /// ```
     ///
     /// In the final example, we attempt to access to a list element using an index created by another list.
@@ -137,8 +137,8 @@ where
     /// let mut other_list = DoublyList::new();
     /// let other_idx = other_list.push_back('a');
     ///
-    /// assert_eq!(list.idx_err(&idx), None);
-    /// // assert_eq!(list.idx_err(&other_idx), Some(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.idx_err(idx), None);
+    /// // assert_eq!(list.idx_err(other_idx), Some(NodeIdxError::OutOfBounds));
     /// ```
     fn idx_err(&self, idx: SinglyIdx<T>) -> Option<NodeIdxError> {
         self.col().try_get_ptr(idx).err()
@@ -163,29 +163,29 @@ where
     /// let a = list.push_back('a');
     /// let b = list.push_back('b');
     ///
-    /// assert_eq!(list.is_valid(&a), true);
-    /// assert_eq!(list.is_valid(&b), true);
+    /// assert_eq!(list.is_valid(a), true);
+    /// assert_eq!(list.is_valid(b), true);
     ///
     /// list.push_front('c');
     /// list.push_back('d');
     /// list.push_front('e');
     /// let f = list.push_back('f');
     ///
-    /// assert_eq!(list.is_valid(&a), true);
-    /// assert_eq!(list.is_valid(&b), true);
-    /// assert_eq!(list.is_valid(&f), true);
+    /// assert_eq!(list.is_valid(a), true);
+    /// assert_eq!(list.is_valid(b), true);
+    /// assert_eq!(list.is_valid(f), true);
     ///
     /// let _ = list.pop_back(); // f is removed
     ///
-    /// assert_eq!(list.is_valid(&a), true);
-    /// assert_eq!(list.is_valid(&b), true);
-    /// assert_eq!(list.is_valid(&f), false);
+    /// assert_eq!(list.is_valid(a), true);
+    /// assert_eq!(list.is_valid(b), true);
+    /// assert_eq!(list.is_valid(f), false);
     ///
     /// list.clear(); // all removed
     ///
-    /// assert_eq!(list.is_valid(&a), false);
-    /// assert_eq!(list.is_valid(&b), false);
-    /// assert_eq!(list.is_valid(&f), false);
+    /// assert_eq!(list.is_valid(a), false);
+    /// assert_eq!(list.is_valid(b), false);
+    /// assert_eq!(list.is_valid(f), false);
     /// ```
     ///
     /// In the following, removal of nodes invalidates indices due to reorganization.
@@ -206,15 +206,15 @@ where
     /// list.push_back('d');
     /// list.push_back('e');
     ///
-    /// assert_eq!(list.is_valid(&c), true);
+    /// assert_eq!(list.is_valid(c), true);
     ///
     /// list.pop_back(); // does not lead to reorganization
     ///
-    /// assert_eq!(list.is_valid(&c), true);
+    /// assert_eq!(list.is_valid(c), true);
     ///
     /// list.pop_front(); // leads to reorganization
     ///
-    /// assert_eq!(list.is_valid(&c), false);
+    /// assert_eq!(list.is_valid(c), false);
     /// ```
     ///
     /// In the final example, we attempt to access to a list element using an index created by another list.
@@ -228,8 +228,8 @@ where
     /// let mut other_list = DoublyList::new();
     /// let other_idx = other_list.push_back('a');
     ///
-    /// assert_eq!(list.is_valid(&idx), true);
-    /// // assert_eq!(list.is_valid(&other_idx), false);
+    /// assert_eq!(list.is_valid(idx), true);
+    /// // assert_eq!(list.is_valid(other_idx), false);
     /// ```
     fn is_valid(&self, idx: SinglyIdx<T>) -> bool {
         self.col().try_get_ptr(idx).is_ok()
@@ -268,29 +268,29 @@ where
     /// let a = list.push_back('a');
     /// let b = list.push_back('b');
     ///
-    /// assert_eq!(list.get(&a), Some(&'a'));
-    /// assert_eq!(list.get(&b), Some(&'b'));
+    /// assert_eq!(list.get(a), Some(&'a'));
+    /// assert_eq!(list.get(b), Some(&'b'));
     ///
     /// list.push_front('c');
     /// list.push_back('d');
     /// list.push_front('e');
     /// let f = list.push_back('f');
     ///
-    /// assert_eq!(list.get(&a), Some(&'a'));
-    /// assert_eq!(list.get(&b), Some(&'b'));
-    /// assert_eq!(list.get(&f), Some(&'f'));
+    /// assert_eq!(list.get(a), Some(&'a'));
+    /// assert_eq!(list.get(b), Some(&'b'));
+    /// assert_eq!(list.get(f), Some(&'f'));
     ///
     /// let _ = list.pop_back(); // f is removed
     ///
-    /// assert_eq!(list.get(&a), Some(&'a'));
-    /// assert_eq!(list.get(&b), Some(&'b'));
-    /// assert_eq!(list.get(&f), None);
+    /// assert_eq!(list.get(a), Some(&'a'));
+    /// assert_eq!(list.get(b), Some(&'b'));
+    /// assert_eq!(list.get(f), None);
     ///
     /// list.clear(); // all removed
     ///
-    /// assert_eq!(list.get(&a), None);
-    /// assert_eq!(list.get(&b), None);
-    /// assert_eq!(list.get(&f), None);
+    /// assert_eq!(list.get(a), None);
+    /// assert_eq!(list.get(b), None);
+    /// assert_eq!(list.get(f), None);
     /// ```
     ///
     /// In the following, removal of nodes invalidates indices due to reorganization.
@@ -311,15 +311,15 @@ where
     /// list.push_back('d');
     /// list.push_back('e');
     ///
-    /// assert_eq!(list.get(&c), Some(&'c'));
+    /// assert_eq!(list.get(c), Some(&'c'));
     ///
     /// list.pop_back(); // does not lead to reorganization
     ///
-    /// assert_eq!(list.get(&c), Some(&'c'));
+    /// assert_eq!(list.get(c), Some(&'c'));
     ///
     /// list.pop_front(); // leads to reorganization
     ///
-    /// assert_eq!(list.get(&c), None);
+    /// assert_eq!(list.get(c), None);
     /// ```
     ///
     /// In the final example, we attempt to access to a list element using an index created by another list.
@@ -333,8 +333,8 @@ where
     /// let mut other_list = DoublyList::new();
     /// let other_idx = other_list.push_back('a');
     ///
-    /// assert_eq!(list.get(&idx), Some(&'a'));
-    /// // assert_eq!(list.get(&other_idx), None);
+    /// assert_eq!(list.get(idx), Some(&'a'));
+    /// // assert_eq!(list.get(other_idx), None);
     /// ```
     fn get<'a>(&'a self, idx: SinglyIdx<T>) -> Option<&'a T>
     where
@@ -379,29 +379,29 @@ where
     /// let a = list.push_back('a');
     /// let b = list.push_back('b');
     ///
-    /// assert_eq!(list.try_get(&a), Ok(&'a'));
-    /// assert_eq!(list.try_get(&b), Ok(&'b'));
+    /// assert_eq!(list.try_get(a), Ok(&'a'));
+    /// assert_eq!(list.try_get(b), Ok(&'b'));
     ///
     /// list.push_front('c');
     /// list.push_back('d');
     /// list.push_front('e');
     /// let f = list.push_back('f');
     ///
-    /// assert_eq!(list.try_get(&a), Ok(&'a'));
-    /// assert_eq!(list.try_get(&b), Ok(&'b'));
-    /// assert_eq!(list.try_get(&f), Ok(&'f'));
+    /// assert_eq!(list.try_get(a), Ok(&'a'));
+    /// assert_eq!(list.try_get(b), Ok(&'b'));
+    /// assert_eq!(list.try_get(f), Ok(&'f'));
     ///
     /// let _ = list.pop_back(); // f is removed
     ///
-    /// assert_eq!(list.try_get(&a), Ok(&'a'));
-    /// assert_eq!(list.try_get(&b), Ok(&'b'));
-    /// assert_eq!(list.try_get(&f), Err(NodeIdxError::RemovedNode));
+    /// assert_eq!(list.try_get(a), Ok(&'a'));
+    /// assert_eq!(list.try_get(b), Ok(&'b'));
+    /// assert_eq!(list.try_get(f), Err(NodeIdxError::RemovedNode));
     ///
     /// list.clear(); // all removed
     ///
-    /// assert_eq!(list.try_get(&a), Err(NodeIdxError::OutOfBounds));
-    /// assert_eq!(list.try_get(&b), Err(NodeIdxError::OutOfBounds));
-    /// assert_eq!(list.try_get(&f), Err(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.try_get(a), Err(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.try_get(b), Err(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.try_get(f), Err(NodeIdxError::OutOfBounds));
     /// ```
     ///
     /// In the following, removal of nodes invalidates indices due to reorganization.
@@ -422,15 +422,15 @@ where
     /// list.push_back('d');
     /// list.push_back('e');
     ///
-    /// assert_eq!(list.try_get(&c), Ok(&'c'));
+    /// assert_eq!(list.try_get(c), Ok(&'c'));
     ///
     /// list.pop_back(); // does not lead to reorganization
     ///
-    /// assert_eq!(list.try_get(&c), Ok(&'c'));
+    /// assert_eq!(list.try_get(c), Ok(&'c'));
     ///
     /// list.pop_front(); // leads to reorganization
     ///
-    /// assert_eq!(list.try_get(&c), Err(NodeIdxError::ReorganizedCollection));
+    /// assert_eq!(list.try_get(c), Err(NodeIdxError::ReorganizedCollection));
     /// ```
     ///
     /// In the final example, we attempt to access to a list element using an index created by another list.
@@ -444,8 +444,8 @@ where
     /// let mut other_list = DoublyList::new();
     /// let other_idx = other_list.push_back('a');
     ///
-    /// assert_eq!(list.try_get(&idx), Ok(&'a'));
-    /// // assert_eq!(list.try_get(&other_idx), Err(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.try_get(idx), Ok(&'a'));
+    /// // assert_eq!(list.try_get(other_idx), Err(NodeIdxError::OutOfBounds));
     /// ```
     fn try_get<'a>(&'a self, idx: SinglyIdx<T>) -> Result<&'a T, NodeIdxError>
     where
@@ -481,13 +481,13 @@ where
     ///
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'c', 'd']));
     ///
-    /// let c = list.next_idx_of(&a).and_then(|b| list.next_idx_of(&b)).unwrap();
-    /// let d = list.next_idx_of(&c).unwrap();
+    /// let c = list.next_idx_of(a).and_then(|b| list.next_idx_of(b)).unwrap();
+    /// let d = list.next_idx_of(c).unwrap();
     ///
-    /// assert_eq!(list.get(&c), Some(&'c'));
-    /// assert_eq!(list.get(&d), Some(&'d'));
+    /// assert_eq!(list.get(c), Some(&'c'));
+    /// assert_eq!(list.get(d), Some(&'d'));
     ///
-    /// assert!(list.next_idx_of(&d).is_none());
+    /// assert!(list.next_idx_of(d).is_none());
     /// ```
     fn next_idx_of(&self, idx: SinglyIdx<T>) -> Option<SinglyIdx<T>> {
         let ptr = self.col().try_get_ptr(idx).expect(IDX_ERR);
@@ -516,7 +516,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'c', 'd']));
     ///
-    /// let c = list.next_idx_of(&a).and_then(|b| list.next_of(&b));
+    /// let c = list.next_idx_of(a).and_then(|b| list.next_of(b));
     /// assert_eq!(c, Some(&'c'));
     /// ```
     fn next_of<'a>(&'a self, idx: SinglyIdx<T>) -> Option<&'a T>

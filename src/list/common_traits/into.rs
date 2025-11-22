@@ -81,22 +81,22 @@ where
     ///
     /// // we can still use the indices to have constant time access to nodes
     ///
-    /// assert_eq!(list.idx_err(&a), None);
-    /// assert_eq!(list.idx_err(&b), Some(NodeIdxError::RemovedNode));
-    /// assert_eq!(list.idx_err(&c), None);
-    /// assert_eq!(list.idx_err(&d), None);
+    /// assert_eq!(list.idx_err(a), None);
+    /// assert_eq!(list.idx_err(b), Some(NodeIdxError::RemovedNode));
+    /// assert_eq!(list.idx_err(c), None);
+    /// assert_eq!(list.idx_err(d), None);
     ///
-    /// assert_eq!(list.get(&a), Some(&'a'));
-    /// assert_eq!(list.get(&b), None);
-    /// assert_eq!(list.get(&c), Some(&'c'));
-    /// assert_eq!(list.get(&d), Some(&'d'));
+    /// assert_eq!(list.get(a), Some(&'a'));
+    /// assert_eq!(list.get(b), None);
+    /// assert_eq!(list.get(c), Some(&'c'));
+    /// assert_eq!(list.get(d), Some(&'d'));
     ///
     /// // make auto again
     /// let mut list: DoublyList<_> = list.into_auto_reclaim();
     ///
     /// // now removals might lead to reorganization if node utilization
     /// // falls below a certain threshold (75% when D=2).
-    /// let pop = list.remove(&d);
+    /// let pop = list.remove(d);
     /// assert_eq!(pop, 'd');
     ///
     /// // 2 removed nodes reclaimed (b, d); 2 active nodes remains (c, a)
@@ -104,22 +104,22 @@ where
     /// assert_eq!(list.node_utilization().num_closed_nodes, 0);
     ///
     /// // node positions might have change during reorganization
-    /// assert_eq!(list.idx_err(&a), Some(NodeIdxError::ReorganizedCollection));
-    /// assert_eq!(list.idx_err(&b), Some(NodeIdxError::ReorganizedCollection));
+    /// assert_eq!(list.idx_err(a), Some(NodeIdxError::ReorganizedCollection));
+    /// assert_eq!(list.idx_err(b), Some(NodeIdxError::ReorganizedCollection));
     /// // or prior position does not belong to the storage any more
-    /// assert_eq!(list.idx_err(&c), Some(NodeIdxError::OutOfBounds));
-    /// assert_eq!(list.idx_err(&d), Some(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.idx_err(c), Some(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.idx_err(d), Some(NodeIdxError::OutOfBounds));
     ///
     /// // indices can no longer be used to access the elements
-    /// assert_eq!(list.get(&a), None);
-    /// assert_eq!(list.get(&b), None);
-    /// assert_eq!(list.get(&c), None);
-    /// assert_eq!(list.get(&d), None);
+    /// assert_eq!(list.get(a), None);
+    /// assert_eq!(list.get(b), None);
+    /// assert_eq!(list.get(c), None);
+    /// assert_eq!(list.get(d), None);
     ///
     /// // we can recollect valid indices if necessary
     /// let idx: Vec<_> = list.indices().collect();
-    /// assert_eq!(list.get(&idx[0]), Some(&'c'));
-    /// assert_eq!(list.get(&idx[1]), Some(&'a'));
+    /// assert_eq!(list.get(idx[0]), Some(&'c'));
+    /// assert_eq!(list.get(idx[1]), Some(&'a'));
     /// ```
     pub fn into_lazy_reclaim(self) -> List<V, MemoryReclaimNever, P> {
         self.into()
@@ -173,22 +173,22 @@ where
     ///
     /// // we can still use the indices to have constant time access to nodes
     ///
-    /// assert_eq!(list.idx_err(&a), None);
-    /// assert_eq!(list.idx_err(&b), Some(NodeIdxError::RemovedNode));
-    /// assert_eq!(list.idx_err(&c), None);
-    /// assert_eq!(list.idx_err(&d), None);
+    /// assert_eq!(list.idx_err(a), None);
+    /// assert_eq!(list.idx_err(b), Some(NodeIdxError::RemovedNode));
+    /// assert_eq!(list.idx_err(c), None);
+    /// assert_eq!(list.idx_err(d), None);
     ///
-    /// assert_eq!(list.get(&a), Some(&'a'));
-    /// assert_eq!(list.get(&b), None);
-    /// assert_eq!(list.get(&c), Some(&'c'));
-    /// assert_eq!(list.get(&d), Some(&'d'));
+    /// assert_eq!(list.get(a), Some(&'a'));
+    /// assert_eq!(list.get(b), None);
+    /// assert_eq!(list.get(c), Some(&'c'));
+    /// assert_eq!(list.get(d), Some(&'d'));
     ///
     /// // make auto again
     /// let mut list: DoublyList<_> = list.into_auto_reclaim();
     ///
     /// // now removals might lead to reorganization if node utilization
     /// // falls below a certain threshold (75% when D=2).
-    /// let pop = list.remove(&d);
+    /// let pop = list.remove(d);
     /// assert_eq!(pop, 'd');
     ///
     /// // 2 removed nodes reclaimed (b, d); 2 active nodes remains (c, a)
@@ -196,22 +196,22 @@ where
     /// assert_eq!(list.node_utilization().num_closed_nodes, 0);
     ///
     /// // node positions might have change during reorganization
-    /// assert_eq!(list.idx_err(&a), Some(NodeIdxError::ReorganizedCollection));
-    /// assert_eq!(list.idx_err(&b), Some(NodeIdxError::ReorganizedCollection));
+    /// assert_eq!(list.idx_err(a), Some(NodeIdxError::ReorganizedCollection));
+    /// assert_eq!(list.idx_err(b), Some(NodeIdxError::ReorganizedCollection));
     /// // or prior position does not belong to the storage any more
-    /// assert_eq!(list.idx_err(&c), Some(NodeIdxError::OutOfBounds));
-    /// assert_eq!(list.idx_err(&d), Some(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.idx_err(c), Some(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.idx_err(d), Some(NodeIdxError::OutOfBounds));
     ///
     /// // indices can no longer be used to access the elements
-    /// assert_eq!(list.get(&a), None);
-    /// assert_eq!(list.get(&b), None);
-    /// assert_eq!(list.get(&c), None);
-    /// assert_eq!(list.get(&d), None);
+    /// assert_eq!(list.get(a), None);
+    /// assert_eq!(list.get(b), None);
+    /// assert_eq!(list.get(c), None);
+    /// assert_eq!(list.get(d), None);
     ///
     /// // we can recollect valid indices if necessary
     /// let idx: Vec<_> = list.indices().collect();
-    /// assert_eq!(list.get(&idx[0]), Some(&'c'));
-    /// assert_eq!(list.get(&idx[1]), Some(&'a'));
+    /// assert_eq!(list.get(idx[0]), Some(&'c'));
+    /// assert_eq!(list.get(idx[1]), Some(&'a'));
     /// ```
     pub fn into_auto_reclaim(self) -> DoublyList<T, P> {
         self.into()
@@ -260,22 +260,22 @@ where
     ///
     /// // we can still use the indices to have constant time access to nodes
     ///
-    /// assert_eq!(list.idx_err(&a), None);
-    /// assert_eq!(list.idx_err(&b), Some(NodeIdxError::RemovedNode));
-    /// assert_eq!(list.idx_err(&c), None);
-    /// assert_eq!(list.idx_err(&d), None);
+    /// assert_eq!(list.idx_err(a), None);
+    /// assert_eq!(list.idx_err(b), Some(NodeIdxError::RemovedNode));
+    /// assert_eq!(list.idx_err(c), None);
+    /// assert_eq!(list.idx_err(d), None);
     ///
-    /// assert_eq!(list.get(&a), Some(&'a'));
-    /// assert_eq!(list.get(&b), None);
-    /// assert_eq!(list.get(&c), Some(&'c'));
-    /// assert_eq!(list.get(&d), Some(&'d'));
+    /// assert_eq!(list.get(a), Some(&'a'));
+    /// assert_eq!(list.get(b), None);
+    /// assert_eq!(list.get(c), Some(&'c'));
+    /// assert_eq!(list.get(d), Some(&'d'));
     ///
     /// // make auto again
     /// let mut list: DoublyList<_> = list.into_auto_reclaim();
     ///
     /// // now removals might lead to reorganization if node utilization
     /// // falls below a certain threshold (75% when D=2).
-    /// let pop = list.remove(&d);
+    /// let pop = list.remove(d);
     /// assert_eq!(pop, 'd');
     ///
     /// // 2 removed nodes reclaimed (b, d); 2 active nodes remains (c, a)
@@ -283,22 +283,22 @@ where
     /// assert_eq!(list.node_utilization().num_closed_nodes, 0);
     ///
     /// // node positions might have change during reorganization
-    /// assert_eq!(list.idx_err(&a), Some(NodeIdxError::ReorganizedCollection));
-    /// assert_eq!(list.idx_err(&b), Some(NodeIdxError::ReorganizedCollection));
+    /// assert_eq!(list.idx_err(a), Some(NodeIdxError::ReorganizedCollection));
+    /// assert_eq!(list.idx_err(b), Some(NodeIdxError::ReorganizedCollection));
     /// // or prior position does not belong to the storage any more
-    /// assert_eq!(list.idx_err(&c), Some(NodeIdxError::OutOfBounds));
-    /// assert_eq!(list.idx_err(&d), Some(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.idx_err(c), Some(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.idx_err(d), Some(NodeIdxError::OutOfBounds));
     ///
     /// // indices can no longer be used to access the elements
-    /// assert_eq!(list.get(&a), None);
-    /// assert_eq!(list.get(&b), None);
-    /// assert_eq!(list.get(&c), None);
-    /// assert_eq!(list.get(&d), None);
+    /// assert_eq!(list.get(a), None);
+    /// assert_eq!(list.get(b), None);
+    /// assert_eq!(list.get(c), None);
+    /// assert_eq!(list.get(d), None);
     ///
     /// // we can recollect valid indices if necessary
     /// let idx: Vec<_> = list.indices().collect();
-    /// assert_eq!(list.get(&idx[0]), Some(&'c'));
-    /// assert_eq!(list.get(&idx[1]), Some(&'a'));
+    /// assert_eq!(list.get(idx[0]), Some(&'c'));
+    /// assert_eq!(list.get(idx[1]), Some(&'a'));
     /// ```
     pub fn into_auto_reclaim_with_threshold<const D: usize>(self) -> DoublyListThreshold<D, T, P> {
         self.into()
@@ -352,22 +352,22 @@ where
     ///
     /// // we can still use the indices to have constant time access to nodes
     ///
-    /// assert_eq!(list.idx_err(&a), None);
-    /// assert_eq!(list.idx_err(&b), Some(NodeIdxError::RemovedNode));
-    /// assert_eq!(list.idx_err(&c), None);
-    /// assert_eq!(list.idx_err(&d), None);
+    /// assert_eq!(list.idx_err(a), None);
+    /// assert_eq!(list.idx_err(b), Some(NodeIdxError::RemovedNode));
+    /// assert_eq!(list.idx_err(c), None);
+    /// assert_eq!(list.idx_err(d), None);
     ///
-    /// assert_eq!(list.get(&a), Some(&'a'));
-    /// assert_eq!(list.get(&b), None);
-    /// assert_eq!(list.get(&c), Some(&'c'));
-    /// assert_eq!(list.get(&d), Some(&'d'));
+    /// assert_eq!(list.get(a), Some(&'a'));
+    /// assert_eq!(list.get(b), None);
+    /// assert_eq!(list.get(c), Some(&'c'));
+    /// assert_eq!(list.get(d), Some(&'d'));
     ///
     /// // make auto again
     /// let mut list: DoublyList<_> = list.into_auto_reclaim();
     ///
     /// // now removals might lead to reorganization if node utilization
     /// // falls below a certain threshold (75% when D=2).
-    /// let pop = list.remove(&d);
+    /// let pop = list.remove(d);
     /// assert_eq!(pop, 'd');
     ///
     /// // 2 removed nodes reclaimed (b, d); 2 active nodes remains (c, a)
@@ -375,22 +375,22 @@ where
     /// assert_eq!(list.node_utilization().num_closed_nodes, 0);
     ///
     /// // node positions might have change during reorganization
-    /// assert_eq!(list.idx_err(&a), Some(NodeIdxError::ReorganizedCollection));
-    /// assert_eq!(list.idx_err(&b), Some(NodeIdxError::ReorganizedCollection));
+    /// assert_eq!(list.idx_err(a), Some(NodeIdxError::ReorganizedCollection));
+    /// assert_eq!(list.idx_err(b), Some(NodeIdxError::ReorganizedCollection));
     /// // or prior position does not belong to the storage any more
-    /// assert_eq!(list.idx_err(&c), Some(NodeIdxError::OutOfBounds));
-    /// assert_eq!(list.idx_err(&d), Some(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.idx_err(c), Some(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.idx_err(d), Some(NodeIdxError::OutOfBounds));
     ///
     /// // indices can no longer be used to access the elements
-    /// assert_eq!(list.get(&a), None);
-    /// assert_eq!(list.get(&b), None);
-    /// assert_eq!(list.get(&c), None);
-    /// assert_eq!(list.get(&d), None);
+    /// assert_eq!(list.get(a), None);
+    /// assert_eq!(list.get(b), None);
+    /// assert_eq!(list.get(c), None);
+    /// assert_eq!(list.get(d), None);
     ///
     /// // we can recollect valid indices if necessary
     /// let idx: Vec<_> = list.indices().collect();
-    /// assert_eq!(list.get(&idx[0]), Some(&'c'));
-    /// assert_eq!(list.get(&idx[1]), Some(&'a'));
+    /// assert_eq!(list.get(idx[0]), Some(&'c'));
+    /// assert_eq!(list.get(idx[1]), Some(&'a'));
     /// ```
     pub fn into_auto_reclaim(self) -> SinglyList<T, P> {
         self.into()
@@ -439,22 +439,22 @@ where
     ///
     /// // we can still use the indices to have constant time access to nodes
     ///
-    /// assert_eq!(list.idx_err(&a), None);
-    /// assert_eq!(list.idx_err(&b), Some(NodeIdxError::RemovedNode));
-    /// assert_eq!(list.idx_err(&c), None);
-    /// assert_eq!(list.idx_err(&d), None);
+    /// assert_eq!(list.idx_err(a), None);
+    /// assert_eq!(list.idx_err(b), Some(NodeIdxError::RemovedNode));
+    /// assert_eq!(list.idx_err(c), None);
+    /// assert_eq!(list.idx_err(d), None);
     ///
-    /// assert_eq!(list.get(&a), Some(&'a'));
-    /// assert_eq!(list.get(&b), None);
-    /// assert_eq!(list.get(&c), Some(&'c'));
-    /// assert_eq!(list.get(&d), Some(&'d'));
+    /// assert_eq!(list.get(a), Some(&'a'));
+    /// assert_eq!(list.get(b), None);
+    /// assert_eq!(list.get(c), Some(&'c'));
+    /// assert_eq!(list.get(d), Some(&'d'));
     ///
     /// // make auto again
     /// let mut list: DoublyList<_> = list.into_auto_reclaim();
     ///
     /// // now removals might lead to reorganization if node utilization
     /// // falls below a certain threshold (75% when D=2).
-    /// let pop = list.remove(&d);
+    /// let pop = list.remove(d);
     /// assert_eq!(pop, 'd');
     ///
     /// // 2 removed nodes reclaimed (b, d); 2 active nodes remains (c, a)
@@ -462,22 +462,22 @@ where
     /// assert_eq!(list.node_utilization().num_closed_nodes, 0);
     ///
     /// // node positions might have change during reorganization
-    /// assert_eq!(list.idx_err(&a), Some(NodeIdxError::ReorganizedCollection));
-    /// assert_eq!(list.idx_err(&b), Some(NodeIdxError::ReorganizedCollection));
+    /// assert_eq!(list.idx_err(a), Some(NodeIdxError::ReorganizedCollection));
+    /// assert_eq!(list.idx_err(b), Some(NodeIdxError::ReorganizedCollection));
     /// // or prior position does not belong to the storage any more
-    /// assert_eq!(list.idx_err(&c), Some(NodeIdxError::OutOfBounds));
-    /// assert_eq!(list.idx_err(&d), Some(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.idx_err(c), Some(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.idx_err(d), Some(NodeIdxError::OutOfBounds));
     ///
     /// // indices can no longer be used to access the elements
-    /// assert_eq!(list.get(&a), None);
-    /// assert_eq!(list.get(&b), None);
-    /// assert_eq!(list.get(&c), None);
-    /// assert_eq!(list.get(&d), None);
+    /// assert_eq!(list.get(a), None);
+    /// assert_eq!(list.get(b), None);
+    /// assert_eq!(list.get(c), None);
+    /// assert_eq!(list.get(d), None);
     ///
     /// // we can recollect valid indices if necessary
     /// let idx: Vec<_> = list.indices().collect();
-    /// assert_eq!(list.get(&idx[0]), Some(&'c'));
-    /// assert_eq!(list.get(&idx[1]), Some(&'a'));
+    /// assert_eq!(list.get(idx[0]), Some(&'c'));
+    /// assert_eq!(list.get(idx[1]), Some(&'a'));
     /// ```
     pub fn into_auto_reclaim_with_threshold<const D: usize>(self) -> SinglyListThreshold<D, T, P> {
         self.into()

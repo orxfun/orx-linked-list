@@ -64,7 +64,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3]));
     ///
-    /// for x in list.iter_mut_from(&idx) {
+    /// for x in list.iter_mut_from(idx) {
     ///     *x += 10;
     /// }
     ///

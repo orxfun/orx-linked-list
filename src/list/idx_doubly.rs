@@ -33,7 +33,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'c', 'd', 'e']));
     ///
-    /// let value = list.remove(&idx);
+    /// let value = list.remove(idx);
     ///
     /// assert_eq!(value, 'b');
     /// assert!(list.eq_to_iter_vals(['a', 'c', 'd', 'e']));
@@ -80,9 +80,9 @@ where
     ///
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'c', 'd']));
     ///
-    /// let x = list.insert_next_to(&b, 'x');
+    /// let x = list.insert_next_to(b, 'x');
     ///
-    /// assert_eq!(list.get(&x), Some(&'x'));
+    /// assert_eq!(list.get(x), Some(&'x'));
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'x', 'c', 'd']));
     ///```
     pub fn insert_next_to(&mut self, idx: DoublyIdx<T>, value: T) -> DoublyIdx<T> {
@@ -127,9 +127,9 @@ where
     ///
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'c', 'd']));
     ///
-    /// let x = list.insert_prev_to(&c, 'x');
+    /// let x = list.insert_prev_to(c, 'x');
     ///
-    /// assert_eq!(list.get(&x), Some(&'x'));
+    /// assert_eq!(list.get(x), Some(&'x'));
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'x', 'c', 'd']));
     ///```
     pub fn insert_prev_to(&mut self, idx: DoublyIdx<T>, value: T) -> DoublyIdx<T> {
@@ -171,13 +171,13 @@ where
     ///
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'c', 'd', 'e']));
     ///
-    /// let value = list.try_remove(&idx);
+    /// let value = list.try_remove(idx);
     ///
     /// assert_eq!(value, Some('b'));
     /// assert!(list.eq_to_iter_vals(['a', 'c', 'd', 'e']));
-    /// assert_eq!(list.idx_err(&idx), Some(NodeIdxError::RemovedNode));
+    /// assert_eq!(list.idx_err(idx), Some(NodeIdxError::RemovedNode));
     ///
-    /// let value = list.try_remove(&idx);
+    /// let value = list.try_remove(idx);
     /// assert_eq!(value, None);
     /// ```
     pub fn try_remove(&mut self, idx: DoublyIdx<T>) -> Option<T> {
@@ -227,15 +227,15 @@ where
     ///
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'c', 'd']));
     ///
-    /// let x = list.try_insert_next_to(&b, 'x').unwrap();
+    /// let x = list.try_insert_next_to(b, 'x').unwrap();
     ///
-    /// assert_eq!(list.get(&x), Some(&'x'));
+    /// assert_eq!(list.get(x), Some(&'x'));
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'x', 'c', 'd']));
     ///
-    /// let _ = list.remove(&b);
+    /// let _ = list.remove(b);
     /// assert!(list.eq_to_iter_vals(['a', 'x', 'c', 'd']));
     ///
-    /// let y = list.try_insert_next_to(&b, 'y');
+    /// let y = list.try_insert_next_to(b, 'y');
     /// assert_eq!(y, Err(NodeIdxError::RemovedNode));
     /// assert!(list.eq_to_iter_vals(['a', 'x', 'c', 'd'])); // unchanged
     ///```
@@ -283,15 +283,15 @@ where
     ///
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'c', 'd']));
     ///
-    /// let x = list.try_insert_prev_to(&c, 'x').unwrap();
+    /// let x = list.try_insert_prev_to(c, 'x').unwrap();
     ///
-    /// assert_eq!(list.get(&x), Some(&'x'));
+    /// assert_eq!(list.get(x), Some(&'x'));
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'x', 'c', 'd']));
     ///
-    /// let _ = list.remove(&c);
+    /// let _ = list.remove(c);
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'x', 'd']));
     ///
-    /// let y = list.try_insert_prev_to(&c, 'y');
+    /// let y = list.try_insert_prev_to(c, 'y');
     /// assert_eq!(y, Err(NodeIdxError::RemovedNode));
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'x', 'd'])); // unchanged
     ///```
