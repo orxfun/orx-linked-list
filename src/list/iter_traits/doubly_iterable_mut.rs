@@ -74,7 +74,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([0, 1, 12, 13]));
     /// ```
-    fn iter_mut_from<'a>(&'a mut self, idx: &DoublyIdx<T>) -> DoublyIterMut<'a, T, P>
+    fn iter_mut_from<'a>(&'a mut self, idx: DoublyIdx<T>) -> DoublyIterMut<'a, T, P>
     where
         M: 'a,
     {
@@ -111,7 +111,7 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([10, 11, 12, 3]));
     /// ```
-    fn iter_mut_backward_from<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Rev<DoublyIterMut<'a, T, P>>
+    fn iter_mut_backward_from<'a>(&'a mut self, idx: DoublyIdx<T>) -> Rev<DoublyIterMut<'a, T, P>>
     where
         M: 'a,
     {
@@ -156,7 +156,7 @@ where
     /// scan(list.ring_iter_mut(&idx[3]));
     /// assert!(list.eq_to_iter_vals([7, 8, 10, 3, 7]));
     /// ```
-    fn ring_iter_mut<'a>(&'a mut self, pivot_idx: &DoublyIdx<T>) -> DoublyIterMutChain<'a, T, P>
+    fn ring_iter_mut<'a>(&'a mut self, pivot_idx: DoublyIdx<T>) -> DoublyIterMutChain<'a, T, P>
     where
         M: 'a,
     {

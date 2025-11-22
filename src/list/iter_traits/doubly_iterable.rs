@@ -197,7 +197,7 @@ where
     /// ```
     fn ring_iter<'a>(
         &'a self,
-        pivot_idx: &DoublyIdx<T>,
+        pivot_idx: DoublyIdx<T>,
     ) -> Chain<DoublyIter<'a, T, P>, DoublyIter<'a, T, P>>
     where
         M: 'a,
@@ -243,7 +243,7 @@ where
     /// assert_eq!(iter.next(), Some(&3));
     /// assert_eq!(iter.next(), None);
     /// ```
-    fn iter_from<'a>(&'a self, idx: &DoublyIdx<T>) -> DoublyIter<'a, T, P>
+    fn iter_from<'a>(&'a self, idx: DoublyIdx<T>) -> DoublyIter<'a, T, P>
     where
         M: 'a,
     {
@@ -278,7 +278,7 @@ where
     /// assert_eq!(iter.next(), Some(&0));
     /// assert_eq!(iter.next(), None);
     /// ```
-    fn iter_backward_from<'a>(&'a self, idx: &DoublyIdx<T>) -> Rev<DoublyIter<'a, T, P>>
+    fn iter_backward_from<'a>(&'a self, idx: DoublyIdx<T>) -> Rev<DoublyIter<'a, T, P>>
     where
         M: 'a,
     {
@@ -311,7 +311,7 @@ where
     ///
     /// assert_eq!(iter.next(), None);
     /// ```
-    fn iter_links_from<'a>(&'a self, idx: &DoublyIdx<T>) -> DoublyLinkIter<'a, T, P>
+    fn iter_links_from<'a>(&'a self, idx: DoublyIdx<T>) -> DoublyLinkIter<'a, T, P>
     where
         M: 'a,
     {

@@ -179,7 +179,7 @@ where
     /// assert!(list.get_mut(&idx).is_some());
     /// // assert_eq!(list.get_mut(&other_idx), None);
     /// ```
-    fn get_mut<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Option<&'a mut T>
+    fn get_mut<'a>(&'a mut self, idx: DoublyIdx<T>) -> Option<&'a mut T>
     where
         M: 'a,
         P: 'a,
@@ -296,7 +296,7 @@ where
     /// assert!(list.try_get_mut(&idx).is_ok());
     /// // assert_eq!(list.try_get_mut(&other_idx), Err(NodeIdxError::OutOfBounds));
     /// ```
-    fn try_get_mut<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Result<&'a mut T, NodeIdxError>
+    fn try_get_mut<'a>(&'a mut self, idx: DoublyIdx<T>) -> Result<&'a mut T, NodeIdxError>
     where
         M: 'a,
         P: 'a,
@@ -335,12 +335,12 @@ where
     ///
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'x', 'd']));
     /// ```
-    fn next_mut_of<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Option<&'a mut T>
+    fn next_mut_of<'a>(&'a mut self, idx: DoublyIdx<T>) -> Option<&'a mut T>
     where
         M: 'a,
         P: 'a,
     {
-        self.next_idx_of(idx).and_then(|i| self.get_mut(&i))
+        self.next_idx_of(idx).and_then(|i| self.get_mut(i))
     }
 
     /// ***O(1)*** Returns a mutable reference to the element preceding the one with the given `idx`.
@@ -369,12 +369,12 @@ where
     ///
     /// assert!(list.eq_to_iter_vals(['x', 'b', 'c', 'd']));
     /// ```
-    fn prev_mut_of<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Option<&'a mut T>
+    fn prev_mut_of<'a>(&'a mut self, idx: DoublyIdx<T>) -> Option<&'a mut T>
     where
         M: 'a,
         P: 'a,
     {
-        self.prev_idx_of(idx).and_then(|i| self.get_mut(&i))
+        self.prev_idx_of(idx).and_then(|i| self.get_mut(i))
     }
 
     /// ***O(n)*** Reverses the list (in-place).
@@ -486,7 +486,7 @@ where
     /// list.move_next_to(&idx[3], &idx[0]);
     /// assert!(list.eq_to_iter_vals([0, 3, 1, 4, 5, 2]));
     /// ```
-    fn move_next_to(&mut self, idx: &DoublyIdx<T>, idx_target: &DoublyIdx<T>) {
+    fn move_next_to(&mut self, idx: DoublyIdx<T>, idx_target: DoublyIdx<T>) {
         let mid = self.col().try_get_ptr(idx).expect(IDX_ERR);
         let prev = self.col().try_get_ptr(idx_target).expect(IDX_ERR);
 
@@ -591,7 +591,7 @@ where
     /// list.move_prev_to(&idx[3], &idx[0]);
     /// assert!(list.eq_to_iter_vals([3, 0, 4, 1, 2, 5]));
     /// ```
-    fn move_prev_to(&mut self, idx: &DoublyIdx<T>, idx_target: &DoublyIdx<T>) {
+    fn move_prev_to(&mut self, idx: DoublyIdx<T>, idx_target: DoublyIdx<T>) {
         let mid = self.col().try_get_ptr(idx).expect(IDX_ERR);
         let next = self.col().try_get_ptr(idx_target).expect(IDX_ERR);
 
@@ -696,10 +696,10 @@ where
     /// list.move_to_front(&idx[3]);
     /// assert!(list.eq_to_iter_vals([3, 2, 5, 0, 1, 4]));
     /// ```
-    fn move_to_front(&mut self, idx: &DoublyIdx<T>) {
+    fn move_to_front(&mut self, idx: DoublyIdx<T>) {
         let ptr = self.ends().get(FRONT_IDX).expect(OOB);
         let idx_target = NodeIdx::new(self.col().memory_state(), ptr);
-        self.move_prev_to(idx, &idx_target);
+        self.move_prev_to(idx, idx_target);
     }
 
     /// ***O(1)*** Moves the element with the given `idx`
@@ -728,10 +728,10 @@ where
     /// list.move_to_back(&idx[2]);
     /// assert!(list.eq_to_iter_vals([0, 3, 5, 1, 4, 2]));
     /// ```
-    fn move_to_back(&mut self, idx: &DoublyIdx<T>) {
+    fn move_to_back(&mut self, idx: DoublyIdx<T>) {
         let ptr = self.ends().get(BACK_IDX).expect(OOB);
         let idx_target = NodeIdx::new(self.col().memory_state(), ptr);
-        self.move_next_to(idx, &idx_target);
+        self.move_next_to(idx, idx_target);
     }
 
     /// ***O(1)*** Swaps the elements with indices `a` and `b`.
@@ -759,7 +759,7 @@ where
     /// list.swap(&idx[3], &idx[5]);
     /// assert!(list.eq_to_iter_vals([4, 3, 2, 5, 0, 1]));
     /// ```
-    fn swap(&mut self, idx_a: &DoublyIdx<T>, idx_b: &DoublyIdx<T>) {
+    fn swap(&mut self, idx_a: DoublyIdx<T>, idx_b: DoublyIdx<T>) {
         let a = self.col().try_get_ptr(idx_a).expect(IDX_ERR);
         let b = self.col().try_get_ptr(idx_b).expect(IDX_ERR);
 
@@ -874,7 +874,7 @@ where
     /// This example also makes it clear that the unsafe api is very useful;
     /// however, it must only be used through a safe method that defines a
     /// proved to be legal move as a combination of unsafe moves.
-    unsafe fn add_link(&mut self, a: &DoublyIdx<T>, b: &DoublyIdx<T>) {
+    unsafe fn add_link(&mut self, a: DoublyIdx<T>, b: DoublyIdx<T>) {
         let a = self.col().try_get_ptr(a).expect(OOB);
         let b = self.col().try_get_ptr(b).expect(OOB);
         self.link(&a, &b);
@@ -919,7 +919,7 @@ where
     /// This example also makes it clear that the unsafe api is very useful;
     /// however, it must only be used through a safe method that defines a
     /// proved to be legal move as a combination of unsafe moves.
-    unsafe fn remove_link(&mut self, a: &DoublyIdx<T>, b: &DoublyIdx<T>) {
+    unsafe fn remove_link(&mut self, a: DoublyIdx<T>, b: DoublyIdx<T>) {
         let a = self.col().try_get_ptr(a).expect(OOB);
         let b = self.col().try_get_ptr(b).expect(OOB);
         self.unlink(&a, &b);
@@ -961,7 +961,7 @@ where
     /// This example also makes it clear that the unsafe api is very useful;
     /// however, it must only be used through a safe method that defines a
     /// proved to be legal move as a combination of unsafe moves.
-    unsafe fn set_front(&mut self, new_front: &DoublyIdx<T>) {
+    unsafe fn set_front(&mut self, new_front: DoublyIdx<T>) {
         let new_front = self.col().try_get_ptr(new_front).expect(OOB);
         self.col_mut().ends_mut().set_some(FRONT_IDX, new_front);
     }
@@ -1002,7 +1002,7 @@ where
     /// This example also makes it clear that the unsafe api is very useful;
     /// however, it must only be used through a safe method that defines a
     /// proved to be legal move as a combination of unsafe moves.
-    unsafe fn set_back(&mut self, new_back: &DoublyIdx<T>) {
+    unsafe fn set_back(&mut self, new_back: DoublyIdx<T>) {
         let new_back = self.col().try_get_ptr(new_back).expect(OOB);
         self.col_mut().ends_mut().set_some(BACK_IDX, new_back);
     }

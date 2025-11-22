@@ -38,7 +38,7 @@ where
     /// assert_eq!(value, 'b');
     /// assert!(list.eq_to_iter_vals(['a', 'c', 'd', 'e']));
     /// ```
-    pub fn remove(&mut self, idx: &DoublyIdx<T>) -> T {
+    pub fn remove(&mut self, idx: DoublyIdx<T>) -> T {
         let idx = self.0.try_get_ptr(idx).expect(IDX_ERR);
         let [prev, next] = {
             let node = self.0.node(&idx);
@@ -85,7 +85,7 @@ where
     /// assert_eq!(list.get(&x), Some(&'x'));
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'x', 'c', 'd']));
     ///```
-    pub fn insert_next_to(&mut self, idx: &DoublyIdx<T>, value: T) -> DoublyIdx<T> {
+    pub fn insert_next_to(&mut self, idx: DoublyIdx<T>, value: T) -> DoublyIdx<T> {
         let prev = self.0.try_get_ptr(idx).expect(IDX_ERR);
         let next = self.0.node(&prev).next().get().cloned();
         let idx = self.0.push(value);
@@ -132,7 +132,7 @@ where
     /// assert_eq!(list.get(&x), Some(&'x'));
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'x', 'c', 'd']));
     ///```
-    pub fn insert_prev_to(&mut self, idx: &DoublyIdx<T>, value: T) -> DoublyIdx<T> {
+    pub fn insert_prev_to(&mut self, idx: DoublyIdx<T>, value: T) -> DoublyIdx<T> {
         let next = self.0.try_get_ptr(idx).expect(IDX_ERR);
         let prev = self.0.node(&next).prev().get().cloned();
         let idx = self.0.push(value);
@@ -180,7 +180,7 @@ where
     /// let value = list.try_remove(&idx);
     /// assert_eq!(value, None);
     /// ```
-    pub fn try_remove(&mut self, idx: &DoublyIdx<T>) -> Option<T> {
+    pub fn try_remove(&mut self, idx: DoublyIdx<T>) -> Option<T> {
         let can_remove = self.0.node_mut_from_idx(idx).is_some_and(|n| n.is_active());
         match can_remove {
             true => {
@@ -241,7 +241,7 @@ where
     ///```
     pub fn try_insert_next_to(
         &mut self,
-        idx: &DoublyIdx<T>,
+        idx: DoublyIdx<T>,
         value: T,
     ) -> Result<DoublyIdx<T>, NodeIdxError> {
         let prev = self.0.try_get_ptr(idx)?;
@@ -297,7 +297,7 @@ where
     ///```
     pub fn try_insert_prev_to(
         &mut self,
-        idx: &DoublyIdx<T>,
+        idx: DoublyIdx<T>,
         value: T,
     ) -> Result<DoublyIdx<T>, NodeIdxError> {
         let next = self.0.try_get_ptr(idx)?;

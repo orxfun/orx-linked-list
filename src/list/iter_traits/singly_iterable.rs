@@ -127,7 +127,7 @@ where
     /// assert_eq!(iter.next(), Some(&3));
     /// assert_eq!(iter.next(), None);
     /// ```
-    fn iter_from<'a>(&'a self, idx: &SinglyIdx<T>) -> SinglyIter<'a, T, P>
+    fn iter_from<'a>(&'a self, idx: SinglyIdx<T>) -> SinglyIter<'a, T, P>
     where
         M: 'a,
     {

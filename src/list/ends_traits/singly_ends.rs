@@ -140,7 +140,7 @@ where
     /// assert_eq!(list.idx_err(&idx), None);
     /// // assert_eq!(list.idx_err(&other_idx), Some(NodeIdxError::OutOfBounds));
     /// ```
-    fn idx_err(&self, idx: &SinglyIdx<T>) -> Option<NodeIdxError> {
+    fn idx_err(&self, idx: SinglyIdx<T>) -> Option<NodeIdxError> {
         self.col().try_get_ptr(idx).err()
     }
 
@@ -231,7 +231,7 @@ where
     /// assert_eq!(list.is_valid(&idx), true);
     /// // assert_eq!(list.is_valid(&other_idx), false);
     /// ```
-    fn is_valid(&self, idx: &SinglyIdx<T>) -> bool {
+    fn is_valid(&self, idx: SinglyIdx<T>) -> bool {
         self.col().try_get_ptr(idx).is_ok()
     }
 
@@ -336,7 +336,7 @@ where
     /// assert_eq!(list.get(&idx), Some(&'a'));
     /// // assert_eq!(list.get(&other_idx), None);
     /// ```
-    fn get<'a>(&'a self, idx: &SinglyIdx<T>) -> Option<&'a T>
+    fn get<'a>(&'a self, idx: SinglyIdx<T>) -> Option<&'a T>
     where
         M: 'a,
         P: 'a,
@@ -447,7 +447,7 @@ where
     /// assert_eq!(list.try_get(&idx), Ok(&'a'));
     /// // assert_eq!(list.try_get(&other_idx), Err(NodeIdxError::OutOfBounds));
     /// ```
-    fn try_get<'a>(&'a self, idx: &SinglyIdx<T>) -> Result<&'a T, NodeIdxError>
+    fn try_get<'a>(&'a self, idx: SinglyIdx<T>) -> Result<&'a T, NodeIdxError>
     where
         M: 'a,
         P: 'a,
@@ -489,7 +489,7 @@ where
     ///
     /// assert!(list.next_idx_of(&d).is_none());
     /// ```
-    fn next_idx_of(&self, idx: &SinglyIdx<T>) -> Option<SinglyIdx<T>> {
+    fn next_idx_of(&self, idx: SinglyIdx<T>) -> Option<SinglyIdx<T>> {
         let ptr = self.col().try_get_ptr(idx).expect(IDX_ERR);
         let next_ptr = self.col().node(&ptr).next().get();
         next_ptr.map(|p| SinglyIdx::new(self.col().memory_state(), p))
@@ -519,12 +519,12 @@ where
     /// let c = list.next_idx_of(&a).and_then(|b| list.next_of(&b));
     /// assert_eq!(c, Some(&'c'));
     /// ```
-    fn next_of<'a>(&'a self, idx: &SinglyIdx<T>) -> Option<&'a T>
+    fn next_of<'a>(&'a self, idx: SinglyIdx<T>) -> Option<&'a T>
     where
         M: 'a,
         P: 'a,
     {
-        self.next_idx_of(idx).and_then(|i| self.get(&i))
+        self.next_idx_of(idx).and_then(|i| self.get(i))
     }
 }
 

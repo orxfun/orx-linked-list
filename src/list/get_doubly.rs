@@ -77,10 +77,9 @@ where
     /// let slice = list.slice(&idx[4]..&idx[1]);
     /// assert!(slice.eq_to_iter_vals([4, 5, 6, 7, 8, 9]));
     /// ```
-    pub fn slice<'a, R>(&self, range: R) -> ListSlice<'_, Doubly<T>, M>
+    pub fn slice<R>(&self, range: R) -> ListSlice<'_, Doubly<T>, M>
     where
-        R: RangeBounds<&'a DoublyIdx<T>>,
-        T: 'a,
+        R: RangeBounds<DoublyIdx<T>>,
     {
         let ends = self.slice_ends(range).expect("invalid indices in range");
         ListSlice { col: &self.0, ends }
