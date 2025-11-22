@@ -52,7 +52,7 @@ where
                 match Some(&curr) == self.current_back.as_ref() {
                     false => {
                         let next = self.col.node(curr).next().get();
-                        let new_current = next.map(|next| (curr.clone(), next));
+                        let new_current = next.map(|next| (curr, next));
                         self.current = new_current;
                     }
                     true => self.end(),

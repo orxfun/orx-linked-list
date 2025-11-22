@@ -530,7 +530,7 @@ where
             match old_back == prev {
                 true => {
                     // new node placed in front
-                    self.ends_mut().set_some(BACK_IDX, mid.clone())
+                    self.ends_mut().set_some(BACK_IDX, mid)
                 }
                 false => {
                     if old_back == mid {
@@ -635,7 +635,7 @@ where
             match old_front == &next {
                 true => {
                     // new node placed in front
-                    self.ends_mut().set_some(FRONT_IDX, mid.clone())
+                    self.ends_mut().set_some(FRONT_IDX, mid)
                 }
                 false => {
                     if old_front == &mid {
@@ -770,7 +770,7 @@ where
         let n_a = self.col().node(a).next().get();
         let n_b = self.col().node(b).next().get();
 
-        match (n_a.clone(), n_b.clone()) {
+        match (n_a, n_b) {
             (Some(n_a), _) if b == n_a => self.move_next_to(idx_a, idx_b),
             (_, Some(n_b)) if a == n_b => self.move_next_to(idx_b, idx_a),
             _ => {
@@ -796,21 +796,21 @@ where
 
                 // cache custom ends
                 let custom_front = match self.ends().get(FRONT_IDX) {
-                    Some(x) if x == a => Some(b.clone()),
-                    Some(x) if x == b => Some(a.clone()),
+                    Some(x) if x == a => Some(b),
+                    Some(x) if x == b => Some(a),
                     _ => None,
                 };
 
                 let custom_back = match self.ends().get(BACK_IDX) {
-                    Some(x) if x == a => Some(b.clone()),
-                    Some(x) if x == b => Some(a.clone()),
+                    Some(x) if x == a => Some(b),
+                    Some(x) if x == b => Some(a),
                     _ => None,
                 };
 
                 // update col ends
                 match self.col().ends().get(FRONT_IDX) {
-                    Some(x) if x == a => self.col_mut().ends_mut().set_some(FRONT_IDX, b.clone()),
-                    Some(x) if x == b => self.col_mut().ends_mut().set_some(FRONT_IDX, a.clone()),
+                    Some(x) if x == a => self.col_mut().ends_mut().set_some(FRONT_IDX, b),
+                    Some(x) if x == b => self.col_mut().ends_mut().set_some(FRONT_IDX, a),
                     _ => {}
                 }
 
