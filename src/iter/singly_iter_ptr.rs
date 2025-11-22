@@ -30,10 +30,10 @@ where
     type Item = NodePtr<Singly<T>>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match &self.current {
+        match self.current {
             Some(p) => {
                 let ptr = Some(p.clone());
-                self.current = self.col.node(p).next().get().cloned();
+                self.current = self.col.node(p).next().get();
                 ptr
             }
             None => None,

@@ -33,8 +33,8 @@ where
     #[inline(always)]
     fn next(&mut self) -> Option<Self::Item> {
         self.0.next().map(|p| {
-            (unsafe { self.0.col.data_unchecked(&p.0) }, unsafe {
-                self.0.col.data_unchecked(&p.1)
+            (unsafe { self.0.col.data_unchecked(p.0) }, unsafe {
+                self.0.col.data_unchecked(p.1)
             })
         })
     }

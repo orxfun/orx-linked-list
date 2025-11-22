@@ -53,11 +53,11 @@ where
     type Item = &'a mut T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match &self.current {
+        match self.current {
             Some(p) => {
                 let ptr = unsafe { p.ptr_mut() };
                 match self.current == self.current_back {
-                    false => self.current = self.col.node(p).next().get().cloned(),
+                    false => self.current = self.col.node(p).next().get(),
                     true => self.end(),
                 }
 
@@ -73,12 +73,12 @@ where
     P: PinnedVec<Node<Doubly<T>>>,
 {
     fn next_back(&mut self) -> Option<Self::Item> {
-        match &self.current_back {
+        match self.current_back {
             Some(p) => {
                 // SAFETY: collection as alive as guaranteed by the `col` field.
                 let ptr = unsafe { p.ptr_mut() };
                 match self.current == self.current_back {
-                    false => self.current_back = self.col.node(p).prev().get().cloned(),
+                    false => self.current_back = self.col.node(p).prev().get(),
                     true => self.end(),
                 }
                 unsafe { &mut *ptr }.data_mut()

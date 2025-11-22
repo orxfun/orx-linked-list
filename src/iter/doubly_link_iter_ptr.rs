@@ -46,13 +46,12 @@ where
     type Item = PairPtr<T>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match &self.current {
+        match self.current {
             Some(p) => {
                 let (prev, curr) = p.clone();
                 match Some(&curr) == self.current_back.as_ref() {
                     false => {
-                        //
-                        let next = self.col.node(&curr).next().get().cloned();
+                        let next = self.col.node(curr).next().get();
                         let new_current = next.map(|next| (curr.clone(), next));
                         self.current = new_current;
                     }
