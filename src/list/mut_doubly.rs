@@ -35,8 +35,8 @@ where
     /// assert_eq!(Some(&'z'), list.front());
     /// ```
     pub fn swap_front(&mut self, new_front: T) -> Option<T> {
-        match self.0.ends().get(FRONT_IDX).cloned() {
-            Some(p) => Some(self.0.swap_data(&p, new_front)),
+        match self.0.ends().get(FRONT_IDX) {
+            Some(p) => Some(self.0.swap_data(p, new_front)),
             None => {
                 self.push_front(new_front);
                 None
@@ -66,8 +66,8 @@ where
     /// assert_eq!(Some(&'z'), list.back());
     /// ```
     pub fn swap_back(&mut self, new_back: T) -> Option<T> {
-        match self.0.ends().get(BACK_IDX).cloned() {
-            Some(p) => Some(self.0.swap_data(&p, new_back)),
+        match self.0.ends().get(BACK_IDX) {
+            Some(p) => Some(self.0.swap_data(p, new_back)),
             None => {
                 self.push_back(new_back);
                 None
@@ -96,19 +96,19 @@ where
     pub fn push_front(&mut self, value: T) -> DoublyIdx<T> {
         let idx = self.0.push(value);
 
-        match self.0.ends().get(FRONT_IDX).cloned() {
+        match self.0.ends().get(FRONT_IDX) {
             Some(front) => {
-                self.0.node_mut(&front).prev_mut().set_some(idx.clone());
-                self.0.node_mut(&idx).next_mut().set_some(front);
-                self.0.ends_mut().set_some(FRONT_IDX, idx.clone());
+                self.0.node_mut(front).prev_mut().set_some(idx);
+                self.0.node_mut(idx).next_mut().set_some(front);
+                self.0.ends_mut().set_some(FRONT_IDX, idx);
             }
             None => {
-                self.0.ends_mut().set_some(FRONT_IDX, idx.clone());
-                self.0.ends_mut().set_some(BACK_IDX, idx.clone());
+                self.0.ends_mut().set_some(FRONT_IDX, idx);
+                self.0.ends_mut().set_some(BACK_IDX, idx);
             }
         }
 
-        NodeIdx::new(self.0.memory_state(), &idx)
+        NodeIdx::new(self.0.memory_state(), idx)
     }
 
     /// ***O(1)*** Pushes the `value` to the `back` of the list.
@@ -132,19 +132,19 @@ where
     pub fn push_back(&mut self, value: T) -> DoublyIdx<T> {
         let idx = self.0.push(value);
 
-        match self.0.ends().get(BACK_IDX).cloned() {
+        match self.0.ends().get(BACK_IDX) {
             Some(back) => {
-                self.0.node_mut(&back).next_mut().set_some(idx.clone());
-                self.0.node_mut(&idx).prev_mut().set_some(back);
-                self.0.ends_mut().set_some(BACK_IDX, idx.clone());
+                self.0.node_mut(back).next_mut().set_some(idx);
+                self.0.node_mut(idx).prev_mut().set_some(back);
+                self.0.ends_mut().set_some(BACK_IDX, idx);
             }
             None => {
-                self.0.ends_mut().set_some(FRONT_IDX, idx.clone());
-                self.0.ends_mut().set_some(BACK_IDX, idx.clone());
+                self.0.ends_mut().set_some(FRONT_IDX, idx);
+                self.0.ends_mut().set_some(BACK_IDX, idx);
             }
         }
 
-        NodeIdx::new(self.0.memory_state(), &idx)
+        NodeIdx::new(self.0.memory_state(), idx)
     }
 
     /// ***O(1)*** Pops and returns the value at the `front` of the list; returns None if the list is empty.
@@ -167,15 +167,15 @@ where
     /// assert!(list.is_empty());
     /// ```
     pub fn pop_front(&mut self) -> Option<T> {
-        self.0.ends().get(FRONT_IDX).cloned().map(|front| {
-            match self.0.node(&front).next().get().cloned() {
+        self.0.ends().get(FRONT_IDX).map(|front| {
+            match self.0.node(front).next().get() {
                 Some(new_front) => {
-                    self.0.node_mut(&new_front).prev_mut().clear();
+                    self.0.node_mut(new_front).prev_mut().clear();
                     self.0.ends_mut().set_some(FRONT_IDX, new_front);
                 }
                 None => self.0.ends_mut().clear(),
             }
-            self.0.close_and_reclaim(&front)
+            self.0.close_and_reclaim(front)
         })
     }
 
@@ -199,15 +199,15 @@ where
     /// assert!(list.is_empty());
     /// ```
     pub fn pop_back(&mut self) -> Option<T> {
-        self.0.ends().get(BACK_IDX).cloned().map(|back| {
-            match self.0.node(&back).prev().get().cloned() {
+        self.0.ends().get(BACK_IDX).map(|back| {
+            match self.0.node(back).prev().get() {
                 Some(new_back) => {
-                    self.0.node_mut(&new_back).next_mut().clear();
+                    self.0.node_mut(new_back).next_mut().clear();
                     self.0.ends_mut().set_some(BACK_IDX, new_back);
                 }
                 None => self.0.ends_mut().clear(),
             }
-            self.0.close_and_reclaim(&back)
+            self.0.close_and_reclaim(back)
         })
     }
 

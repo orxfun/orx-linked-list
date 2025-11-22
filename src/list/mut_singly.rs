@@ -30,8 +30,8 @@ where
     /// assert_eq!(Some(&'z'), list.front());
     /// ```
     pub fn swap_front(&mut self, new_front: T) -> Option<T> {
-        match self.0.ends().get().cloned() {
-            Some(p) => Some(self.0.swap_data(&p, new_front)),
+        match self.0.ends().get() {
+            Some(p) => Some(self.0.swap_data(p, new_front)),
             None => {
                 self.push_front(new_front);
                 None
@@ -60,13 +60,13 @@ where
     pub fn push_front(&mut self, value: T) -> SinglyIdx<T> {
         let idx = self.0.push(value);
 
-        if let Some(front) = self.0.ends().get().cloned() {
-            self.0.node_mut(&idx).next_mut().set_some(front.clone());
+        if let Some(front) = self.0.ends().get() {
+            self.0.node_mut(idx).next_mut().set_some(front.clone());
         }
 
         self.0.ends_mut().set_some(idx.clone());
 
-        NodeIdx::new(self.0.memory_state(), &idx)
+        NodeIdx::new(self.0.memory_state(), idx)
     }
 
     /// ***O(1)*** Pops and returns the value at the `front` of the list; returns None if the list is empty.
@@ -89,12 +89,12 @@ where
     /// assert!(list.is_empty());
     /// ```
     pub fn pop_front(&mut self) -> Option<T> {
-        self.0.ends().get().cloned().map(|front| {
-            match self.0.node(&front).next().get().cloned() {
+        self.0.ends().get().map(|front| {
+            match self.0.node(front).next().get() {
                 Some(new_front) => self.0.ends_mut().set_some(new_front.clone()),
                 None => self.0.ends_mut().clear(),
             }
-            self.0.close_and_reclaim(&front)
+            self.0.close_and_reclaim(front)
         })
     }
 

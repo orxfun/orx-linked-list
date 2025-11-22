@@ -45,13 +45,13 @@ where
                 let prev = self.iter_ptr().nth(x - 1).expect(OOB);
                 let idx = self.0.push(value);
 
-                if let Some(next) = self.0.node(&prev).next().get().cloned() {
-                    self.0.node_mut(&idx).next_mut().set_some(next);
+                if let Some(next) = self.0.node(prev).next().get() {
+                    self.0.node_mut(idx).next_mut().set_some(next);
                 }
 
-                self.0.node_mut(&prev).next_mut().set_some(idx.clone());
+                self.0.node_mut(prev).next_mut().set_some(idx);
 
-                NodeIdx::new(self.memory_state(), &idx)
+                NodeIdx::new(self.memory_state(), idx)
             }
         }
     }
@@ -96,12 +96,12 @@ where
                     (prev, idx)
                 };
 
-                match self.0.node(&idx).next().get().cloned() {
-                    Some(next) => self.0.node_mut(&prev).next_mut().set_some(next),
-                    None => self.0.node_mut(&prev).next_mut().set_none(),
+                match self.0.node(idx).next().get() {
+                    Some(next) => self.0.node_mut(prev).next_mut().set_some(next),
+                    None => self.0.node_mut(prev).next_mut().set_none(),
                 }
 
-                Some(self.0.close_and_reclaim(&idx))
+                Some(self.0.close_and_reclaim(idx))
             }
         }
     }
@@ -148,15 +148,15 @@ where
             _ => {
                 let prev = self.iter_ptr().nth(position - 1).expect(OOB);
                 let idx = self.0.push(value);
-                let next = self.0.node(&prev).next().get().cloned().expect("exists");
+                let next = self.0.node(prev).next().get().expect("exists");
 
-                self.0.node_mut(&prev).next_mut().set_some(idx.clone());
-                self.0.node_mut(&next).prev_mut().set_some(idx.clone());
+                self.0.node_mut(prev).next_mut().set_some(idx);
+                self.0.node_mut(next).prev_mut().set_some(idx);
 
-                self.0.node_mut(&idx).prev_mut().set_some(prev);
-                self.0.node_mut(&idx).next_mut().set_some(next);
+                self.0.node_mut(idx).prev_mut().set_some(prev);
+                self.0.node_mut(idx).next_mut().set_some(next);
 
-                NodeIdx::new(self.memory_state(), &idx)
+                NodeIdx::new(self.memory_state(), idx)
             }
         }
     }
@@ -200,15 +200,15 @@ where
                 let mut iter = self.iter_ptr().rev();
                 let next = iter.nth(x - 1).expect(OOB);
                 let idx = self.0.push(value);
-                let prev = self.0.node(&next).prev().get().expect("exists").clone();
+                let prev = self.0.node(next).prev().get().expect("exists");
 
-                self.0.node_mut(&next).prev_mut().set_some(idx.clone());
-                self.0.node_mut(&prev).next_mut().set_some(idx.clone());
+                self.0.node_mut(next).prev_mut().set_some(idx);
+                self.0.node_mut(prev).next_mut().set_some(idx);
 
-                self.0.node_mut(&idx).prev_mut().set_some(prev);
-                self.0.node_mut(&idx).next_mut().set_some(next);
+                self.0.node_mut(idx).prev_mut().set_some(prev);
+                self.0.node_mut(idx).next_mut().set_some(next);
 
-                NodeIdx::new(self.memory_state(), &idx)
+                NodeIdx::new(self.memory_state(), idx)
             }
         }
     }
@@ -255,10 +255,10 @@ where
                     (prev, idx, next)
                 };
 
-                self.0.node_mut(&prev).next_mut().set_some(next.clone());
-                self.0.node_mut(&next).prev_mut().set_some(prev);
+                self.0.node_mut(prev).next_mut().set_some(next);
+                self.0.node_mut(next).prev_mut().set_some(prev);
 
-                Some(self.0.close_and_reclaim(&idx))
+                Some(self.0.close_and_reclaim(idx))
             }
         }
     }
@@ -305,10 +305,10 @@ where
                     (prev, idx, next)
                 };
 
-                self.0.node_mut(&prev).next_mut().set_some(next.clone());
-                self.0.node_mut(&next).prev_mut().set_some(prev);
+                self.0.node_mut(prev).next_mut().set_some(next);
+                self.0.node_mut(next).prev_mut().set_some(prev);
 
-                Some(self.0.close_and_reclaim(&idx))
+                Some(self.0.close_and_reclaim(idx))
             }
         }
     }

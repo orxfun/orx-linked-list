@@ -46,18 +46,15 @@ where
             (_, false) => { /* no update when new is empty */ }
             (false, true) => {
                 let new_front = ends.get(FRONT_IDX).expect("exists");
-                self.0.ends_mut().set_some(FRONT_IDX, new_front.clone());
+                self.0.ends_mut().set_some(FRONT_IDX, new_front);
             }
             (true, true) => {
-                let new_front = ends.get(FRONT_IDX).expect("exists").clone();
-                let new_back = ends.get(BACK_IDX).expect("exists").clone();
-                let old_front = self.0.ends().get(FRONT_IDX).expect("exists").clone();
+                let new_front = ends.get(FRONT_IDX).expect("exists");
+                let new_back = ends.get(BACK_IDX).expect("exists");
+                let old_front = self.0.ends().get(FRONT_IDX).expect("exists");
 
-                self.0
-                    .node_mut(&old_front)
-                    .prev_mut()
-                    .set_some(new_back.clone());
-                self.0.node_mut(&new_back).next_mut().set_some(old_front);
+                self.0.node_mut(old_front).prev_mut().set_some(new_back);
+                self.0.node_mut(new_back).next_mut().set_some(old_front);
 
                 self.0.ends_mut().set_some(FRONT_IDX, new_front);
             }
@@ -107,19 +104,16 @@ where
         match (old_back_exists, new_back_exists) {
             (_, false) => { /* no update when new is empty */ }
             (false, true) => {
-                let new_back = ends.get(BACK_IDX).expect("exists").clone();
+                let new_back = ends.get(BACK_IDX).expect("exists");
                 self.0.ends_mut().set_some(BACK_IDX, new_back);
             }
             (true, true) => {
-                let new_front = ends.get(FRONT_IDX).expect("exists").clone();
-                let new_back = ends.get(BACK_IDX).expect("exists").clone();
-                let old_back = self.0.ends().get(BACK_IDX).expect("exists").clone();
+                let new_front = ends.get(FRONT_IDX).expect("exists");
+                let new_back = ends.get(BACK_IDX).expect("exists");
+                let old_back = self.0.ends().get(BACK_IDX).expect("exists");
 
-                self.0
-                    .node_mut(&old_back)
-                    .next_mut()
-                    .set_some(new_front.clone());
-                self.0.node_mut(&new_front).prev_mut().set_some(old_back);
+                self.0.node_mut(old_back).next_mut().set_some(new_front);
+                self.0.node_mut(new_front).prev_mut().set_some(old_back);
 
                 self.0.ends_mut().set_some(BACK_IDX, new_back);
             }
