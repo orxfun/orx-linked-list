@@ -14,6 +14,13 @@ impl<T> SinglyPointer<T> for SinglyPtr<T> {
 /// A node pointer in a Singly linked list.
 pub trait SinglyPointer<T> {
     /// Returns the raw pointer to the node.
+    ///
+    /// # SAFETY
+    ///
+    /// This method is unsafe as node pointers implement `Send` and `Sync`.
+    ///
+    /// It is safe dereference the received pointer if we know that `is_valid_for(col)` would
+    /// return `true` where `col` is the collection that this pointer is created from.
     unsafe fn raw_ptr(&self) -> *mut Node<Singly<T>>;
 
     /// Returns a reference to the node.

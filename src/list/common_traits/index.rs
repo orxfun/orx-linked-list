@@ -65,7 +65,7 @@ where
     }
 }
 
-impl<'i, T, M, P> IndexMut<DoublyIdx<T>> for List<Doubly<T>, M, P>
+impl<T, M, P> IndexMut<DoublyIdx<T>> for List<Doubly<T>, M, P>
 where
     M: MemoryPolicy<Doubly<T>>,
     P: PinnedVec<Node<Doubly<T>>>,

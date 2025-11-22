@@ -14,6 +14,13 @@ impl<T> DoublyPointer<T> for DoublyPtr<T> {
 /// A node pointer in a doubly linked list.
 pub trait DoublyPointer<T> {
     /// Returns the raw pointer to the node.
+    ///
+    /// # SAFETY
+    ///
+    /// This method is unsafe as node pointers implement `Send` and `Sync`.
+    ///
+    /// It is safe dereference the received pointer if we know that `is_valid_for(col)` would
+    /// return `true` where `col` is the collection that this pointer is created from.
     unsafe fn raw_ptr(&self) -> *mut Node<Doubly<T>>;
 
     /// Returns a reference to the node.
