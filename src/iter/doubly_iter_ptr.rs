@@ -89,8 +89,8 @@ where
     fn clone(&self) -> Self {
         Self {
             col: self.col,
-            current: self.current.clone(),
-            current_back: self.current_back.clone(),
+            current: self.current,
+            current_back: self.current_back,
         }
     }
 }

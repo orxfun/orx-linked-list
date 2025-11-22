@@ -414,7 +414,7 @@ where
             let new_next_of_front = self.col().node(back).next().get();
             let new_prev_of_back = self.col().node(front).prev().get();
 
-            let mut prev = front.clone();
+            let mut prev = front;
             let mut new_next = self.col().node(prev).next().get();
 
             while let Some(next) = new_next {
@@ -443,11 +443,11 @@ where
             let old_col_front = self.col().ends().get(FRONT_IDX).expect("exists");
             let old_col_back = self.col().ends().get(BACK_IDX).expect("exists");
 
-            self.ends_mut().set_some(FRONT_IDX, back.clone());
-            self.ends_mut().set_some(BACK_IDX, front.clone());
+            self.ends_mut().set_some(FRONT_IDX, back);
+            self.ends_mut().set_some(BACK_IDX, front);
 
             if front == old_col_front {
-                self.col_mut().ends_mut().set_some(FRONT_IDX, back.clone());
+                self.col_mut().ends_mut().set_some(FRONT_IDX, back);
             }
 
             if back == old_col_back {
@@ -526,7 +526,7 @@ where
         let old_front = self.ends().get(FRONT_IDX);
         let old_back = self.ends().get(BACK_IDX);
 
-        if let Some(old_back) = old_back.clone() {
+        if let Some(old_back) = old_back {
             match old_back == prev {
                 true => {
                     // new node placed in front
@@ -535,7 +535,7 @@ where
                 false => {
                     if old_back == mid {
                         // old front is moved away
-                        let old_front = old_front.clone().expect("exists");
+                        let old_front = old_front.expect("exists");
                         match mid == old_front {
                             false => {
                                 let new_back = old_prev.expect("exists");
@@ -640,7 +640,7 @@ where
                 false => {
                     if old_front == &mid {
                         // old front is moved away
-                        let old_back = old_back.clone().expect("exists");
+                        let old_back = old_back.expect("exists");
                         match mid == old_back {
                             false => {
                                 let new_front = old_next.expect("exists");

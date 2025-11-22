@@ -48,7 +48,7 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         match self.current {
             Some(p) => {
-                let (prev, curr) = p.clone();
+                let (prev, curr) = p;
                 match Some(&curr) == self.current_back.as_ref() {
                     false => {
                         let next = self.col.node(curr).next().get();
@@ -74,8 +74,8 @@ where
     fn clone(&self) -> Self {
         Self {
             col: self.col,
-            current: self.current.clone(),
-            current_back: self.current_back.clone(),
+            current: self.current,
+            current_back: self.current_back,
         }
     }
 }

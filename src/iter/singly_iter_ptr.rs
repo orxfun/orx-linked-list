@@ -50,7 +50,7 @@ where
     fn clone(&self) -> Self {
         Self {
             col: self.col,
-            current: self.current.clone(),
+            current: self.current,
         }
     }
 }

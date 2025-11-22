@@ -61,7 +61,7 @@ where
         let idx = self.0.push(value);
 
         if let Some(front) = self.0.ends().get() {
-            self.0.node_mut(idx).next_mut().set_some(front.clone());
+            self.0.node_mut(idx).next_mut().set_some(front);
         }
 
         self.0.ends_mut().set_some(idx.clone());
@@ -91,7 +91,7 @@ where
     pub fn pop_front(&mut self) -> Option<T> {
         self.0.ends().get().map(|front| {
             match self.0.node(front).next().get() {
-                Some(new_front) => self.0.ends_mut().set_some(new_front.clone()),
+                Some(new_front) => self.0.ends_mut().set_some(new_front),
                 None => self.0.ends_mut().clear(),
             }
             self.0.close_and_reclaim(front)
