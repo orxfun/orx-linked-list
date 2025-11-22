@@ -41,7 +41,7 @@ fn singleton_slice() {
 
     let indices = [a.clone(), b.clone(), c.clone()];
 
-    for (i, x) in indices.iter().enumerate() {
+    for (i, x) in indices.iter().copied().enumerate() {
         let mut slice = list.slice_mut(x..=x);
         *slice.get_mut(x).unwrap() = expected[i];
     }

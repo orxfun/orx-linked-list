@@ -11,7 +11,7 @@ fn ring_iter_mut_on_list() {
     let values: Vec<_> = list.iter().cloned().collect();
 
     for i in 0..n {
-        let cyclic: Vec<_> = list.ring_iter_mut(&idx[i]).map(|x| x.clone()).collect();
+        let cyclic: Vec<_> = list.ring_iter_mut(idx[i]).map(|x| x.clone()).collect();
         assert_eq!(cyclic.len(), n);
 
         for j in i..n {
@@ -33,13 +33,13 @@ fn ring_iter_mut_on_slice() {
     let idx: Vec<_> = list.indices().collect();
 
     let n = b - a;
-    let mut slice = list.slice_mut(&idx[a]..&idx[b]);
+    let mut slice = list.slice_mut(idx[a]..idx[b]);
 
     let idx: Vec<_> = slice.indices().collect();
     let values: Vec<_> = slice.iter().cloned().collect();
 
     for i in 0..n {
-        let cyclic: Vec<_> = slice.ring_iter_mut(&idx[i]).map(|x| x.clone()).collect();
+        let cyclic: Vec<_> = slice.ring_iter_mut(idx[i]).map(|x| x.clone()).collect();
         assert_eq!(cyclic.len(), n);
 
         for j in i..n {
@@ -73,6 +73,6 @@ fn ring_iter_mut_demo() {
     // circular scan starting from a pivot point in the middle
     let mut list: DoublyList<_> = (0..5).collect();
     let idx: Vec<_> = list.indices().collect();
-    scan(list.ring_iter_mut(&idx[3]));
+    scan(list.ring_iter_mut(idx[3]));
     assert!(list.eq_to_iter_vals([7, 8, 10, 3, 7]));
 }

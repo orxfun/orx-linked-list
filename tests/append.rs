@@ -23,8 +23,8 @@ fn append_front_doubly<M: MemoryPolicy<Doubly<char>>>(mut list: List<Doubly<char
     list.validate();
     assert!(list.eq_to_iter_vals(['f', 'g', 'h', 'i', 'j', 'a', 'b', 'c', 'd', 'e']));
 
-    assert_eq!(list.get(&a), Some(&'a'));
-    assert_eq!(list.get(&g), Some(&'g'));
+    assert_eq!(list.get(a), Some(&'a'));
+    assert_eq!(list.get(g), Some(&'g'));
 }
 
 #[test_matrix(
@@ -49,6 +49,6 @@ fn append_back_doubly<M: MemoryPolicy<Doubly<char>>>(mut list: List<Doubly<char>
     list.validate();
     assert!(list.eq_to_iter_vals(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']));
 
-    assert_eq!(list.get(&a), Some(&'a'));
-    assert_eq!(list.get(&g), Some(&'g'));
+    assert_eq!(list.get(a), Some(&'a'));
+    assert_eq!(list.get(g), Some(&'g'));
 }
