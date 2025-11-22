@@ -61,6 +61,6 @@ pub trait SinglyPointer<T> {
     /// Alternatively, you may use `NodeIdx` for safe access.
     #[inline(always)]
     unsafe fn next(&self) -> Option<SinglyPtr<T>> {
-        unsafe { self.node() }.next().get().cloned()
+        unsafe { self.node() }.next().get()
     }
 }

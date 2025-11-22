@@ -61,7 +61,7 @@ pub trait DoublyPointer<T> {
     /// Alternatively, you may use `NodeIdx` for safe access.
     #[inline(always)]
     unsafe fn next(&self) -> Option<DoublyPtr<T>> {
-        unsafe { self.node() }.next().get().cloned()
+        unsafe { self.node() }.next().get()
     }
 
     /// Returns the pointer to the prev node if exists; None otherwise.
@@ -77,6 +77,6 @@ pub trait DoublyPointer<T> {
     /// Alternatively, you may use `NodeIdx` for safe access.
     #[inline(always)]
     unsafe fn prev(&self) -> Option<DoublyPtr<T>> {
-        unsafe { self.node() }.prev().get().cloned()
+        unsafe { self.node() }.prev().get()
     }
 }

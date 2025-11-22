@@ -38,8 +38,7 @@ where
     {
         self.ends_mut()
             .get(FRONT_IDX)
-            .cloned()
-            .map(|p| unsafe { self.col_mut().data_mut_unchecked(&p) })
+            .map(|p| unsafe { self.col_mut().data_mut_unchecked(p) })
     }
 
     /// ***O(1)*** Returns a mutable reference to the back of the list,
@@ -68,8 +67,7 @@ where
     {
         self.ends_mut()
             .get(BACK_IDX)
-            .cloned()
-            .map(|p| unsafe { self.col_mut().data_mut_unchecked(&p) })
+            .map(|p| unsafe { self.col_mut().data_mut_unchecked(p) })
     }
 
     // idx
@@ -406,21 +404,21 @@ where
     /// assert!(list.eq_to_iter_vals(['c', 'd', 'e', 'b', 'a']));
     /// ```
     fn reverse(&mut self) {
-        if let Some(front) = self.ends().get(FRONT_IDX).cloned() {
-            let back = self.ends().get(BACK_IDX).cloned().expect("exists");
+        if let Some(front) = self.ends().get(FRONT_IDX) {
+            let back = self.ends().get(BACK_IDX).expect("exists");
 
             if front == back {
                 return;
             }
 
-            let new_next_of_front = self.col().node(&back).next().get().cloned();
-            let new_prev_of_back = self.col().node(&front).prev().get().cloned();
+            let new_next_of_front = self.col().node(back).next().get();
+            let new_prev_of_back = self.col().node(front).prev().get();
 
             let mut prev = front.clone();
-            let mut new_next = self.col().node(&prev).next().get().cloned();
+            let mut new_next = self.col().node(prev).next().get();
 
             while let Some(next) = new_next {
-                new_next = self.col().node(&next).next().get().cloned();
+                new_next = self.col().node(next).next().get();
 
                 self.link(&next, &prev);
 
@@ -432,18 +430,18 @@ where
 
             match new_next_of_front {
                 Some(new_next_of_front) => self.link(&front, &new_next_of_front),
-                None => self.col_mut().node_mut(&front).next_mut().set_none(),
+                None => self.col_mut().node_mut(front).next_mut().set_none(),
             }
 
             match new_prev_of_back {
                 Some(new_prev_of_back) => self.link(&new_prev_of_back, &back),
-                None => self.col_mut().node_mut(&back).prev_mut().set_none(),
+                None => self.col_mut().node_mut(back).prev_mut().set_none(),
             }
 
             // ends
 
-            let old_col_front = self.col().ends().get(FRONT_IDX).cloned().expect("exists");
-            let old_col_back = self.col().ends().get(BACK_IDX).cloned().expect("exists");
+            let old_col_front = self.col().ends().get(FRONT_IDX).expect("exists");
+            let old_col_back = self.col().ends().get(BACK_IDX).expect("exists");
 
             self.ends_mut().set_some(FRONT_IDX, back.clone());
             self.ends_mut().set_some(BACK_IDX, front.clone());
@@ -494,9 +492,9 @@ where
             return;
         }
 
-        let next = self.col().node(&prev).next().get().cloned();
-        let old_next = self.col().node(&mid).next().get().cloned();
-        let old_prev = self.col().node(&mid).prev().get().cloned();
+        let next = self.col().node(prev).next().get();
+        let old_next = self.col().node(mid).next().get();
+        let old_prev = self.col().node(mid).prev().get();
 
         // update the gap
         match (old_prev.clone(), old_next.clone()) {
@@ -504,13 +502,13 @@ where
             (Some(old_prev), Some(old_next)) => self.link(&old_prev, &old_next),
             (Some(old_prev), None) => {
                 // idx must be col.back
-                self.col_mut().node_mut(&old_prev).next_mut().set_none();
+                self.col_mut().node_mut(old_prev).next_mut().set_none();
 
                 self.col_mut().ends_mut().set_some(BACK_IDX, old_prev);
             }
             (None, Some(old_next)) => {
                 // idx must be col.front
-                self.col_mut().node_mut(&old_next).prev_mut().set_none();
+                self.col_mut().node_mut(old_next).prev_mut().set_none();
 
                 self.col_mut().ends_mut().set_some(FRONT_IDX, old_next);
             }
@@ -520,13 +518,13 @@ where
         // update the fill
         match next {
             Some(next) => self.link(&mid, &next),
-            None => self.col_mut().node_mut(&mid).next_mut().set_none(),
+            None => self.col_mut().node_mut(mid).next_mut().set_none(),
         }
         self.link(&prev, &mid);
 
         // custom ends
-        let old_front = self.ends().get(FRONT_IDX).cloned();
-        let old_back = self.ends().get(BACK_IDX).cloned();
+        let old_front = self.ends().get(FRONT_IDX);
+        let old_back = self.ends().get(BACK_IDX);
 
         if let Some(old_back) = old_back.clone() {
             match old_back == prev {
@@ -599,9 +597,9 @@ where
             return;
         }
 
-        let prev = self.col().node(&next).prev().get().cloned();
-        let old_next = self.col().node(&mid).next().get().cloned();
-        let old_prev = self.col().node(&mid).prev().get().cloned();
+        let prev = self.col().node(next).prev().get();
+        let old_next = self.col().node(mid).next().get();
+        let old_prev = self.col().node(mid).prev().get();
 
         // update the gap
         match (old_prev.clone(), old_next.clone()) {
@@ -609,13 +607,13 @@ where
             (Some(old_prev), Some(old_next)) => self.link(&old_prev, &old_next),
             (Some(old_prev), None) => {
                 // idx must be col.back
-                self.col_mut().node_mut(&old_prev).next_mut().set_none();
+                self.col_mut().node_mut(old_prev).next_mut().set_none();
 
                 self.col_mut().ends_mut().set_some(BACK_IDX, old_prev);
             }
             (None, Some(old_next)) => {
                 // idx must be col.front
-                self.col_mut().node_mut(&old_next).prev_mut().set_none();
+                self.col_mut().node_mut(old_next).prev_mut().set_none();
 
                 self.col_mut().ends_mut().set_some(FRONT_IDX, old_next);
             }
@@ -625,13 +623,13 @@ where
         // update the fill
         match prev {
             Some(prev) => self.link(&prev, &mid),
-            None => self.col_mut().node_mut(&mid).prev_mut().set_none(),
+            None => self.col_mut().node_mut(mid).prev_mut().set_none(),
         }
         self.link(&mid, &next);
 
         // custom ends
-        let old_front = self.ends().get(FRONT_IDX).cloned();
-        let old_back = self.ends().get(BACK_IDX).cloned();
+        let old_front = self.ends().get(FRONT_IDX);
+        let old_back = self.ends().get(BACK_IDX);
 
         if let Some(old_front) = &old_front {
             match old_front == &next {
@@ -767,10 +765,10 @@ where
             return;
         }
 
-        let p_a = self.col().node(&a).prev().get().cloned();
-        let p_b = self.col().node(&b).prev().get().cloned();
-        let n_a = self.col().node(&a).next().get().cloned();
-        let n_b = self.col().node(&b).next().get().cloned();
+        let p_a = self.col().node(a).prev().get();
+        let p_b = self.col().node(b).prev().get();
+        let n_a = self.col().node(a).next().get();
+        let n_b = self.col().node(b).next().get();
 
         match (n_a.clone(), n_b.clone()) {
             (Some(n_a), _) if b == n_a => self.move_next_to(idx_a, idx_b),
@@ -778,45 +776,45 @@ where
             _ => {
                 match p_a {
                     Some(p_a) => self.link(&p_a, &b),
-                    None => self.col_mut().node_mut(&b).prev_mut().set_none(),
+                    None => self.col_mut().node_mut(b).prev_mut().set_none(),
                 }
 
                 match p_b {
                     Some(p_b) => self.link(&p_b, &a),
-                    None => self.col_mut().node_mut(&a).prev_mut().set_none(),
+                    None => self.col_mut().node_mut(a).prev_mut().set_none(),
                 }
 
                 match n_a {
                     Some(n_a) => self.link(&b, &n_a),
-                    None => self.col_mut().node_mut(&b).next_mut().set_none(),
+                    None => self.col_mut().node_mut(b).next_mut().set_none(),
                 }
 
                 match n_b {
                     Some(n_b) => self.link(&a, &n_b),
-                    None => self.col_mut().node_mut(&a).next_mut().set_none(),
+                    None => self.col_mut().node_mut(a).next_mut().set_none(),
                 }
 
                 // cache custom ends
-                let custom_front = match self.ends().get(FRONT_IDX).cloned() {
+                let custom_front = match self.ends().get(FRONT_IDX) {
                     Some(x) if x == a => Some(b.clone()),
                     Some(x) if x == b => Some(a.clone()),
                     _ => None,
                 };
 
-                let custom_back = match self.ends().get(BACK_IDX).cloned() {
+                let custom_back = match self.ends().get(BACK_IDX) {
                     Some(x) if x == a => Some(b.clone()),
                     Some(x) if x == b => Some(a.clone()),
                     _ => None,
                 };
 
                 // update col ends
-                match self.col().ends().get(FRONT_IDX).cloned() {
+                match self.col().ends().get(FRONT_IDX) {
                     Some(x) if x == a => self.col_mut().ends_mut().set_some(FRONT_IDX, b.clone()),
                     Some(x) if x == b => self.col_mut().ends_mut().set_some(FRONT_IDX, a.clone()),
                     _ => {}
                 }
 
-                match self.col().ends().get(BACK_IDX).cloned() {
+                match self.col().ends().get(BACK_IDX) {
                     Some(x) if x == a => self.col_mut().ends_mut().set_some(BACK_IDX, b),
                     Some(x) if x == b => self.col_mut().ends_mut().set_some(BACK_IDX, a),
                     _ => {}
