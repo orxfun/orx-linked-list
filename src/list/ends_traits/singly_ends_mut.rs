@@ -35,8 +35,7 @@ where
     {
         self.ends_mut()
             .get()
-            .cloned()
-            .map(|p| unsafe { self.col_mut().data_mut_unchecked(&p) })
+            .map(|p| unsafe { self.col_mut().data_mut_unchecked(p) })
     }
 
     // idx

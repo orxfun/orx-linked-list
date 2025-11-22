@@ -420,7 +420,7 @@ where
             while let Some(next) = new_next {
                 new_next = self.col().node(next).next().get();
 
-                self.link(&next, &prev);
+                self.link(next, prev);
 
                 prev = next;
                 if prev == back {
@@ -429,12 +429,12 @@ where
             }
 
             match new_next_of_front {
-                Some(new_next_of_front) => self.link(&front, &new_next_of_front),
+                Some(new_next_of_front) => self.link(front, new_next_of_front),
                 None => self.col_mut().node_mut(front).next_mut().set_none(),
             }
 
             match new_prev_of_back {
-                Some(new_prev_of_back) => self.link(&new_prev_of_back, &back),
+                Some(new_prev_of_back) => self.link(new_prev_of_back, back),
                 None => self.col_mut().node_mut(back).prev_mut().set_none(),
             }
 
@@ -499,7 +499,7 @@ where
         // update the gap
         match (old_prev.clone(), old_next.clone()) {
             (Some(old_prev), _) if old_prev == prev => return,
-            (Some(old_prev), Some(old_next)) => self.link(&old_prev, &old_next),
+            (Some(old_prev), Some(old_next)) => self.link(old_prev, old_next),
             (Some(old_prev), None) => {
                 // idx must be col.back
                 self.col_mut().node_mut(old_prev).next_mut().set_none();
@@ -517,10 +517,10 @@ where
 
         // update the fill
         match next {
-            Some(next) => self.link(&mid, &next),
+            Some(next) => self.link(mid, next),
             None => self.col_mut().node_mut(mid).next_mut().set_none(),
         }
-        self.link(&prev, &mid);
+        self.link(prev, mid);
 
         // custom ends
         let old_front = self.ends().get(FRONT_IDX);
@@ -604,7 +604,7 @@ where
         // update the gap
         match (old_prev.clone(), old_next.clone()) {
             (_, Some(old_next)) if old_next == next => return,
-            (Some(old_prev), Some(old_next)) => self.link(&old_prev, &old_next),
+            (Some(old_prev), Some(old_next)) => self.link(old_prev, old_next),
             (Some(old_prev), None) => {
                 // idx must be col.back
                 self.col_mut().node_mut(old_prev).next_mut().set_none();
@@ -622,10 +622,10 @@ where
 
         // update the fill
         match prev {
-            Some(prev) => self.link(&prev, &mid),
+            Some(prev) => self.link(prev, mid),
             None => self.col_mut().node_mut(mid).prev_mut().set_none(),
         }
-        self.link(&mid, &next);
+        self.link(mid, next);
 
         // custom ends
         let old_front = self.ends().get(FRONT_IDX);
@@ -775,22 +775,22 @@ where
             (_, Some(n_b)) if a == n_b => self.move_next_to(idx_b, idx_a),
             _ => {
                 match p_a {
-                    Some(p_a) => self.link(&p_a, &b),
+                    Some(p_a) => self.link(p_a, b),
                     None => self.col_mut().node_mut(b).prev_mut().set_none(),
                 }
 
                 match p_b {
-                    Some(p_b) => self.link(&p_b, &a),
+                    Some(p_b) => self.link(p_b, a),
                     None => self.col_mut().node_mut(a).prev_mut().set_none(),
                 }
 
                 match n_a {
-                    Some(n_a) => self.link(&b, &n_a),
+                    Some(n_a) => self.link(b, n_a),
                     None => self.col_mut().node_mut(b).next_mut().set_none(),
                 }
 
                 match n_b {
-                    Some(n_b) => self.link(&a, &n_b),
+                    Some(n_b) => self.link(a, n_b),
                     None => self.col_mut().node_mut(a).next_mut().set_none(),
                 }
 
@@ -875,7 +875,7 @@ where
     unsafe fn add_link(&mut self, a: DoublyIdx<T>, b: DoublyIdx<T>) {
         let a = self.col().try_get_ptr(a).expect(OOB);
         let b = self.col().try_get_ptr(b).expect(OOB);
-        self.link(&a, &b);
+        self.link(a, b);
     }
 
     /// ***O(1)*** Removes a link between `a` and `b`; i.e.,
@@ -920,7 +920,7 @@ where
     unsafe fn remove_link(&mut self, a: DoublyIdx<T>, b: DoublyIdx<T>) {
         let a = self.col().try_get_ptr(a).expect(OOB);
         let b = self.col().try_get_ptr(b).expect(OOB);
-        self.unlink(&a, &b);
+        self.unlink(a, b);
     }
 
     /// ***O(1)*** Sets the `front` of the list as the `new_front`.

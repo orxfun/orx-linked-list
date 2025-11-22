@@ -528,7 +528,7 @@ where
     /// ```
     fn next_idx_of(&self, idx: DoublyIdx<T>) -> Option<DoublyIdx<T>> {
         let ptr = self.col().try_get_ptr(idx).expect(IDX_ERR);
-        let next_ptr = self.col().node(&ptr).next().get();
+        let next_ptr = self.col().node(ptr).next().get();
         next_ptr.map(|p| DoublyIdx::new(self.col().memory_state(), p))
     }
 
@@ -595,7 +595,7 @@ where
     /// ```
     fn prev_idx_of(&self, idx: DoublyIdx<T>) -> Option<DoublyIdx<T>> {
         let ptr = self.col().try_get_ptr(idx).expect(IDX_ERR);
-        let prev_ptr = self.col().node(&ptr).prev().get();
+        let prev_ptr = self.col().node(ptr).prev().get();
         prev_ptr.map(|p| DoublyIdx::new(self.col().memory_state(), p))
     }
 

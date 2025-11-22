@@ -491,7 +491,7 @@ where
     /// ```
     fn next_idx_of(&self, idx: SinglyIdx<T>) -> Option<SinglyIdx<T>> {
         let ptr = self.col().try_get_ptr(idx).expect(IDX_ERR);
-        let next_ptr = self.col().node(&ptr).next().get();
+        let next_ptr = self.col().node(ptr).next().get();
         next_ptr.map(|p| SinglyIdx::new(self.col().memory_state(), p))
     }
 

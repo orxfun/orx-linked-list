@@ -23,10 +23,10 @@ where
         let begin = match range.start_bound() {
             Excluded(x) => {
                 let ptr = self.col().try_get_ptr(*x)?;
-                self.col().node(&ptr).next().get().cloned()
+                self.col().node(ptr).next().get()
             }
             Included(x) => Some(self.col().try_get_ptr(*x)?),
-            Unbounded => self.col().ends().get(FRONT_IDX).cloned(),
+            Unbounded => self.col().ends().get(FRONT_IDX),
         };
 
         Ok(begin)
@@ -43,12 +43,12 @@ where
             Excluded(x) => {
                 let ptr = self.col().try_get_ptr(*x)?;
                 match ptr == front {
-                    false => self.col().node(&ptr).prev().get().cloned(),
+                    false => self.col().node(ptr).prev().get(),
                     true => None,
                 }
             }
             Included(x) => Some(self.col().try_get_ptr(*x)?),
-            Unbounded => self.ends().get(BACK_IDX).cloned(),
+            Unbounded => self.ends().get(BACK_IDX),
         };
 
         Ok(end)
@@ -87,13 +87,13 @@ where
 
     // links
     #[inline(always)]
-    fn is_linked(&self, prev: &NodePtr<Doubly<T>>, next: &NodePtr<Doubly<T>>) -> bool {
+    fn is_linked(&self, prev: NodePtr<Doubly<T>>, next: NodePtr<Doubly<T>>) -> bool {
         self.col().node(prev).next().get() == Some(next)
             && self.col().node(next).prev().get() == Some(prev)
     }
 
     #[inline(always)]
-    fn link(&mut self, prev: &NodePtr<Doubly<T>>, next: &NodePtr<Doubly<T>>) {
+    fn link(&mut self, prev: NodePtr<Doubly<T>>, next: NodePtr<Doubly<T>>) {
         self.col_mut()
             .node_mut(prev)
             .next_mut()
@@ -105,7 +105,7 @@ where
     }
 
     #[inline(always)]
-    fn unlink(&mut self, prev: &NodePtr<Doubly<T>>, next: &NodePtr<Doubly<T>>) {
+    fn unlink(&mut self, prev: NodePtr<Doubly<T>>, next: NodePtr<Doubly<T>>) {
         debug_assert!(self.is_linked(prev, next));
 
         self.col_mut().node_mut(prev).next_mut().set_none();
