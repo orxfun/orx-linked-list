@@ -38,8 +38,7 @@ where
     {
         self.ends_mut()
             .get(FRONT_IDX)
-            .cloned()
-            .map(|p| unsafe { self.col_mut().data_mut_unchecked(&p) })
+            .map(|p| unsafe { self.col_mut().data_mut_unchecked(p) })
     }
 
     /// ***O(1)*** Returns a mutable reference to the back of the list,
@@ -68,8 +67,7 @@ where
     {
         self.ends_mut()
             .get(BACK_IDX)
-            .cloned()
-            .map(|p| unsafe { self.col_mut().data_mut_unchecked(&p) })
+            .map(|p| unsafe { self.col_mut().data_mut_unchecked(p) })
     }
 
     // idx
@@ -107,33 +105,33 @@ where
     /// let a = list.push_back('a');
     /// let b = list.push_back('b');
     ///
-    /// assert_eq!(list.get(&a), Some(&'a'));
-    /// assert_eq!(list.get(&b), Some(&'b'));
+    /// assert_eq!(list.get(a), Some(&'a'));
+    /// assert_eq!(list.get(b), Some(&'b'));
     ///
-    /// *list.get_mut(&a).unwrap() = 'x';
+    /// *list.get_mut(a).unwrap() = 'x';
     ///
     /// list.push_front('c');
     /// list.push_back('d');
     /// list.push_front('e');
     /// let f = list.push_back('f');
     ///
-    /// assert_eq!(list.get(&a), Some(&'x'));
-    /// assert_eq!(list.get(&b), Some(&'b'));
-    /// assert_eq!(list.get(&f), Some(&'f'));
+    /// assert_eq!(list.get(a), Some(&'x'));
+    /// assert_eq!(list.get(b), Some(&'b'));
+    /// assert_eq!(list.get(f), Some(&'f'));
     ///
     /// let _ = list.pop_back(); // f is removed
     ///
-    /// *list.get_mut(&a).unwrap() = 'y';
+    /// *list.get_mut(a).unwrap() = 'y';
     ///
-    /// assert_eq!(list.get(&a), Some(&'y'));
-    /// assert_eq!(list.get(&b), Some(&'b'));
-    /// assert_eq!(list.get(&f), None);
+    /// assert_eq!(list.get(a), Some(&'y'));
+    /// assert_eq!(list.get(b), Some(&'b'));
+    /// assert_eq!(list.get(f), None);
     ///
     /// list.clear(); // all removed
     ///
-    /// assert_eq!(list.get(&a), None);
-    /// assert_eq!(list.get(&b), None);
-    /// assert_eq!(list.get(&f), None);
+    /// assert_eq!(list.get(a), None);
+    /// assert_eq!(list.get(b), None);
+    /// assert_eq!(list.get(f), None);
     /// ```
     ///
     /// In the following, removal of nodes invalidates indices due to reorganization.
@@ -154,15 +152,15 @@ where
     /// list.push_back('d');
     /// list.push_back('e');
     ///
-    /// *list.get_mut(&c).unwrap() = 'x';
+    /// *list.get_mut(c).unwrap() = 'x';
     ///
     /// list.pop_back(); // does not lead to reorganization
     ///
-    /// assert_eq!(list.get(&c), Some(&'x'));
+    /// assert_eq!(list.get(c), Some(&'x'));
     ///
     /// list.pop_front(); // leads to reorganization
     ///
-    /// assert_eq!(list.get(&c), None);
+    /// assert_eq!(list.get(c), None);
     /// ```
     ///
     /// In the final example, we attempt to access to a list element using an index created by another list.
@@ -176,10 +174,10 @@ where
     /// let mut other_list = DoublyList::new();
     /// let other_idx = other_list.push_back('a');
     ///
-    /// assert!(list.get_mut(&idx).is_some());
-    /// // assert_eq!(list.get_mut(&other_idx), None);
+    /// assert!(list.get_mut(idx).is_some());
+    /// // assert_eq!(list.get_mut(other_idx), None);
     /// ```
-    fn get_mut<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Option<&'a mut T>
+    fn get_mut<'a>(&'a mut self, idx: DoublyIdx<T>) -> Option<&'a mut T>
     where
         M: 'a,
         P: 'a,
@@ -224,33 +222,33 @@ where
     /// let a = list.push_back('a');
     /// let b = list.push_back('b');
     ///
-    /// assert_eq!(list.try_get(&a), Ok(&'a'));
-    /// assert_eq!(list.try_get(&b), Ok(&'b'));
+    /// assert_eq!(list.try_get(a), Ok(&'a'));
+    /// assert_eq!(list.try_get(b), Ok(&'b'));
     ///
-    /// *list.try_get_mut(&a).unwrap() = 'x';
+    /// *list.try_get_mut(a).unwrap() = 'x';
     ///
     /// list.push_front('c');
     /// list.push_back('d');
     /// list.push_front('e');
     /// let f = list.push_back('f');
     ///
-    /// assert_eq!(list.try_get(&a), Ok(&'x'));
-    /// assert_eq!(list.try_get(&b), Ok(&'b'));
-    /// assert_eq!(list.try_get(&f), Ok(&'f'));
+    /// assert_eq!(list.try_get(a), Ok(&'x'));
+    /// assert_eq!(list.try_get(b), Ok(&'b'));
+    /// assert_eq!(list.try_get(f), Ok(&'f'));
     ///
     /// let _ = list.pop_back(); // f is removed
     ///
-    /// *list.try_get_mut(&a).unwrap() = 'y';
+    /// *list.try_get_mut(a).unwrap() = 'y';
     ///
-    /// assert_eq!(list.try_get(&a), Ok(&'y'));
-    /// assert_eq!(list.try_get(&b), Ok(&'b'));
-    /// assert_eq!(list.try_get(&f), Err(NodeIdxError::RemovedNode));
+    /// assert_eq!(list.try_get(a), Ok(&'y'));
+    /// assert_eq!(list.try_get(b), Ok(&'b'));
+    /// assert_eq!(list.try_get(f), Err(NodeIdxError::RemovedNode));
     ///
     /// list.clear(); // all removed
     ///
-    /// assert_eq!(list.try_get(&a), Err(NodeIdxError::OutOfBounds));
-    /// assert_eq!(list.try_get(&b), Err(NodeIdxError::OutOfBounds));
-    /// assert_eq!(list.try_get(&f), Err(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.try_get(a), Err(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.try_get(b), Err(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.try_get(f), Err(NodeIdxError::OutOfBounds));
     /// ```
     ///
     /// In the following, removal of nodes invalidates indices due to reorganization.
@@ -271,15 +269,15 @@ where
     /// list.push_back('d');
     /// list.push_back('e');
     ///
-    /// *list.try_get_mut(&c).unwrap() = 'x';
+    /// *list.try_get_mut(c).unwrap() = 'x';
     ///
     /// list.pop_back(); // does not lead to reorganization
     ///
-    /// assert_eq!(list.get(&c), Some(&'x'));
+    /// assert_eq!(list.get(c), Some(&'x'));
     ///
     /// list.pop_front(); // leads to reorganization
     ///
-    /// assert_eq!(list.try_get_mut(&c), Err(NodeIdxError::ReorganizedCollection));
+    /// assert_eq!(list.try_get_mut(c), Err(NodeIdxError::ReorganizedCollection));
     /// ```
     ///
     /// In the final example, we attempt to access to a list element using an index created by another list.
@@ -293,10 +291,10 @@ where
     /// let mut other_list = DoublyList::new();
     /// let other_idx = other_list.push_back('a');
     ///
-    /// assert!(list.try_get_mut(&idx).is_ok());
-    /// // assert_eq!(list.try_get_mut(&other_idx), Err(NodeIdxError::OutOfBounds));
+    /// assert!(list.try_get_mut(idx).is_ok());
+    /// // assert_eq!(list.try_get_mut(other_idx), Err(NodeIdxError::OutOfBounds));
     /// ```
-    fn try_get_mut<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Result<&'a mut T, NodeIdxError>
+    fn try_get_mut<'a>(&'a mut self, idx: DoublyIdx<T>) -> Result<&'a mut T, NodeIdxError>
     where
         M: 'a,
         P: 'a,
@@ -330,17 +328,17 @@ where
     ///
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'c', 'd']));
     ///
-    /// let c = list.next_idx_of(&a).and_then(|b| list.next_mut_of(&b));
+    /// let c = list.next_idx_of(a).and_then(|b| list.next_mut_of(b));
     /// *c.unwrap() = 'x';
     ///
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'x', 'd']));
     /// ```
-    fn next_mut_of<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Option<&'a mut T>
+    fn next_mut_of<'a>(&'a mut self, idx: DoublyIdx<T>) -> Option<&'a mut T>
     where
         M: 'a,
         P: 'a,
     {
-        self.next_idx_of(idx).and_then(|i| self.get_mut(&i))
+        self.next_idx_of(idx).and_then(|i| self.get_mut(i))
     }
 
     /// ***O(1)*** Returns a mutable reference to the element preceding the one with the given `idx`.
@@ -364,17 +362,17 @@ where
     ///
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'c', 'd']));
     ///
-    /// let a = list.prev_idx_of(&c).and_then(|b| list.prev_mut_of(&b));
+    /// let a = list.prev_idx_of(c).and_then(|b| list.prev_mut_of(b));
     /// *a.unwrap() = 'x';
     ///
     /// assert!(list.eq_to_iter_vals(['x', 'b', 'c', 'd']));
     /// ```
-    fn prev_mut_of<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Option<&'a mut T>
+    fn prev_mut_of<'a>(&'a mut self, idx: DoublyIdx<T>) -> Option<&'a mut T>
     where
         M: 'a,
         P: 'a,
     {
-        self.prev_idx_of(idx).and_then(|i| self.get_mut(&i))
+        self.prev_idx_of(idx).and_then(|i| self.get_mut(i))
     }
 
     /// ***O(n)*** Reverses the list (in-place).
@@ -406,23 +404,23 @@ where
     /// assert!(list.eq_to_iter_vals(['c', 'd', 'e', 'b', 'a']));
     /// ```
     fn reverse(&mut self) {
-        if let Some(front) = self.ends().get(FRONT_IDX).cloned() {
-            let back = self.ends().get(BACK_IDX).cloned().expect("exists");
+        if let Some(front) = self.ends().get(FRONT_IDX) {
+            let back = self.ends().get(BACK_IDX).expect("exists");
 
             if front == back {
                 return;
             }
 
-            let new_next_of_front = self.col().node(&back).next().get().cloned();
-            let new_prev_of_back = self.col().node(&front).prev().get().cloned();
+            let new_next_of_front = self.col().node(back).next().get();
+            let new_prev_of_back = self.col().node(front).prev().get();
 
-            let mut prev = front.clone();
-            let mut new_next = self.col().node(&prev).next().get().cloned();
+            let mut prev = front;
+            let mut new_next = self.col().node(prev).next().get();
 
             while let Some(next) = new_next {
-                new_next = self.col().node(&next).next().get().cloned();
+                new_next = self.col().node(next).next().get();
 
-                self.link(&next, &prev);
+                self.link(next, prev);
 
                 prev = next;
                 if prev == back {
@@ -431,25 +429,25 @@ where
             }
 
             match new_next_of_front {
-                Some(new_next_of_front) => self.link(&front, &new_next_of_front),
-                None => self.col_mut().node_mut(&front).next_mut().set_none(),
+                Some(new_next_of_front) => self.link(front, new_next_of_front),
+                None => self.col_mut().node_mut(front).next_mut().set_none(),
             }
 
             match new_prev_of_back {
-                Some(new_prev_of_back) => self.link(&new_prev_of_back, &back),
-                None => self.col_mut().node_mut(&back).prev_mut().set_none(),
+                Some(new_prev_of_back) => self.link(new_prev_of_back, back),
+                None => self.col_mut().node_mut(back).prev_mut().set_none(),
             }
 
             // ends
 
-            let old_col_front = self.col().ends().get(FRONT_IDX).cloned().expect("exists");
-            let old_col_back = self.col().ends().get(BACK_IDX).cloned().expect("exists");
+            let old_col_front = self.col().ends().get(FRONT_IDX).expect("exists");
+            let old_col_back = self.col().ends().get(BACK_IDX).expect("exists");
 
-            self.ends_mut().set_some(FRONT_IDX, back.clone());
-            self.ends_mut().set_some(BACK_IDX, front.clone());
+            self.ends_mut().set_some(FRONT_IDX, back);
+            self.ends_mut().set_some(BACK_IDX, front);
 
             if front == old_col_front {
-                self.col_mut().ends_mut().set_some(FRONT_IDX, back.clone());
+                self.col_mut().ends_mut().set_some(FRONT_IDX, back);
             }
 
             if back == old_col_back {
@@ -477,16 +475,16 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3, 4, 5]));
     ///
-    /// list.move_next_to(&idx[4], &idx[1]);
+    /// list.move_next_to(idx[4], idx[1]);
     /// assert!(list.eq_to_iter_vals([0, 1, 4, 2, 3, 5]));
     ///
-    /// list.move_next_to(&idx[2], &idx[5]);
+    /// list.move_next_to(idx[2], idx[5]);
     /// assert!(list.eq_to_iter_vals([0, 1, 4, 3, 5, 2]));
     ///
-    /// list.move_next_to(&idx[3], &idx[0]);
+    /// list.move_next_to(idx[3], idx[0]);
     /// assert!(list.eq_to_iter_vals([0, 3, 1, 4, 5, 2]));
     /// ```
-    fn move_next_to(&mut self, idx: &DoublyIdx<T>, idx_target: &DoublyIdx<T>) {
+    fn move_next_to(&mut self, idx: DoublyIdx<T>, idx_target: DoublyIdx<T>) {
         let mid = self.col().try_get_ptr(idx).expect(IDX_ERR);
         let prev = self.col().try_get_ptr(idx_target).expect(IDX_ERR);
 
@@ -494,23 +492,23 @@ where
             return;
         }
 
-        let next = self.col().node(&prev).next().get().cloned();
-        let old_next = self.col().node(&mid).next().get().cloned();
-        let old_prev = self.col().node(&mid).prev().get().cloned();
+        let next = self.col().node(prev).next().get();
+        let old_next = self.col().node(mid).next().get();
+        let old_prev = self.col().node(mid).prev().get();
 
         // update the gap
-        match (old_prev.clone(), old_next.clone()) {
+        match (old_prev, old_next) {
             (Some(old_prev), _) if old_prev == prev => return,
-            (Some(old_prev), Some(old_next)) => self.link(&old_prev, &old_next),
+            (Some(old_prev), Some(old_next)) => self.link(old_prev, old_next),
             (Some(old_prev), None) => {
                 // idx must be col.back
-                self.col_mut().node_mut(&old_prev).next_mut().set_none();
+                self.col_mut().node_mut(old_prev).next_mut().set_none();
 
                 self.col_mut().ends_mut().set_some(BACK_IDX, old_prev);
             }
             (None, Some(old_next)) => {
                 // idx must be col.front
-                self.col_mut().node_mut(&old_next).prev_mut().set_none();
+                self.col_mut().node_mut(old_next).prev_mut().set_none();
 
                 self.col_mut().ends_mut().set_some(FRONT_IDX, old_next);
             }
@@ -519,25 +517,25 @@ where
 
         // update the fill
         match next {
-            Some(next) => self.link(&mid, &next),
-            None => self.col_mut().node_mut(&mid).next_mut().set_none(),
+            Some(next) => self.link(mid, next),
+            None => self.col_mut().node_mut(mid).next_mut().set_none(),
         }
-        self.link(&prev, &mid);
+        self.link(prev, mid);
 
         // custom ends
-        let old_front = self.ends().get(FRONT_IDX).cloned();
-        let old_back = self.ends().get(BACK_IDX).cloned();
+        let old_front = self.ends().get(FRONT_IDX);
+        let old_back = self.ends().get(BACK_IDX);
 
-        if let Some(old_back) = old_back.clone() {
+        if let Some(old_back) = old_back {
             match old_back == prev {
                 true => {
                     // new node placed in front
-                    self.ends_mut().set_some(BACK_IDX, mid.clone())
+                    self.ends_mut().set_some(BACK_IDX, mid)
                 }
                 false => {
                     if old_back == mid {
                         // old front is moved away
-                        let old_front = old_front.clone().expect("exists");
+                        let old_front = old_front.expect("exists");
                         match mid == old_front {
                             false => {
                                 let new_back = old_prev.expect("exists");
@@ -582,16 +580,16 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3, 4, 5]));
     ///
-    /// list.move_prev_to(&idx[4], &idx[1]);
+    /// list.move_prev_to(idx[4], idx[1]);
     /// assert!(list.eq_to_iter_vals([0, 4, 1, 2, 3, 5]));
     ///
-    /// list.move_prev_to(&idx[2], &idx[5]);
+    /// list.move_prev_to(idx[2], idx[5]);
     /// assert!(list.eq_to_iter_vals([0, 4, 1, 3, 2, 5]));
     ///
-    /// list.move_prev_to(&idx[3], &idx[0]);
+    /// list.move_prev_to(idx[3], idx[0]);
     /// assert!(list.eq_to_iter_vals([3, 0, 4, 1, 2, 5]));
     /// ```
-    fn move_prev_to(&mut self, idx: &DoublyIdx<T>, idx_target: &DoublyIdx<T>) {
+    fn move_prev_to(&mut self, idx: DoublyIdx<T>, idx_target: DoublyIdx<T>) {
         let mid = self.col().try_get_ptr(idx).expect(IDX_ERR);
         let next = self.col().try_get_ptr(idx_target).expect(IDX_ERR);
 
@@ -599,23 +597,23 @@ where
             return;
         }
 
-        let prev = self.col().node(&next).prev().get().cloned();
-        let old_next = self.col().node(&mid).next().get().cloned();
-        let old_prev = self.col().node(&mid).prev().get().cloned();
+        let prev = self.col().node(next).prev().get();
+        let old_next = self.col().node(mid).next().get();
+        let old_prev = self.col().node(mid).prev().get();
 
         // update the gap
-        match (old_prev.clone(), old_next.clone()) {
+        match (old_prev, old_next) {
             (_, Some(old_next)) if old_next == next => return,
-            (Some(old_prev), Some(old_next)) => self.link(&old_prev, &old_next),
+            (Some(old_prev), Some(old_next)) => self.link(old_prev, old_next),
             (Some(old_prev), None) => {
                 // idx must be col.back
-                self.col_mut().node_mut(&old_prev).next_mut().set_none();
+                self.col_mut().node_mut(old_prev).next_mut().set_none();
 
                 self.col_mut().ends_mut().set_some(BACK_IDX, old_prev);
             }
             (None, Some(old_next)) => {
                 // idx must be col.front
-                self.col_mut().node_mut(&old_next).prev_mut().set_none();
+                self.col_mut().node_mut(old_next).prev_mut().set_none();
 
                 self.col_mut().ends_mut().set_some(FRONT_IDX, old_next);
             }
@@ -624,25 +622,25 @@ where
 
         // update the fill
         match prev {
-            Some(prev) => self.link(&prev, &mid),
-            None => self.col_mut().node_mut(&mid).prev_mut().set_none(),
+            Some(prev) => self.link(prev, mid),
+            None => self.col_mut().node_mut(mid).prev_mut().set_none(),
         }
-        self.link(&mid, &next);
+        self.link(mid, next);
 
         // custom ends
-        let old_front = self.ends().get(FRONT_IDX).cloned();
-        let old_back = self.ends().get(BACK_IDX).cloned();
+        let old_front = self.ends().get(FRONT_IDX);
+        let old_back = self.ends().get(BACK_IDX);
 
         if let Some(old_front) = &old_front {
             match old_front == &next {
                 true => {
                     // new node placed in front
-                    self.ends_mut().set_some(FRONT_IDX, mid.clone())
+                    self.ends_mut().set_some(FRONT_IDX, mid)
                 }
                 false => {
                     if old_front == &mid {
                         // old front is moved away
-                        let old_back = old_back.clone().expect("exists");
+                        let old_back = old_back.expect("exists");
                         match mid == old_back {
                             false => {
                                 let new_front = old_next.expect("exists");
@@ -687,19 +685,19 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3, 4, 5]));
     ///
-    /// list.move_to_front(&idx[5]);
+    /// list.move_to_front(idx[5]);
     /// assert!(list.eq_to_iter_vals([5, 0, 1, 2, 3, 4]));
     ///
-    /// list.move_to_front(&idx[2]);
+    /// list.move_to_front(idx[2]);
     /// assert!(list.eq_to_iter_vals([2, 5, 0, 1, 3, 4]));
     ///
-    /// list.move_to_front(&idx[3]);
+    /// list.move_to_front(idx[3]);
     /// assert!(list.eq_to_iter_vals([3, 2, 5, 0, 1, 4]));
     /// ```
-    fn move_to_front(&mut self, idx: &DoublyIdx<T>) {
+    fn move_to_front(&mut self, idx: DoublyIdx<T>) {
         let ptr = self.ends().get(FRONT_IDX).expect(OOB);
         let idx_target = NodeIdx::new(self.col().memory_state(), ptr);
-        self.move_prev_to(idx, &idx_target);
+        self.move_prev_to(idx, idx_target);
     }
 
     /// ***O(1)*** Moves the element with the given `idx`
@@ -719,19 +717,19 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3, 4, 5]));
     ///
-    /// list.move_to_back(&idx[1]);
+    /// list.move_to_back(idx[1]);
     /// assert!(list.eq_to_iter_vals([0, 2, 3, 4, 5, 1]));
     ///
-    /// list.move_to_back(&idx[4]);
+    /// list.move_to_back(idx[4]);
     /// assert!(list.eq_to_iter_vals([0, 2, 3, 5, 1, 4]));
     ///
-    /// list.move_to_back(&idx[2]);
+    /// list.move_to_back(idx[2]);
     /// assert!(list.eq_to_iter_vals([0, 3, 5, 1, 4, 2]));
     /// ```
-    fn move_to_back(&mut self, idx: &DoublyIdx<T>) {
+    fn move_to_back(&mut self, idx: DoublyIdx<T>) {
         let ptr = self.ends().get(BACK_IDX).expect(OOB);
         let idx_target = NodeIdx::new(self.col().memory_state(), ptr);
-        self.move_next_to(idx, &idx_target);
+        self.move_next_to(idx, idx_target);
     }
 
     /// ***O(1)*** Swaps the elements with indices `a` and `b`.
@@ -750,16 +748,16 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3, 4, 5]));
     ///
-    /// list.swap(&idx[1], &idx[5]);
+    /// list.swap(idx[1], idx[5]);
     /// assert!(list.eq_to_iter_vals([0, 5, 2, 3, 4, 1]));
     ///
-    /// list.swap(&idx[4], &idx[0]);
+    /// list.swap(idx[4], idx[0]);
     /// assert!(list.eq_to_iter_vals([4, 5, 2, 3, 0, 1]));
     ///
-    /// list.swap(&idx[3], &idx[5]);
+    /// list.swap(idx[3], idx[5]);
     /// assert!(list.eq_to_iter_vals([4, 3, 2, 5, 0, 1]));
     /// ```
-    fn swap(&mut self, idx_a: &DoublyIdx<T>, idx_b: &DoublyIdx<T>) {
+    fn swap(&mut self, idx_a: DoublyIdx<T>, idx_b: DoublyIdx<T>) {
         let a = self.col().try_get_ptr(idx_a).expect(IDX_ERR);
         let b = self.col().try_get_ptr(idx_b).expect(IDX_ERR);
 
@@ -767,56 +765,56 @@ where
             return;
         }
 
-        let p_a = self.col().node(&a).prev().get().cloned();
-        let p_b = self.col().node(&b).prev().get().cloned();
-        let n_a = self.col().node(&a).next().get().cloned();
-        let n_b = self.col().node(&b).next().get().cloned();
+        let p_a = self.col().node(a).prev().get();
+        let p_b = self.col().node(b).prev().get();
+        let n_a = self.col().node(a).next().get();
+        let n_b = self.col().node(b).next().get();
 
-        match (n_a.clone(), n_b.clone()) {
+        match (n_a, n_b) {
             (Some(n_a), _) if b == n_a => self.move_next_to(idx_a, idx_b),
             (_, Some(n_b)) if a == n_b => self.move_next_to(idx_b, idx_a),
             _ => {
                 match p_a {
-                    Some(p_a) => self.link(&p_a, &b),
-                    None => self.col_mut().node_mut(&b).prev_mut().set_none(),
+                    Some(p_a) => self.link(p_a, b),
+                    None => self.col_mut().node_mut(b).prev_mut().set_none(),
                 }
 
                 match p_b {
-                    Some(p_b) => self.link(&p_b, &a),
-                    None => self.col_mut().node_mut(&a).prev_mut().set_none(),
+                    Some(p_b) => self.link(p_b, a),
+                    None => self.col_mut().node_mut(a).prev_mut().set_none(),
                 }
 
                 match n_a {
-                    Some(n_a) => self.link(&b, &n_a),
-                    None => self.col_mut().node_mut(&b).next_mut().set_none(),
+                    Some(n_a) => self.link(b, n_a),
+                    None => self.col_mut().node_mut(b).next_mut().set_none(),
                 }
 
                 match n_b {
-                    Some(n_b) => self.link(&a, &n_b),
-                    None => self.col_mut().node_mut(&a).next_mut().set_none(),
+                    Some(n_b) => self.link(a, n_b),
+                    None => self.col_mut().node_mut(a).next_mut().set_none(),
                 }
 
                 // cache custom ends
-                let custom_front = match self.ends().get(FRONT_IDX).cloned() {
-                    Some(x) if x == a => Some(b.clone()),
-                    Some(x) if x == b => Some(a.clone()),
+                let custom_front = match self.ends().get(FRONT_IDX) {
+                    Some(x) if x == a => Some(b),
+                    Some(x) if x == b => Some(a),
                     _ => None,
                 };
 
-                let custom_back = match self.ends().get(BACK_IDX).cloned() {
-                    Some(x) if x == a => Some(b.clone()),
-                    Some(x) if x == b => Some(a.clone()),
+                let custom_back = match self.ends().get(BACK_IDX) {
+                    Some(x) if x == a => Some(b),
+                    Some(x) if x == b => Some(a),
                     _ => None,
                 };
 
                 // update col ends
-                match self.col().ends().get(FRONT_IDX).cloned() {
-                    Some(x) if x == a => self.col_mut().ends_mut().set_some(FRONT_IDX, b.clone()),
-                    Some(x) if x == b => self.col_mut().ends_mut().set_some(FRONT_IDX, a.clone()),
+                match self.col().ends().get(FRONT_IDX) {
+                    Some(x) if x == a => self.col_mut().ends_mut().set_some(FRONT_IDX, b),
+                    Some(x) if x == b => self.col_mut().ends_mut().set_some(FRONT_IDX, a),
                     _ => {}
                 }
 
-                match self.col().ends().get(BACK_IDX).cloned() {
+                match self.col().ends().get(BACK_IDX) {
                     Some(x) if x == a => self.col_mut().ends_mut().set_some(BACK_IDX, b),
                     Some(x) if x == b => self.col_mut().ends_mut().set_some(BACK_IDX, a),
                     _ => {}
@@ -861,11 +859,11 @@ where
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3, 4, 5, 6, 7]));
     ///
     /// unsafe {
-    ///     list.remove_link(&idx[0], &idx[1]);
-    ///     list.remove_link(&idx[2], &idx[3]);
-    ///     list.add_link(&idx[0], &idx[3]);
-    ///     list.add_link(&idx[7], &idx[1]);
-    ///     list.set_back(&idx[2]);
+    ///     list.remove_link(idx[0], idx[1]);
+    ///     list.remove_link(idx[2], idx[3]);
+    ///     list.add_link(idx[0], idx[3]);
+    ///     list.add_link(idx[7], idx[1]);
+    ///     list.set_back(idx[2]);
     /// }
     ///
     /// assert!(list.eq_to_iter_vals([0, 3, 4, 5, 6, 7, 1, 2]));
@@ -874,10 +872,10 @@ where
     /// This example also makes it clear that the unsafe api is very useful;
     /// however, it must only be used through a safe method that defines a
     /// proved to be legal move as a combination of unsafe moves.
-    unsafe fn add_link(&mut self, a: &DoublyIdx<T>, b: &DoublyIdx<T>) {
+    unsafe fn add_link(&mut self, a: DoublyIdx<T>, b: DoublyIdx<T>) {
         let a = self.col().try_get_ptr(a).expect(OOB);
         let b = self.col().try_get_ptr(b).expect(OOB);
-        self.link(&a, &b);
+        self.link(a, b);
     }
 
     /// ***O(1)*** Removes a link between `a` and `b`; i.e.,
@@ -906,11 +904,11 @@ where
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3, 4, 5, 6, 7]));
     ///
     /// unsafe {
-    ///     list.remove_link(&idx[0], &idx[1]);
-    ///     list.remove_link(&idx[2], &idx[3]);
-    ///     list.add_link(&idx[0], &idx[3]);
-    ///     list.add_link(&idx[7], &idx[1]);
-    ///     list.set_back(&idx[2]);
+    ///     list.remove_link(idx[0], idx[1]);
+    ///     list.remove_link(idx[2], idx[3]);
+    ///     list.add_link(idx[0], idx[3]);
+    ///     list.add_link(idx[7], idx[1]);
+    ///     list.set_back(idx[2]);
     /// }
     ///
     /// assert!(list.eq_to_iter_vals([0, 3, 4, 5, 6, 7, 1, 2]));
@@ -919,10 +917,10 @@ where
     /// This example also makes it clear that the unsafe api is very useful;
     /// however, it must only be used through a safe method that defines a
     /// proved to be legal move as a combination of unsafe moves.
-    unsafe fn remove_link(&mut self, a: &DoublyIdx<T>, b: &DoublyIdx<T>) {
+    unsafe fn remove_link(&mut self, a: DoublyIdx<T>, b: DoublyIdx<T>) {
         let a = self.col().try_get_ptr(a).expect(OOB);
         let b = self.col().try_get_ptr(b).expect(OOB);
-        self.unlink(&a, &b);
+        self.unlink(a, b);
     }
 
     /// ***O(1)*** Sets the `front` of the list as the `new_front`.
@@ -948,11 +946,11 @@ where
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3, 4, 5, 6, 7]));
     ///
     /// unsafe {
-    ///     list.remove_link(&idx[0], &idx[1]);
-    ///     list.remove_link(&idx[2], &idx[3]);
-    ///     list.add_link(&idx[0], &idx[3]);
-    ///     list.add_link(&idx[7], &idx[1]);
-    ///     list.set_back(&idx[2]);
+    ///     list.remove_link(idx[0], idx[1]);
+    ///     list.remove_link(idx[2], idx[3]);
+    ///     list.add_link(idx[0], idx[3]);
+    ///     list.add_link(idx[7], idx[1]);
+    ///     list.set_back(idx[2]);
     /// }
     ///
     /// assert!(list.eq_to_iter_vals([0, 3, 4, 5, 6, 7, 1, 2]));
@@ -961,7 +959,7 @@ where
     /// This example also makes it clear that the unsafe api is very useful;
     /// however, it must only be used through a safe method that defines a
     /// proved to be legal move as a combination of unsafe moves.
-    unsafe fn set_front(&mut self, new_front: &DoublyIdx<T>) {
+    unsafe fn set_front(&mut self, new_front: DoublyIdx<T>) {
         let new_front = self.col().try_get_ptr(new_front).expect(OOB);
         self.col_mut().ends_mut().set_some(FRONT_IDX, new_front);
     }
@@ -989,11 +987,11 @@ where
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3, 4, 5, 6, 7]));
     ///
     /// unsafe {
-    ///     list.remove_link(&idx[0], &idx[1]);
-    ///     list.remove_link(&idx[2], &idx[3]);
-    ///     list.add_link(&idx[0], &idx[3]);
-    ///     list.add_link(&idx[7], &idx[1]);
-    ///     list.set_back(&idx[2]);
+    ///     list.remove_link(idx[0], idx[1]);
+    ///     list.remove_link(idx[2], idx[3]);
+    ///     list.add_link(idx[0], idx[3]);
+    ///     list.add_link(idx[7], idx[1]);
+    ///     list.set_back(idx[2]);
     /// }
     ///
     /// assert!(list.eq_to_iter_vals([0, 3, 4, 5, 6, 7, 1, 2]));
@@ -1002,7 +1000,7 @@ where
     /// This example also makes it clear that the unsafe api is very useful;
     /// however, it must only be used through a safe method that defines a
     /// proved to be legal move as a combination of unsafe moves.
-    unsafe fn set_back(&mut self, new_back: &DoublyIdx<T>) {
+    unsafe fn set_back(&mut self, new_back: DoublyIdx<T>) {
         let new_back = self.col().try_get_ptr(new_back).expect(OOB);
         self.col_mut().ends_mut().set_some(BACK_IDX, new_back);
     }

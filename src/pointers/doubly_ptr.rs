@@ -6,15 +6,22 @@ pub type DoublyPtr<T> = NodePtr<Doubly<T>>;
 
 impl<T> DoublyPointer<T> for DoublyPtr<T> {
     #[inline(always)]
-    fn raw_ptr(&self) -> *mut Node<Doubly<T>> {
-        self.ptr() as *mut Node<Doubly<T>>
+    unsafe fn raw_ptr(&self) -> *mut Node<Doubly<T>> {
+        unsafe { self.ptr() as *mut Node<Doubly<T>> }
     }
 }
 
 /// A node pointer in a doubly linked list.
 pub trait DoublyPointer<T> {
     /// Returns the raw pointer to the node.
-    fn raw_ptr(&self) -> *mut Node<Doubly<T>>;
+    ///
+    /// # SAFETY
+    ///
+    /// This method is unsafe as node pointers implement `Send` and `Sync`.
+    ///
+    /// It is safe dereference the received pointer if we know that `is_valid_for(col)` would
+    /// return `true` where `col` is the collection that this pointer is created from.
+    unsafe fn raw_ptr(&self) -> *mut Node<Doubly<T>>;
 
     /// Returns a reference to the node.
     ///
@@ -61,7 +68,7 @@ pub trait DoublyPointer<T> {
     /// Alternatively, you may use `NodeIdx` for safe access.
     #[inline(always)]
     unsafe fn next(&self) -> Option<DoublyPtr<T>> {
-        unsafe { self.node() }.next().get().cloned()
+        unsafe { self.node() }.next().get()
     }
 
     /// Returns the pointer to the prev node if exists; None otherwise.
@@ -77,6 +84,6 @@ pub trait DoublyPointer<T> {
     /// Alternatively, you may use `NodeIdx` for safe access.
     #[inline(always)]
     unsafe fn prev(&self) -> Option<DoublyPtr<T>> {
-        unsafe { self.node() }.prev().get().cloned()
+        unsafe { self.node() }.prev().get()
     }
 }

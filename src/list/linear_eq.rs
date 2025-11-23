@@ -31,28 +31,28 @@ where
     ///
     /// let b = b.unwrap();
     ///
-    /// let data_b = list.get(&b); // O(1)
+    /// let data_b = list.get(b); // O(1)
     /// assert_eq!(data_b, Some(&'b'));
     ///
     /// // O(1) to create the iterators from the index
-    /// assert_eq!(&['b', 'c', 'd'], list.iter_from(&b).copied().collect::<Vec<_>>().as_slice());
-    /// assert_eq!(&['b', 'a'], list.iter_backward_from(&b).copied().collect::<Vec<_>>().as_slice());
+    /// assert_eq!(&['b', 'c', 'd'], list.iter_from(b).copied().collect::<Vec<_>>().as_slice());
+    /// assert_eq!(&['b', 'a'], list.iter_backward_from(b).copied().collect::<Vec<_>>().as_slice());
     ///
-    /// list.insert_prev_to(&b, 'X'); // O(1)
-    /// list.insert_next_to(&b, 'Y'); // O(1)
+    /// list.insert_prev_to(b, 'X'); // O(1)
+    /// list.insert_next_to(b, 'Y'); // O(1)
     /// assert!(list.eq_to_iter_vals(['a', 'X', 'b', 'Y', 'c', 'd']));
     ///
-    /// let removed = list.remove(&b);  // O(1)
+    /// let removed = list.remove(b);  // O(1)
     /// assert_eq!(removed, 'b');
     /// assert!(list.eq_to_iter_vals(['a', 'X', 'Y', 'c', 'd']));
     ///
-    /// assert_eq!(list.get(&b), None);
-    /// assert_eq!(list.idx_err(&b), Some(NodeIdxError::RemovedNode));
+    /// assert_eq!(list.get(b), None);
+    /// assert_eq!(list.idx_err(b), Some(NodeIdxError::RemovedNode));
     /// ```
     pub fn idx_of(&self, value: &T) -> Option<SinglyIdx<T>> {
         self.iter_ptr()
-            .find(|p| self.0.node(p).data().is_some_and(|d| d == value))
-            .map(|p| NodeIdx::new(self.memory_state(), &p))
+            .find(|p| self.0.node(*p).data().is_some_and(|d| d == value))
+            .map(|p| NodeIdx::new(self.memory_state(), p))
     }
 
     /// ***O(n)*** Performs a forward search from the front and returns `true` if there exists a node with value equal to the given `value`.
@@ -71,7 +71,7 @@ where
     /// ```
     pub fn contains(&self, value: &T) -> bool {
         self.iter_ptr()
-            .any(|p| self.0.node(&p).data().is_some_and(|d| d == value))
+            .any(|p| self.0.node(p).data().is_some_and(|d| d == value))
     }
 
     /// ***O(n)*** Performs a forward search from the front and returns the position of the first node with value equal to the given `value`.
@@ -94,7 +94,7 @@ where
     pub fn position_of_value(&self, value: &T) -> Option<usize> {
         self.iter_ptr().enumerate().find_map(|(i, p)| {
             self.0
-                .node(&p)
+                .node(p)
                 .data()
                 .is_some_and(|d| d == value)
                 .then_some(i)
@@ -131,28 +131,28 @@ where
     ///
     /// let b = b.unwrap();
     ///
-    /// let data_b = list.get(&b); // O(1)
+    /// let data_b = list.get(b); // O(1)
     /// assert_eq!(data_b, Some(&'b'));
     ///
     /// // O(1) to create the iterators from the index
-    /// assert_eq!(&['b', 'c', 'd'], list.iter_from(&b).copied().collect::<Vec<_>>().as_slice());
-    /// assert_eq!(&['b', 'a'], list.iter_backward_from(&b).copied().collect::<Vec<_>>().as_slice());
+    /// assert_eq!(&['b', 'c', 'd'], list.iter_from(b).copied().collect::<Vec<_>>().as_slice());
+    /// assert_eq!(&['b', 'a'], list.iter_backward_from(b).copied().collect::<Vec<_>>().as_slice());
     ///
-    /// list.insert_prev_to(&b, 'X'); // O(1)
-    /// list.insert_next_to(&b, 'Y'); // O(1)
+    /// list.insert_prev_to(b, 'X'); // O(1)
+    /// list.insert_next_to(b, 'Y'); // O(1)
     /// assert!(list.eq_to_iter_vals(['a', 'X', 'b', 'Y', 'c', 'd']));
     ///
-    /// let removed = list.remove(&b);  // O(1)
+    /// let removed = list.remove(b);  // O(1)
     /// assert_eq!(removed, 'b');
     /// assert!(list.eq_to_iter_vals(['a', 'X', 'Y', 'c', 'd']));
     ///
-    /// assert_eq!(list.get(&b), None);
-    /// assert_eq!(list.idx_err(&b), Some(NodeIdxError::RemovedNode));
+    /// assert_eq!(list.get(b), None);
+    /// assert_eq!(list.idx_err(b), Some(NodeIdxError::RemovedNode));
     /// ```
     pub fn idx_of(&self, value: &T) -> Option<DoublyIdx<T>> {
         self.iter_ptr()
-            .find(|p| self.0.node(p).data().is_some_and(|d| d == value))
-            .map(|p| NodeIdx::new(self.memory_state(), &p))
+            .find(|p| self.0.node(*p).data().is_some_and(|d| d == value))
+            .map(|p| NodeIdx::new(self.memory_state(), p))
     }
 
     /// ***O(n)*** Performs a forward search from the front and returns `true` if there exists a node with value equal to the given `value`.
@@ -171,7 +171,7 @@ where
     /// ```
     pub fn contains(&self, value: &T) -> bool {
         self.iter_ptr()
-            .any(|p| self.0.node(&p).data().is_some_and(|d| d == value))
+            .any(|p| self.0.node(p).data().is_some_and(|d| d == value))
     }
 
     /// ***O(n)*** Performs a forward search from the front and returns the position of the first node with value equal to the given `value`.
@@ -194,7 +194,7 @@ where
     pub fn position_of_value(&self, value: &T) -> Option<usize> {
         self.iter_ptr().enumerate().find_map(|(i, p)| {
             self.0
-                .node(&p)
+                .node(p)
                 .data()
                 .is_some_and(|d| d == value)
                 .then_some(i)
@@ -222,29 +222,29 @@ where
     ///
     /// let b = b.unwrap();
     ///
-    /// let data_b = list.get(&b); // O(1)
+    /// let data_b = list.get(b); // O(1)
     /// assert_eq!(data_b, Some(&'b'));
     ///
     /// // O(1) to create the iterators from the index
-    /// assert_eq!(&['b', 'c', 'd'], list.iter_from(&b).copied().collect::<Vec<_>>().as_slice());
-    /// assert_eq!(&['b', 'a'], list.iter_backward_from(&b).copied().collect::<Vec<_>>().as_slice());
+    /// assert_eq!(&['b', 'c', 'd'], list.iter_from(b).copied().collect::<Vec<_>>().as_slice());
+    /// assert_eq!(&['b', 'a'], list.iter_backward_from(b).copied().collect::<Vec<_>>().as_slice());
     ///
-    /// list.insert_prev_to(&b, 'X'); // O(1)
-    /// list.insert_next_to(&b, 'Y'); // O(1)
+    /// list.insert_prev_to(b, 'X'); // O(1)
+    /// list.insert_next_to(b, 'Y'); // O(1)
     /// assert!(list.eq_to_iter_vals(['a', 'X', 'b', 'Y', 'c', 'd']));
     ///
-    /// let removed = list.remove(&b);  // O(1)
+    /// let removed = list.remove(b);  // O(1)
     /// assert_eq!(removed, 'b');
     /// assert!(list.eq_to_iter_vals(['a', 'X', 'Y', 'c', 'd']));
     ///
-    /// assert_eq!(list.get(&b), None);
-    /// assert_eq!(list.idx_err(&b), Some(NodeIdxError::RemovedNode));
+    /// assert_eq!(list.get(b), None);
+    /// assert_eq!(list.idx_err(b), Some(NodeIdxError::RemovedNode));
     /// ```
     pub fn idx_of_from_back(&self, value: &T) -> Option<DoublyIdx<T>> {
         self.iter_ptr()
             .rev()
-            .find(|p| self.0.node(p).data().is_some_and(|d| d == value))
-            .map(|p| NodeIdx::new(self.memory_state(), &p))
+            .find(|p| self.0.node(*p).data().is_some_and(|d| d == value))
+            .map(|p| NodeIdx::new(self.memory_state(), p))
     }
 
     /// ***O(n)*** Performs a backward search from the back and returns `true` if there exists a node with value equal to the given `value`.
@@ -264,7 +264,7 @@ where
     pub fn contains_from_back(&self, value: &T) -> bool {
         self.iter_ptr()
             .rev()
-            .any(|p| self.0.node(&p).data().is_some_and(|d| d == value))
+            .any(|p| self.0.node(p).data().is_some_and(|d| d == value))
     }
 
     /// ***O(n)*** Performs a backward search from the back and returns the position of the first node with value equal to the given `value`.
@@ -287,7 +287,7 @@ where
     pub fn position_of_from_back(&self, value: &T) -> Option<usize> {
         self.iter_ptr().rev().enumerate().find_map(|(i, p)| {
             self.0
-                .node(&p)
+                .node(p)
                 .data()
                 .is_some_and(|d| d == value)
                 .then_some(i)

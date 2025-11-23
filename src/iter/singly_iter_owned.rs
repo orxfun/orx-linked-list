@@ -19,7 +19,7 @@ where
     P: PinnedVec<Node<Singly<T>>>,
 {
     pub(crate) fn new(col: CoreCol<Singly<T>, P>) -> Self {
-        let current = col.ends().get().cloned();
+        let current = col.ends().get();
         Self { col, current }
     }
 }
@@ -31,10 +31,11 @@ where
     type Item = T;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match &self.current {
+        match self.current {
             Some(p) => {
-                let ptr = p.ptr_mut();
-                self.current = self.col.node(p).next().get().cloned();
+                // SAFETY: collection as alive as guaranteed by the `col` field.
+                let ptr = unsafe { p.ptr_mut() };
+                self.current = self.col.node(p).next().get();
                 unsafe { &mut *ptr }.take_data()
             }
             None => None,

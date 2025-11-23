@@ -21,8 +21,8 @@ where
     where
         M: 'a,
     {
-        let a = self.ends().get(FRONT_IDX).cloned();
-        let b = self.ends().get(BACK_IDX).cloned();
+        let a = self.ends().get(FRONT_IDX);
+        let b = self.ends().get(BACK_IDX);
         DoublyIterPtr::new(self.col(), a, b)
     }
 
@@ -68,8 +68,8 @@ where
     where
         M: 'a,
     {
-        let a = self.ends().get(FRONT_IDX).cloned();
-        let b = self.ends().get(BACK_IDX).cloned();
+        let a = self.ends().get(FRONT_IDX);
+        let b = self.ends().get(BACK_IDX);
         DoublyIter::new(self.col(), a, b)
     }
 
@@ -95,15 +95,13 @@ where
     where
         M: 'a,
     {
-        let a = self.ends().get(FRONT_IDX).cloned();
-        let b = a
-            .as_ref()
-            .and_then(|a| self.col().node(a).next().get().cloned());
+        let a = self.ends().get(FRONT_IDX);
+        let b = a.and_then(|a| self.col().node(a).next().get());
         let begin = match (a, b) {
             (Some(a), Some(b)) => Some((a, b)),
             _ => None,
         };
-        let end = self.ends().get(BACK_IDX).cloned();
+        let end = self.ends().get(BACK_IDX);
         DoublyLinkIter::new(self.col(), begin, end)
     }
 
@@ -128,12 +126,12 @@ where
     ///
     /// let idx: Vec<_> = list.indices().collect();
     ///
-    /// assert_eq!(list.get(&idx[1]), Some(&1));
+    /// assert_eq!(list.get(idx[1]), Some(&1));
     ///
     /// // O(1) mutations through indices
-    /// list.insert_next_to(&idx[0], 42);
-    /// list.insert_prev_to(&idx[2], 7);
-    /// list.remove(&idx[1]);
+    /// list.insert_next_to(idx[0], 42);
+    /// list.insert_prev_to(idx[2], 7);
+    /// list.remove(idx[1]);
     ///
     /// assert!(list.eq_to_iter_vals([0, 42, 7, 2]));
     /// ```
@@ -144,7 +142,7 @@ where
         P: 'a,
     {
         let s = self.col().memory_state();
-        self.iter_ptr().map(move |ptr| DoublyIdx::new(s, &ptr))
+        self.iter_ptr().map(move |ptr| DoublyIdx::new(s, ptr))
     }
 
     /// Returns an iterator of pointers to the elements of the list.
@@ -175,29 +173,29 @@ where
     /// let list: DoublyList<_> = (0..8).collect();
     /// let idx: Vec<_> = list.indices().collect();
     ///
-    /// let iter = list.ring_iter(&idx[2]);
+    /// let iter = list.ring_iter(idx[2]);
     /// assert_eq!(iter.copied().collect::<Vec<_>>(), [2, 3, 4, 5, 6, 7, 0, 1]);
     ///
-    /// let iter = list.ring_iter(&idx[4]);
+    /// let iter = list.ring_iter(idx[4]);
     /// assert_eq!(iter.copied().collect::<Vec<_>>(), [4, 5, 6, 7, 0, 1, 2, 3]);
     ///
     /// // ring iterator is also double-ended
-    /// let iter = list.ring_iter(&idx[4]).rev();
+    /// let iter = list.ring_iter(idx[4]).rev();
     /// assert_eq!(iter.copied().collect::<Vec<_>>(), [3, 2, 1, 0, 7, 6, 5, 4]);
     ///
     /// // ring iterators are also available for slices
-    /// let slice = list.slice(&idx[3]..&idx[7]);
+    /// let slice = list.slice(idx[3]..idx[7]);
     /// assert!(slice.eq_to_iter_vals([3, 4, 5, 6]));
     ///
-    /// let iter = slice.ring_iter(&idx[4]);
+    /// let iter = slice.ring_iter(idx[4]);
     /// assert_eq!(iter.copied().collect::<Vec<_>>(), [4, 5, 6, 3,]);
     ///
-    /// let iter = slice.ring_iter(&idx[6]);
+    /// let iter = slice.ring_iter(idx[6]);
     /// assert_eq!(iter.copied().collect::<Vec<_>>(), [6, 3, 4, 5]);
     /// ```
     fn ring_iter<'a>(
         &'a self,
-        pivot_idx: &DoublyIdx<T>,
+        pivot_idx: DoublyIdx<T>,
     ) -> Chain<DoublyIter<'a, T, P>, DoublyIter<'a, T, P>>
     where
         M: 'a,
@@ -205,11 +203,11 @@ where
         let iter1 = self.iter_from(pivot_idx);
 
         let pivot = self.col().try_get_ptr(pivot_idx).expect(OOB);
-        let a = self.ends().get(FRONT_IDX).expect(OOB).clone();
+        let a = self.ends().get(FRONT_IDX).expect(OOB);
 
         let iter2 = match pivot == a {
             true => DoublyIter::new(self.col(), None, None),
-            false => match self.col().node(&pivot).prev().get().cloned() {
+            false => match self.col().node(pivot).prev().get() {
                 Some(b) => DoublyIter::new(self.col(), Some(a), Some(b)),
                 None => DoublyIter::new(self.col(), None, None),
             },
@@ -238,17 +236,17 @@ where
     /// let idx = list.push_back(2);
     /// list.push_back(3);
     ///
-    /// let mut iter = list.iter_from(&idx);
+    /// let mut iter = list.iter_from(idx);
     /// assert_eq!(iter.next(), Some(&2));
     /// assert_eq!(iter.next(), Some(&3));
     /// assert_eq!(iter.next(), None);
     /// ```
-    fn iter_from<'a>(&'a self, idx: &DoublyIdx<T>) -> DoublyIter<'a, T, P>
+    fn iter_from<'a>(&'a self, idx: DoublyIdx<T>) -> DoublyIter<'a, T, P>
     where
         M: 'a,
     {
         let a = self.col().try_get_ptr(idx).expect(OOB);
-        let b = self.ends().get(BACK_IDX).cloned();
+        let b = self.ends().get(BACK_IDX);
         DoublyIter::new(self.col(), Some(a), b)
     }
 
@@ -272,18 +270,18 @@ where
     /// let idx = list.push_back(2);
     /// list.push_back(3);
     ///
-    /// let mut iter = list.iter_backward_from(&idx);
+    /// let mut iter = list.iter_backward_from(idx);
     /// assert_eq!(iter.next(), Some(&2));
     /// assert_eq!(iter.next(), Some(&1));
     /// assert_eq!(iter.next(), Some(&0));
     /// assert_eq!(iter.next(), None);
     /// ```
-    fn iter_backward_from<'a>(&'a self, idx: &DoublyIdx<T>) -> Rev<DoublyIter<'a, T, P>>
+    fn iter_backward_from<'a>(&'a self, idx: DoublyIdx<T>) -> Rev<DoublyIter<'a, T, P>>
     where
         M: 'a,
     {
         let b = self.col().try_get_ptr(idx).expect(OOB);
-        let a = self.ends().get(FRONT_IDX).cloned();
+        let a = self.ends().get(FRONT_IDX);
         DoublyIter::new(self.col(), a, Some(b)).rev()
     }
 
@@ -303,7 +301,7 @@ where
     /// let tour: DoublyList<_> = ['a', 'b', 'c', 'd', 'e'].into_iter().collect();
     /// let idx: Vec<_> = tour.indices().collect();
     ///
-    /// let mut iter = tour.iter_links_from(&idx[1]);
+    /// let mut iter = tour.iter_links_from(idx[1]);
     ///
     /// assert_eq!(iter.next(), Some((&'b', &'c')));
     /// assert_eq!(iter.next(), Some((&'c', &'d')));
@@ -311,14 +309,14 @@ where
     ///
     /// assert_eq!(iter.next(), None);
     /// ```
-    fn iter_links_from<'a>(&'a self, idx: &DoublyIdx<T>) -> DoublyLinkIter<'a, T, P>
+    fn iter_links_from<'a>(&'a self, idx: DoublyIdx<T>) -> DoublyLinkIter<'a, T, P>
     where
         M: 'a,
     {
         let a = self.col().try_get_ptr(idx).expect(OOB);
-        let b = self.col().node(&a).next().get().cloned();
+        let b = self.col().node(a).next().get();
         let begin = b.map(|b| (a, b));
-        let end = self.ends().get(BACK_IDX).cloned();
+        let end = self.ends().get(BACK_IDX);
         DoublyLinkIter::new(self.col(), begin, end)
     }
 
@@ -405,7 +403,7 @@ where
             .iter()
             .map(|n| match n.prev().get() {
                 Some(x) => {
-                    let x = self.col().node(&x).data().unwrap();
+                    let x = self.col().node(x).data().unwrap();
                     alloc::format!("{} ", x)
                 }
                 None => "x ".to_string(),
@@ -427,7 +425,7 @@ where
             .iter()
             .map(|n| match n.next().get() {
                 Some(x) => {
-                    let x = self.col().node(&x).data().unwrap();
+                    let x = self.col().node(x).data().unwrap();
                     alloc::format!("{} ", x)
                 }
                 None => "x ".to_string(),

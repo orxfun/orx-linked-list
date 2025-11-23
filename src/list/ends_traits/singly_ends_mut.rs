@@ -35,8 +35,7 @@ where
     {
         self.ends_mut()
             .get()
-            .cloned()
-            .map(|p| unsafe { self.col_mut().data_mut_unchecked(&p) })
+            .map(|p| unsafe { self.col_mut().data_mut_unchecked(p) })
     }
 
     // idx
@@ -74,33 +73,33 @@ where
     /// let a = list.push_back('a');
     /// let b = list.push_back('b');
     ///
-    /// assert_eq!(list.get(&a), Some(&'a'));
-    /// assert_eq!(list.get(&b), Some(&'b'));
+    /// assert_eq!(list.get(a), Some(&'a'));
+    /// assert_eq!(list.get(b), Some(&'b'));
     ///
-    /// *list.get_mut(&a).unwrap() = 'x';
+    /// *list.get_mut(a).unwrap() = 'x';
     ///
     /// list.push_front('c');
     /// list.push_back('d');
     /// list.push_front('e');
     /// let f = list.push_back('f');
     ///
-    /// assert_eq!(list.get(&a), Some(&'x'));
-    /// assert_eq!(list.get(&b), Some(&'b'));
-    /// assert_eq!(list.get(&f), Some(&'f'));
+    /// assert_eq!(list.get(a), Some(&'x'));
+    /// assert_eq!(list.get(b), Some(&'b'));
+    /// assert_eq!(list.get(f), Some(&'f'));
     ///
     /// let _ = list.pop_back(); // f is removed
     ///
-    /// *list.get_mut(&a).unwrap() = 'y';
+    /// *list.get_mut(a).unwrap() = 'y';
     ///
-    /// assert_eq!(list.get(&a), Some(&'y'));
-    /// assert_eq!(list.get(&b), Some(&'b'));
-    /// assert_eq!(list.get(&f), None);
+    /// assert_eq!(list.get(a), Some(&'y'));
+    /// assert_eq!(list.get(b), Some(&'b'));
+    /// assert_eq!(list.get(f), None);
     ///
     /// list.clear(); // all removed
     ///
-    /// assert_eq!(list.get(&a), None);
-    /// assert_eq!(list.get(&b), None);
-    /// assert_eq!(list.get(&f), None);
+    /// assert_eq!(list.get(a), None);
+    /// assert_eq!(list.get(b), None);
+    /// assert_eq!(list.get(f), None);
     /// ```
     ///
     /// In the following, removal of nodes invalidates indices due to reorganization.
@@ -121,15 +120,15 @@ where
     /// list.push_back('d');
     /// list.push_back('e');
     ///
-    /// *list.get_mut(&c).unwrap() = 'x';
+    /// *list.get_mut(c).unwrap() = 'x';
     ///
     /// list.pop_back(); // does not lead to reorganization
     ///
-    /// assert_eq!(list.get(&c), Some(&'x'));
+    /// assert_eq!(list.get(c), Some(&'x'));
     ///
     /// list.pop_front(); // leads to reorganization
     ///
-    /// assert_eq!(list.get(&c), None);
+    /// assert_eq!(list.get(c), None);
     /// ```
     ///
     /// In the final example, we attempt to access to a list element using an index created by another list.
@@ -143,10 +142,10 @@ where
     /// let mut other_list = DoublyList::new();
     /// let other_idx = other_list.push_back('a');
     ///
-    /// assert!(list.get_mut(&idx).is_some());
-    /// // assert_eq!(list.get_mut(&other_idx), None);
+    /// assert!(list.get_mut(idx).is_some());
+    /// // assert_eq!(list.get_mut(other_idx), None);
     /// ```
-    fn get_mut<'a>(&'a mut self, idx: &SinglyIdx<T>) -> Option<&'a mut T>
+    fn get_mut<'a>(&'a mut self, idx: SinglyIdx<T>) -> Option<&'a mut T>
     where
         M: 'a,
         P: 'a,
@@ -191,33 +190,33 @@ where
     /// let a = list.push_back('a');
     /// let b = list.push_back('b');
     ///
-    /// assert_eq!(list.try_get(&a), Ok(&'a'));
-    /// assert_eq!(list.try_get(&b), Ok(&'b'));
+    /// assert_eq!(list.try_get(a), Ok(&'a'));
+    /// assert_eq!(list.try_get(b), Ok(&'b'));
     ///
-    /// *list.try_get_mut(&a).unwrap() = 'x';
+    /// *list.try_get_mut(a).unwrap() = 'x';
     ///
     /// list.push_front('c');
     /// list.push_back('d');
     /// list.push_front('e');
     /// let f = list.push_back('f');
     ///
-    /// assert_eq!(list.try_get(&a), Ok(&'x'));
-    /// assert_eq!(list.try_get(&b), Ok(&'b'));
-    /// assert_eq!(list.try_get(&f), Ok(&'f'));
+    /// assert_eq!(list.try_get(a), Ok(&'x'));
+    /// assert_eq!(list.try_get(b), Ok(&'b'));
+    /// assert_eq!(list.try_get(f), Ok(&'f'));
     ///
     /// let _ = list.pop_back(); // f is removed
     ///
-    /// *list.try_get_mut(&a).unwrap() = 'y';
+    /// *list.try_get_mut(a).unwrap() = 'y';
     ///
-    /// assert_eq!(list.try_get(&a), Ok(&'y'));
-    /// assert_eq!(list.try_get(&b), Ok(&'b'));
-    /// assert_eq!(list.try_get(&f), Err(NodeIdxError::RemovedNode));
+    /// assert_eq!(list.try_get(a), Ok(&'y'));
+    /// assert_eq!(list.try_get(b), Ok(&'b'));
+    /// assert_eq!(list.try_get(f), Err(NodeIdxError::RemovedNode));
     ///
     /// list.clear(); // all removed
     ///
-    /// assert_eq!(list.try_get(&a), Err(NodeIdxError::OutOfBounds));
-    /// assert_eq!(list.try_get(&b), Err(NodeIdxError::OutOfBounds));
-    /// assert_eq!(list.try_get(&f), Err(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.try_get(a), Err(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.try_get(b), Err(NodeIdxError::OutOfBounds));
+    /// assert_eq!(list.try_get(f), Err(NodeIdxError::OutOfBounds));
     /// ```
     ///
     /// In the following, removal of nodes invalidates indices due to reorganization.
@@ -238,15 +237,15 @@ where
     /// list.push_back('d');
     /// list.push_back('e');
     ///
-    /// *list.try_get_mut(&c).unwrap() = 'x';
+    /// *list.try_get_mut(c).unwrap() = 'x';
     ///
     /// list.pop_back(); // does not lead to reorganization
     ///
-    /// assert_eq!(list.get(&c), Some(&'x'));
+    /// assert_eq!(list.get(c), Some(&'x'));
     ///
     /// list.pop_front(); // leads to reorganization
     ///
-    /// assert_eq!(list.try_get_mut(&c), Err(NodeIdxError::ReorganizedCollection));
+    /// assert_eq!(list.try_get_mut(c), Err(NodeIdxError::ReorganizedCollection));
     /// ```
     ///
     /// In the final example, we attempt to access to a list element using an index created by another list.
@@ -260,10 +259,10 @@ where
     /// let mut other_list = DoublyList::new();
     /// let other_idx = other_list.push_back('a');
     ///
-    /// assert!(list.try_get_mut(&idx).is_ok());
-    /// // assert_eq!(list.try_get_mut(&other_idx), Err(NodeIdxError::OutOfBounds));
+    /// assert!(list.try_get_mut(idx).is_ok());
+    /// // assert_eq!(list.try_get_mut(other_idx), Err(NodeIdxError::OutOfBounds));
     /// ```
-    fn try_get_mut<'a>(&'a mut self, idx: &SinglyIdx<T>) -> Result<&'a mut T, NodeIdxError>
+    fn try_get_mut<'a>(&'a mut self, idx: SinglyIdx<T>) -> Result<&'a mut T, NodeIdxError>
     where
         M: 'a,
         P: 'a,
@@ -297,17 +296,17 @@ where
     ///
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'c', 'd']));
     ///
-    /// let c = list.next_mut_of(&b);
+    /// let c = list.next_mut_of(b);
     /// *c.unwrap() = 'x';
     ///
     /// assert!(list.eq_to_iter_vals(['a', 'b', 'x', 'd']));
     /// ```
-    fn next_mut_of<'a>(&'a mut self, idx: &SinglyIdx<T>) -> Option<&'a mut T>
+    fn next_mut_of<'a>(&'a mut self, idx: SinglyIdx<T>) -> Option<&'a mut T>
     where
         M: 'a,
         P: 'a,
     {
-        self.next_idx_of(idx).and_then(|i| self.get_mut(&i))
+        self.next_idx_of(idx).and_then(|i| self.get_mut(i))
     }
 }
 

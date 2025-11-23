@@ -14,7 +14,7 @@ fn test_singly_iter_from(
         .0;
 
     let vec_slice = &vec[position..];
-    let mut list_slice = list.iter_from(&idx);
+    let mut list_slice = list.iter_from(idx);
     #[cfg(feature = "validation")]
     list.validate();
 
@@ -40,7 +40,7 @@ fn test_doubly_iter_from(
         .0;
 
     let vec_slice = &vec[position..];
-    let mut list_slice = list.iter_from(&idx);
+    let mut list_slice = list.iter_from(idx);
     #[cfg(feature = "validation")]
     list.validate();
 
@@ -66,7 +66,7 @@ fn test_doubly_iter_backward_from(
         .0;
 
     let vec_slice = &vec[0..=position];
-    let mut list_slice = list.iter_backward_from(&idx);
+    let mut list_slice = list.iter_backward_from(idx);
     #[cfg(feature = "validation")]
     list.validate();
 

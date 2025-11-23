@@ -34,7 +34,7 @@ where
     fn next(&mut self) -> Option<Self::Item> {
         self.0
             .next()
-            .map(|p| unsafe { self.0.col.data_unchecked(&p) })
+            .map(|p| unsafe { self.0.col.data_unchecked(p) })
     }
 }
 
@@ -46,7 +46,7 @@ where
     fn next_back(&mut self) -> Option<Self::Item> {
         self.0
             .next_back()
-            .map(|p| unsafe { self.0.col.data_unchecked(&p) })
+            .map(|p| unsafe { self.0.col.data_unchecked(p) })
     }
 }
 

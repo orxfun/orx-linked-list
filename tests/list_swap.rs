@@ -22,14 +22,14 @@ fn list_swap() {
         let a = r.random_range(0..list.len());
         let b = r.random_range(0..list.len());
 
-        list.swap(&idx[a], &idx[b]);
+        list.swap(idx[a], idx[b]);
 
         // validate
         #[cfg(feature = "validation")]
         list.validate();
 
-        let val_a = list.get(&idx[a]).unwrap();
-        let val_b = list.get(&idx[b]).unwrap();
+        let val_a = list.get(idx[a]).unwrap();
+        let val_b = list.get(idx[b]).unwrap();
 
         let idx_a = control.iter().position(|x| x == val_a).unwrap();
         let idx_b = control.iter().position(|x| x == val_b).unwrap();

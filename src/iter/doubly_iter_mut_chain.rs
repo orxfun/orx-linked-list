@@ -26,7 +26,7 @@ where
         first: [Option<NodePtr<Doubly<T>>>; 2],
         second: [Option<NodePtr<Doubly<T>>>; 2],
     ) -> Self {
-        let iter = DoublyIterMut::new(col, first[0].clone(), first[1].clone());
+        let iter = DoublyIterMut::new(col, first[0], first[1]);
         let [second_front, second_back] = second;
         Self {
             iter,
@@ -50,8 +50,7 @@ where
                 true => None,
                 false => {
                     self.consumed_first = true;
-                    self.iter
-                        .restart_for(self.second_front.clone(), self.second_back.clone());
+                    self.iter.restart_for(self.second_front, self.second_back);
                     self.iter.next()
                 }
             },

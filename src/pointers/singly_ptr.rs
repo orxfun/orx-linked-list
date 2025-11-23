@@ -6,15 +6,22 @@ pub type SinglyPtr<T> = NodePtr<Singly<T>>;
 
 impl<T> SinglyPointer<T> for SinglyPtr<T> {
     #[inline(always)]
-    fn raw_ptr(&self) -> *mut Node<Singly<T>> {
-        self.ptr() as *mut Node<Singly<T>>
+    unsafe fn raw_ptr(&self) -> *mut Node<Singly<T>> {
+        unsafe { self.ptr() as *mut Node<Singly<T>> }
     }
 }
 
 /// A node pointer in a Singly linked list.
 pub trait SinglyPointer<T> {
     /// Returns the raw pointer to the node.
-    fn raw_ptr(&self) -> *mut Node<Singly<T>>;
+    ///
+    /// # SAFETY
+    ///
+    /// This method is unsafe as node pointers implement `Send` and `Sync`.
+    ///
+    /// It is safe dereference the received pointer if we know that `is_valid_for(col)` would
+    /// return `true` where `col` is the collection that this pointer is created from.
+    unsafe fn raw_ptr(&self) -> *mut Node<Singly<T>>;
 
     /// Returns a reference to the node.
     ///
@@ -61,6 +68,6 @@ pub trait SinglyPointer<T> {
     /// Alternatively, you may use `NodeIdx` for safe access.
     #[inline(always)]
     unsafe fn next(&self) -> Option<SinglyPtr<T>> {
-        unsafe { self.node() }.next().get().cloned()
+        unsafe { self.node() }.next().get()
     }
 }

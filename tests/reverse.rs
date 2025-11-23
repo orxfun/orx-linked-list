@@ -21,7 +21,7 @@ fn slice_reverse_empty() {
         let j = i;
 
         if i < idx.len() {
-            list.slice_mut(&idx[i]..&idx[j]).reverse();
+            list.slice_mut(idx[i]..idx[j]).reverse();
             assert!(list.eq_to_iter_refs(&expected));
         }
     }
@@ -37,7 +37,7 @@ fn slice_reverse_single() {
         let j = i;
 
         if i < idx.len() {
-            list.slice_mut(&idx[i]..=&idx[j]).reverse();
+            list.slice_mut(idx[i]..=idx[j]).reverse();
             assert!(list.eq_to_iter_refs(&expected));
         }
     }
@@ -56,7 +56,7 @@ fn slice_reverse_from_front() {
         if j < idx.len() {
             expected[0..=j].reverse();
 
-            list.slice_mut(&idx[i]..=&idx[j]).reverse();
+            list.slice_mut(idx[i]..=idx[j]).reverse();
             assert!(list.eq_to_iter_refs(&expected));
         }
     }
@@ -75,7 +75,7 @@ fn slice_reverse_until_back() {
         if i < list.len() && j < list.len() {
             expected[i..=j].reverse();
 
-            list.slice_mut(&idx[i]..=&idx[j]).reverse();
+            list.slice_mut(idx[i]..=idx[j]).reverse();
             assert!(list.eq_to_iter_refs(&expected));
         }
     }
@@ -93,7 +93,7 @@ fn slice_reverse_middle() {
         if i < list.len() && j < list.len() {
             expected[i..=j].reverse();
 
-            list.slice_mut(&idx[i]..=&idx[j]).reverse();
+            list.slice_mut(idx[i]..=idx[j]).reverse();
             assert!(list.eq_to_iter_refs(&expected));
         }
     }

@@ -36,7 +36,7 @@ where
     where
         M: 'a,
     {
-        let a = self.ends().get().cloned();
+        let a = self.ends().get();
         SinglyIterMut::new(self.col_mut(), a)
     }
 
@@ -64,13 +64,13 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3]));
     ///
-    /// for x in list.iter_mut_from(&idx) {
+    /// for x in list.iter_mut_from(idx) {
     ///     *x += 10;
     /// }
     ///
     /// assert!(list.eq_to_iter_vals([0, 11, 12, 13]));
     /// ```
-    fn iter_mut_from<'a>(&'a mut self, idx: &SinglyIdx<T>) -> SinglyIterMut<'a, T, P>
+    fn iter_mut_from<'a>(&'a mut self, idx: SinglyIdx<T>) -> SinglyIterMut<'a, T, P>
     where
         M: 'a,
     {

@@ -20,7 +20,7 @@ where
     where
         M: 'a,
     {
-        let a = self.ends().get().cloned();
+        let a = self.ends().get();
         SinglyIterPtr::new(self.col(), a)
     }
 
@@ -49,7 +49,7 @@ where
     where
         M: 'a,
     {
-        let a = self.ends().get().cloned();
+        let a = self.ends().get();
         SinglyIter::new(self.col(), a)
     }
 
@@ -74,7 +74,7 @@ where
     ///
     /// let idx: Vec<_> = list.indices().collect();
     ///
-    /// assert_eq!(list.get(&idx[1]), Some(&1));
+    /// assert_eq!(list.get(idx[1]), Some(&1));
     /// ```
     fn indices<'a>(&'a self) -> impl Iterator<Item = SinglyIdx<T>>
     where
@@ -83,7 +83,7 @@ where
         P: 'a,
     {
         let s = self.col().memory_state();
-        self.iter_ptr().map(move |ptr| SinglyIdx::new(s, &ptr))
+        self.iter_ptr().map(move |ptr| SinglyIdx::new(s, ptr))
     }
 
     /// Returns an iterator of pointers to the elements of the list.
@@ -121,13 +121,13 @@ where
     /// let idx = list.push_front(1);
     /// list.push_front(0); // 0->1->2->3
     ///
-    /// let mut iter = list.iter_from(&idx);
+    /// let mut iter = list.iter_from(idx);
     /// assert_eq!(iter.next(), Some(&1));
     /// assert_eq!(iter.next(), Some(&2));
     /// assert_eq!(iter.next(), Some(&3));
     /// assert_eq!(iter.next(), None);
     /// ```
-    fn iter_from<'a>(&'a self, idx: &SinglyIdx<T>) -> SinglyIter<'a, T, P>
+    fn iter_from<'a>(&'a self, idx: SinglyIdx<T>) -> SinglyIter<'a, T, P>
     where
         M: 'a,
     {
@@ -218,7 +218,7 @@ where
             .iter()
             .map(|n| match n.next().get() {
                 Some(x) => {
-                    let x = self.col().node(&x).data().unwrap();
+                    let x = self.col().node(x).data().unwrap();
                     alloc::format!("{} ", x)
                 }
                 None => "x ".to_string(),

@@ -39,8 +39,8 @@ where
     where
         M: 'a,
     {
-        let a = self.ends().get(FRONT_IDX).cloned();
-        let b = self.ends().get(BACK_IDX).cloned();
+        let a = self.ends().get(FRONT_IDX);
+        let b = self.ends().get(BACK_IDX);
         DoublyIterMut::new(self.col_mut(), a, b)
     }
 
@@ -68,18 +68,18 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3]));
     ///
-    /// for x in list.iter_mut_from(&idx) {
+    /// for x in list.iter_mut_from(idx) {
     ///     *x += 10;
     /// }
     ///
     /// assert!(list.eq_to_iter_vals([0, 1, 12, 13]));
     /// ```
-    fn iter_mut_from<'a>(&'a mut self, idx: &DoublyIdx<T>) -> DoublyIterMut<'a, T, P>
+    fn iter_mut_from<'a>(&'a mut self, idx: DoublyIdx<T>) -> DoublyIterMut<'a, T, P>
     where
         M: 'a,
     {
         let a = self.col().try_get_ptr(idx).expect(OOB);
-        let b = self.ends().get(BACK_IDX).cloned();
+        let b = self.ends().get(BACK_IDX);
         DoublyIterMut::new(self.col_mut(), Some(a), b)
     }
 
@@ -105,18 +105,18 @@ where
     ///
     /// assert!(list.eq_to_iter_vals([0, 1, 2, 3]));
     ///
-    /// for x in list.iter_mut_backward_from(&idx) {
+    /// for x in list.iter_mut_backward_from(idx) {
     ///     *x += 10;
     /// }
     ///
     /// assert!(list.eq_to_iter_vals([10, 11, 12, 3]));
     /// ```
-    fn iter_mut_backward_from<'a>(&'a mut self, idx: &DoublyIdx<T>) -> Rev<DoublyIterMut<'a, T, P>>
+    fn iter_mut_backward_from<'a>(&'a mut self, idx: DoublyIdx<T>) -> Rev<DoublyIterMut<'a, T, P>>
     where
         M: 'a,
     {
         let b = self.col().try_get_ptr(idx).expect(OOB);
-        let a = self.col().ends().get(FRONT_IDX).cloned();
+        let a = self.col().ends().get(FRONT_IDX);
         DoublyIterMut::new(self.col_mut(), a, Some(b)).rev()
     }
 
@@ -153,18 +153,18 @@ where
     /// let mut list: DoublyList<_> = (0..5).collect();
     /// let idx: Vec<_> = list.indices().collect();
     ///
-    /// scan(list.ring_iter_mut(&idx[3]));
+    /// scan(list.ring_iter_mut(idx[3]));
     /// assert!(list.eq_to_iter_vals([7, 8, 10, 3, 7]));
     /// ```
-    fn ring_iter_mut<'a>(&'a mut self, pivot_idx: &DoublyIdx<T>) -> DoublyIterMutChain<'a, T, P>
+    fn ring_iter_mut<'a>(&'a mut self, pivot_idx: DoublyIdx<T>) -> DoublyIterMutChain<'a, T, P>
     where
         M: 'a,
     {
         let a1 = self.col().try_get_ptr(pivot_idx).expect(OOB);
-        let b1 = self.ends().get(BACK_IDX).cloned().expect(OOB);
+        let b1 = self.ends().get(BACK_IDX).expect(OOB);
 
-        let a2 = self.ends().get(FRONT_IDX).cloned().expect(OOB);
-        let b2 = self.col().node(&a1).prev().get().cloned();
+        let a2 = self.ends().get(FRONT_IDX).expect(OOB);
+        let b2 = self.col().node(a1).prev().get();
 
         let second = match a1 == a2 {
             true => [None, None],

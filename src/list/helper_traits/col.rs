@@ -12,7 +12,7 @@ where
     /// Returns a reference to the underlying self referential collection.
     fn col(&self) -> &SelfRefCol<V, M, P>;
 
-    fn ptr_to_idx(&self, idx: &NodePtr<V>) -> NodeIdx<V> {
+    fn ptr_to_idx(&self, idx: NodePtr<V>) -> NodeIdx<V> {
         NodeIdx::new(self.col().memory_state(), idx)
     }
 }

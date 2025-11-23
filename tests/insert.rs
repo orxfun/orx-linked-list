@@ -37,15 +37,15 @@ fn insert_doubly<M: MemoryPolicy<Doubly<char>>>(
         _ => 4,
     };
     let idx = match next_to {
-        true => list.try_insert_next_to(&indices[idx], 'f'),
-        false => list.try_insert_prev_to(&indices[idx], 'f'),
+        true => list.try_insert_next_to(indices[idx], 'f'),
+        false => list.try_insert_prev_to(indices[idx], 'f'),
     }
     .unwrap();
     #[cfg(feature = "validation")]
     list.validate();
 
     assert!(list.eq_to_iter_vals(vec.iter().copied()));
-    assert_eq!(list.get(&idx), Some(&'f'));
+    assert_eq!(list.get(idx), Some(&'f'));
 }
 
 #[test_matrix([0, 1, 2, 3, 4], [true, false])]
@@ -71,14 +71,14 @@ fn insert_doubly_oob(idx: usize, next_to: bool) {
         3 => 1,
         _ => 4,
     };
-    let _ = list.try_remove(&indices[idx]);
+    let _ = list.try_remove(indices[idx]);
     #[cfg(feature = "validation")]
     list.validate();
     assert!(list.eq_to_iter_vals(vec.iter().copied()));
 
     let idx = match next_to {
-        true => list.try_insert_next_to(&indices[idx], 'f'),
-        false => list.try_insert_prev_to(&indices[idx], 'f'),
+        true => list.try_insert_next_to(indices[idx], 'f'),
+        false => list.try_insert_prev_to(indices[idx], 'f'),
     };
 
     assert!(idx.is_err());

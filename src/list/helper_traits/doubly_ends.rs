@@ -1,8 +1,6 @@
 use super::{HasCol, HasColMut};
-use crate::{
-    Doubly, DoublyIdx,
-    type_aliases::{BACK_IDX, FRONT_IDX},
-};
+use crate::type_aliases::{BACK_IDX, FRONT_IDX};
+use crate::{Doubly, DoublyIdx};
 use core::ops::RangeBounds;
 use orx_pinned_vec::PinnedVec;
 use orx_selfref_col::{MemoryPolicy, Node, NodeIdxError, NodePtr, Refs, Variant};
@@ -16,60 +14,53 @@ where
     /// Returns a reference to the ends of the linked list.
     fn ends(&self) -> &<Doubly<T> as Variant>::Ends;
 
-    fn range_start<'a, R: RangeBounds<&'a DoublyIdx<T>>>(
+    fn range_start<R: RangeBounds<DoublyIdx<T>>>(
         &self,
         range: &R,
-    ) -> Result<Option<NodePtr<Doubly<T>>>, NodeIdxError>
-    where
-        T: 'a,
-    {
+    ) -> Result<Option<NodePtr<Doubly<T>>>, NodeIdxError> {
         use core::ops::Bound::*;
 
         let begin = match range.start_bound() {
             Excluded(x) => {
-                let ptr = self.col().try_get_ptr(x)?;
-                self.col().node(&ptr).next().get().cloned()
+                let ptr = self.col().try_get_ptr(*x)?;
+                self.col().node(ptr).next().get()
             }
-            Included(x) => Some(self.col().try_get_ptr(x)?),
-            Unbounded => self.col().ends().get(FRONT_IDX).cloned(),
+            Included(x) => Some(self.col().try_get_ptr(*x)?),
+            Unbounded => self.col().ends().get(FRONT_IDX),
         };
 
         Ok(begin)
     }
 
-    fn range_end<'a, R: RangeBounds<&'a DoublyIdx<T>>>(
+    fn range_end<R: RangeBounds<DoublyIdx<T>>>(
         &self,
         range: &R,
-        front: &NodePtr<Doubly<T>>,
-    ) -> Result<Option<NodePtr<Doubly<T>>>, NodeIdxError>
-    where
-        T: 'a,
-    {
+        front: NodePtr<Doubly<T>>,
+    ) -> Result<Option<NodePtr<Doubly<T>>>, NodeIdxError> {
         use core::ops::Bound::*;
 
         let end = match range.end_bound() {
             Excluded(x) => {
-                let ptr = self.col().try_get_ptr(x)?;
-                match ptr == *front {
-                    false => self.col().node(&ptr).prev().get().cloned(),
+                let ptr = self.col().try_get_ptr(*x)?;
+                match ptr == front {
+                    false => self.col().node(ptr).prev().get(),
                     true => None,
                 }
             }
-            Included(x) => Some(self.col().try_get_ptr(x)?),
-            Unbounded => self.ends().get(BACK_IDX).cloned(),
+            Included(x) => Some(self.col().try_get_ptr(*x)?),
+            Unbounded => self.ends().get(BACK_IDX),
         };
 
         Ok(end)
     }
 
-    fn slice_ends<'a, R>(&self, range: R) -> Result<<Doubly<T> as Variant>::Ends, NodeIdxError>
+    fn slice_ends<R>(&self, range: R) -> Result<<Doubly<T> as Variant>::Ends, NodeIdxError>
     where
-        R: RangeBounds<&'a DoublyIdx<T>>,
-        T: 'a,
+        R: RangeBounds<DoublyIdx<T>>,
     {
         Ok(match self.range_start(&range)? {
             Some(front) => {
-                let back = self.range_end(&range, &front)?;
+                let back = self.range_end(&range, front)?;
                 match back {
                     Some(back) => {
                         let mut ends = <Doubly<T> as Variant>::Ends::empty();
@@ -96,25 +87,19 @@ where
 
     // links
     #[inline(always)]
-    fn is_linked(&self, prev: &NodePtr<Doubly<T>>, next: &NodePtr<Doubly<T>>) -> bool {
+    fn is_linked(&self, prev: NodePtr<Doubly<T>>, next: NodePtr<Doubly<T>>) -> bool {
         self.col().node(prev).next().get() == Some(next)
             && self.col().node(next).prev().get() == Some(prev)
     }
 
     #[inline(always)]
-    fn link(&mut self, prev: &NodePtr<Doubly<T>>, next: &NodePtr<Doubly<T>>) {
-        self.col_mut()
-            .node_mut(prev)
-            .next_mut()
-            .set_some(next.clone());
-        self.col_mut()
-            .node_mut(next)
-            .prev_mut()
-            .set_some(prev.clone());
+    fn link(&mut self, prev: NodePtr<Doubly<T>>, next: NodePtr<Doubly<T>>) {
+        self.col_mut().node_mut(prev).next_mut().set_some(next);
+        self.col_mut().node_mut(next).prev_mut().set_some(prev);
     }
 
     #[inline(always)]
-    fn unlink(&mut self, prev: &NodePtr<Doubly<T>>, next: &NodePtr<Doubly<T>>) {
+    fn unlink(&mut self, prev: NodePtr<Doubly<T>>, next: NodePtr<Doubly<T>>) {
         debug_assert!(self.is_linked(prev, next));
 
         self.col_mut().node_mut(prev).next_mut().set_none();

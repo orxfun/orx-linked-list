@@ -89,9 +89,9 @@ struct TourLinkedList {
 
 impl TourLinkedList {
     fn insert_after(&mut self, city: usize, city_to_succeed: usize) {
-        let a = &self.idx[city];
-        let b = &self.idx[city_to_succeed];
-        self.cities.move_next_to(&a, &b);
+        let a = self.idx[city];
+        let b = self.idx[city_to_succeed];
+        self.cities.move_next_to(a, b);
     }
 
     fn create_tour(num_cities: usize, moves: &[(usize, usize)]) -> Self {

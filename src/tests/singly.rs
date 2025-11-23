@@ -67,9 +67,9 @@ where
         assert!(iter.next().is_none());
     }
 
-    fn next(&self, ptr: &NodePtr<Singly<T>>) -> Option<PtrAndNode<'_, T>> {
-        self.0.node(ptr).next().get().cloned().map(|p| {
-            let next_node = self.0.node(&p);
+    fn next(&self, ptr: NodePtr<Singly<T>>) -> Option<PtrAndNode<'_, T>> {
+        self.0.node(ptr).next().get().map(|p| {
+            let next_node = self.0.node(p);
             (p, next_node)
         })
     }

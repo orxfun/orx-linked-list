@@ -12,7 +12,7 @@ impl<T> MemoryReclaimer<Singly<T>> for SinglyReclaimer {
     {
         let mut nodes_moved = false;
 
-        if let Some(mut occupied_ptr) = col.ends().get().cloned() {
+        if let Some(mut occupied_ptr) = col.ends().get() {
             let mut prev = core::ptr::null();
 
             // SAFETY: lifetime of `forward` iterator is limited to this method
@@ -22,18 +22,22 @@ impl<T> MemoryReclaimer<Singly<T>> for SinglyReclaimer {
             for (v, vacant_ptr) in forward {
                 if unsafe { &*vacant_ptr }.is_closed() {
                     loop {
-                        let o = col.position_of_unchecked(&occupied_ptr);
+                        let o = col.position_of_unchecked(occupied_ptr);
 
-                        let next = col.node(&occupied_ptr).next().get().cloned();
+                        let next = col.node(occupied_ptr).next().get();
 
                         let swapped = o > v;
                         match swapped {
                             true => {
                                 nodes_moved = true;
-                                swap(col, vacant_ptr, occupied_ptr.ptr(), prev);
+                                // SAFETY: we have a mutual &mut reference to the underlying collection
+                                // which is guaranteed to be in the same memory state as occupied
+                                swap(col, vacant_ptr, unsafe { occupied_ptr.ptr() }, prev);
                                 prev = vacant_ptr;
                             }
-                            false => prev = occupied_ptr.ptr(),
+                            // SAFETY: we have a mutual &mut reference to the underlying collection
+                            // which is guaranteed to be in the same memory state as occupied
+                            false => prev = unsafe { occupied_ptr.ptr() },
                         }
 
                         match next {
@@ -68,7 +72,7 @@ fn swap<P, T>(
 
     match prev.is_null() {
         false => {
-            col.node_mut(&NodePtr::new(prev))
+            col.node_mut(NodePtr::new(prev))
                 .next_mut()
                 .set(node_ptr(vacant));
         }
