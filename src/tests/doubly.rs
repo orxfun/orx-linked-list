@@ -51,22 +51,22 @@ where
                 assert_ne!(self.0.ends().get(BACK_IDX), self.0.ends().get(FRONT_IDX));
 
                 let mut fwd_pointers = alloc::vec![];
-                let mut ptr = self.0.ends().get(FRONT_IDX).cloned().unwrap();
-                fwd_pointers.push(ptr.clone());
-                while let Some((next_ptr, next)) = self.next(&ptr) {
-                    assert_eq!(next.prev().get(), Some(&ptr));
+                let mut ptr = self.0.ends().get(FRONT_IDX).unwrap();
+                fwd_pointers.push(ptr);
+                while let Some((next_ptr, next)) = self.next(ptr) {
+                    assert_eq!(next.prev().get(), Some(ptr));
                     ptr = next_ptr;
-                    fwd_pointers.push(ptr.clone());
+                    fwd_pointers.push(ptr);
                 }
                 assert_eq!(fwd_pointers.len(), num_active_nodes);
 
                 let mut bwd_pointers = alloc::vec![];
-                let mut ptr = self.0.ends().get(BACK_IDX).cloned().unwrap();
-                bwd_pointers.push(ptr.clone());
-                while let Some((prev_ptr, prev)) = self.prev(&ptr) {
-                    assert_eq!(prev.next().get(), Some(&ptr));
+                let mut ptr = self.0.ends().get(BACK_IDX).unwrap();
+                bwd_pointers.push(ptr);
+                while let Some((prev_ptr, prev)) = self.prev(ptr) {
+                    assert_eq!(prev.next().get(), Some(ptr));
                     ptr = prev_ptr;
-                    bwd_pointers.push(ptr.clone());
+                    bwd_pointers.push(ptr);
                 }
 
                 bwd_pointers.reverse();
@@ -79,14 +79,12 @@ where
 
         assert_eq!(iter.next(), self.front());
 
-        let mut maybe_ptr = self.0.ends().get(FRONT_IDX).cloned();
+        let mut maybe_ptr = self.0.ends().get(FRONT_IDX);
         for _ in 1..num_active_nodes {
-            let ptr = maybe_ptr.clone().unwrap();
-            maybe_ptr = self.next(&ptr).map(|x| x.0);
+            let ptr = maybe_ptr.unwrap();
+            maybe_ptr = self.next(ptr).map(|x| x.0);
 
-            let data = maybe_ptr
-                .clone()
-                .map(|p| unsafe { self.0.data_unchecked(&p) });
+            let data = maybe_ptr.map(|p| unsafe { self.0.data_unchecked(p) });
             assert_eq!(iter.next(), data);
         }
         assert!(iter.next().is_none());
@@ -96,14 +94,12 @@ where
 
         assert_eq!(iter.next(), self.back());
 
-        let mut maybe_ptr = self.0.ends().get(BACK_IDX).cloned();
+        let mut maybe_ptr = self.0.ends().get(BACK_IDX);
         for _ in 1..num_active_nodes {
-            let ptr = maybe_ptr.clone().unwrap();
-            maybe_ptr = self.prev(&ptr).map(|x| x.0);
+            let ptr = maybe_ptr.unwrap();
+            maybe_ptr = self.prev(ptr).map(|x| x.0);
 
-            let data = maybe_ptr
-                .clone()
-                .map(|p| unsafe { self.0.data_unchecked(&p) });
+            let data = maybe_ptr.map(|p| unsafe { self.0.data_unchecked(p) });
             assert_eq!(iter.next(), data);
         }
         assert!(iter.next().is_none());

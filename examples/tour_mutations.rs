@@ -2,7 +2,7 @@ use clap::Parser;
 use orx_linked_list::*;
 use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;
-use std::{fmt::Debug, time::Instant, usize};
+use std::{fmt::Debug, time::Instant};
 
 fn get_cities(num_cities: usize) -> impl Iterator<Item = City> {
     (0..num_cities).map(|id| City {

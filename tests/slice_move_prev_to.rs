@@ -23,7 +23,7 @@ fn slice_move_prev_to_front() {
         #[cfg(feature = "validation")]
         list.validate();
 
-        let mut vec: Vec<_> = (0..n).into_iter().filter(|x| x != &i).collect();
+        let mut vec: Vec<_> = (0..n).filter(|x| x != &i).collect();
         vec.insert(a, i);
 
         assert_eq!(slice, &vec[a..=b]);
@@ -48,7 +48,7 @@ fn slice_move_prev_to_back() {
         #[cfg(feature = "validation")]
         list.validate();
 
-        let mut vec: Vec<_> = (0..n).into_iter().filter(|x| x != &i).collect();
+        let mut vec: Vec<_> = (0..n).filter(|x| x != &i).collect();
         match i != b {
             true => vec.insert(b - 1, i),
             false => vec.insert(b, i),

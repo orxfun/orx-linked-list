@@ -12,6 +12,11 @@ pub struct Singly<T> {
     p: PhantomData<T>,
 }
 
+/// # SAFETY
+///
+/// List variants do not hold any data, safe to send or sync.
+unsafe impl<T> Sync for Singly<T> {}
+
 impl<T> Variant for Singly<T> {
     type Item = T;
 
@@ -31,6 +36,11 @@ impl<T> ListVariant for Singly<T> {
 pub struct Doubly<T> {
     p: PhantomData<T>,
 }
+
+/// # SAFETY
+///
+/// List variants do not hold any data, safe to send or sync.
+unsafe impl<T> Sync for Doubly<T> {}
 
 impl<T> Variant for Doubly<T> {
     type Item = T;

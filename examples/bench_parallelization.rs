@@ -33,25 +33,28 @@ fn main() {
     let args = Args::parse();
 
     let expected_output = {
-        let list: DoublyList<_> = (0..args.len as usize).collect();
+        let list: DoublyList<_> = (0..args.len).collect();
 
         list.iter()
             .filter(|x| *x % 3 != 0)
             .map(|x| x + fibonacci(x % 1000))
-            .filter_map(|x| (x % 2 == 0).then(|| x.to_string()))
+            .filter(|&x| x % 2 == 0)
+            .map(|x| x.to_string())
             .collect::<Vec<_>>()
     };
 
-    let computations: Vec<(&str, Box<dyn Fn() -> Vec<String>>)> = vec![
+    type Compute = dyn Fn() -> Vec<String>;
+    let computations: Vec<(&str, Box<Compute>)> = vec![
         (
             "Sequential computation over std::collections::LinkedList",
             Box::new(move || {
-                let list: std::collections::LinkedList<_> = (0..args.len as usize).collect();
+                let list: std::collections::LinkedList<_> = (0..args.len).collect();
 
                 list.iter()
                     .filter(|x| *x % 3 != 0)
                     .map(|x| x + fibonacci(x % 1000))
-                    .filter_map(|x| (x % 2 == 0).then(|| x.to_string()))
+                    .filter(|&x| x % 2 == 0)
+                    .map(|x| x.to_string())
                     .collect::<Vec<_>>()
             }),
         ),
@@ -59,12 +62,13 @@ fn main() {
         (
             "Sequential computation over DoublyList",
             Box::new(move || {
-                let list: DoublyList<_> = (0..args.len as usize).collect();
+                let list: DoublyList<_> = (0..args.len).collect();
 
                 list.iter_x()
                     .filter(|x| *x % 3 != 0)
                     .map(|x| x + fibonacci(x % 1000))
-                    .filter_map(|x| (x % 2 == 0).then(|| x.to_string()))
+                    .filter(|&x| x % 2 == 0)
+                    .map(|x| x.to_string())
                     .collect::<Vec<_>>()
             }),
         ),
@@ -72,7 +76,7 @@ fn main() {
         (
             "Parallelized over DoublyList using orx_parallel",
             Box::new(move || {
-                let list: DoublyList<_> = (0..args.len as usize).collect();
+                let list: DoublyList<_> = (0..args.len).collect();
 
                 list.par_x() // replace iter_x (into_iter_x) with par_x (into_par_x) to parallelize !
                     .filter(|x| *x % 3 != 0)

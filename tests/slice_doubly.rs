@@ -23,7 +23,7 @@ fn empty_from_nonempty() {
     let c = list.push_back('c');
     assert!(list.eq_to_iter_vals(['a', 'b', 'c']));
 
-    let indices = [a, b, c.clone()];
+    let indices = [a, b, c];
 
     for x in &indices {
         assert_empty_slice(&list.slice(x..x));
@@ -40,7 +40,7 @@ fn singleton_slice() {
     let expected = ['a', 'b', 'c'];
     assert!(list.eq_to_iter_refs(expected.iter()));
 
-    let indices = [a, b, c.clone()];
+    let indices = [a, b, c];
 
     for (i, x) in indices.iter().enumerate() {
         let slice = list.slice(x..=x);
@@ -119,8 +119,8 @@ fn doubly_slice() {
     let idx: Vec<_> = list.indices().collect();
 
     // empty
-    for i in 0..n {
-        assert_empty_slice(&list.slice(idx[i]..idx[i]));
+    for id in idx.iter().take(n) {
+        assert_empty_slice(&list.slice(id..id));
     }
 
     // single
