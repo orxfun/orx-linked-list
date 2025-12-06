@@ -39,11 +39,11 @@ where
                 assert!(self.front().is_some());
 
                 let mut fwd_pointers = alloc::vec![];
-                let mut ptr = self.0.ends().get().cloned().unwrap();
-                fwd_pointers.push(ptr.clone());
-                while let Some((next_ptr, _)) = self.next(&ptr) {
+                let mut ptr = self.0.ends().get().unwrap();
+                fwd_pointers.push(ptr);
+                while let Some((next_ptr, _)) = self.next(ptr) {
                     ptr = next_ptr;
-                    fwd_pointers.push(ptr.clone());
+                    fwd_pointers.push(ptr);
                 }
                 assert_eq!(fwd_pointers.len(), num_active_nodes);
             }
@@ -54,14 +54,12 @@ where
 
         assert_eq!(iter.next(), self.front());
 
-        let mut maybe_ptr = self.0.ends().get().cloned();
+        let mut maybe_ptr = self.0.ends().get();
         for _ in 1..num_active_nodes {
-            let ptr = maybe_ptr.clone().unwrap();
-            maybe_ptr = self.next(&ptr).map(|x| x.0);
+            let ptr = maybe_ptr.unwrap();
+            maybe_ptr = self.next(ptr).map(|x| x.0);
 
-            let data = maybe_ptr
-                .clone()
-                .map(|p| unsafe { self.0.data_unchecked(&p) });
+            let data = maybe_ptr.map(|p| unsafe { self.0.data_unchecked(p) });
             assert_eq!(iter.next(), data);
         }
         assert!(iter.next().is_none());

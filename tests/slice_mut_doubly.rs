@@ -23,7 +23,7 @@ fn empty_from_nonempty() {
     let c = list.push_back('c');
     assert!(list.eq_to_iter_vals(['a', 'b', 'c']));
 
-    let indices = [a, b, c.clone()];
+    let indices = [a, b, c];
 
     for x in &indices {
         assert_empty_slice(&list.slice_mut(x..x));
@@ -39,7 +39,7 @@ fn singleton_slice() {
 
     let expected = ['x', 'y', 'z'];
 
-    let indices = [a, b, c.clone()];
+    let indices = [a, b, c];
 
     for (i, x) in indices.iter().copied().enumerate() {
         let mut slice = list.slice_mut(x..=x);

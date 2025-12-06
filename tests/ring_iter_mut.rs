@@ -57,7 +57,7 @@ fn ring_iter_mut_demo() {
     fn scan<'a, I: Iterator<Item = &'a mut i32>>(mut values: I) {
         if let Some(first) = values.next() {
             let mut acc = *first;
-            while let Some(x) = values.next() {
+            for x in values {
                 let new_acc = acc + *x;
                 *x += acc;
                 acc = new_acc;

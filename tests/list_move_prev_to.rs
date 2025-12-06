@@ -13,7 +13,7 @@ fn list_move_prev_to_front() {
         let (mut list, idx) = list_and_indices(n);
         list.move_prev_to(idx[i], idx[0]);
 
-        let mut vec: Vec<_> = (0..n).into_iter().filter(|x| x != &i).collect();
+        let mut vec: Vec<_> = (0..n).filter(|x| x != &i).collect();
         vec.insert(0, i);
 
         #[cfg(feature = "validation")]
@@ -29,7 +29,7 @@ fn list_move_prev_to_back() {
         let (mut list, idx) = list_and_indices(n);
         list.move_prev_to(idx[i], idx[n - 1]);
 
-        let mut vec: Vec<_> = (0..n).into_iter().filter(|x| x != &i).collect();
+        let mut vec: Vec<_> = (0..n).filter(|x| x != &i).collect();
         match i != n - 1 {
             true => vec.insert(n - 2, i),
             false => vec.push(i),
